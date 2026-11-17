@@ -9,7 +9,7 @@
    - grit:  Silent Hill 3's grit. darker, heavier fog, harder contrast, more grain, a dirty lens.
    - glow:  Folklore / Haunting Ground. lamps that bloom in the fog, gothic but neat.
    ================================================================ */
-export const LOOKS = [
+const BASE = [
   { label:'soft', say:'soft · silent hill 1’s colours and softness',
     res:1080, ink:0.3, fog:[0.43, 0.38, 0.36], fogNear:3, fogFar:18, skyTop:[0.27, 0.22, 0.23], skyWest:[0.55, 0.42, 0.33],
     hemi:0.85, west:0.25, bulb:7, lamp:26, vend:0.9, halo:0.55, shaft:0.05, shadowSoft:5,
@@ -23,3 +23,21 @@ export const LOOKS = [
     hemi:0.65, west:0.18, bulb:9, lamp:32, vend:1.2, halo:0.9, shaft:0.08, shadowSoft:4,
     exposure:1.2, glow:1.7, glowThr:0.38, glowWide:2.2, grain:8, contrast:1.02, vignette:0.38, warm:[1.06, 0.98, 0.94], grime:0, dither:1 },
 ];
+
+/* (Nov 17, later) Aisling's pick for Missing Mile: "i like soft..but can we add like 2% grit and like 2% glow and make
+   it just like 1% darker? ... pump the contrast like a slight bit". soft, with 2% of grit and 2% of glow mixed into every
+   setting, then a hair darker by a touch more contrast. it's the default; the three originals stay for comparing. */
+function mixLooks(parts){
+  const o = {};
+  for (const k of Object.keys(parts[0][0])) {
+    const v0 = parts[0][0][k];
+    if (typeof v0 === 'number') o[k] = parts.reduce((a, p) => a + p[0][k]*p[1], 0);
+    else if (Array.isArray(v0)) o[k] = v0.map((_, i) => parts.reduce((a, p) => a + p[0][k][i]*p[1], 0));
+    else o[k] = v0;
+  }
+  return o;
+}
+const MM = mixLooks([[BASE[0], 0.96], [BASE[1], 0.02], [BASE[2], 0.02]]);
+MM.label = 'missing mile'; MM.say = 'missing mile · soft, a touch of grit and glow, a hair darker';
+MM.contrast *= 1.04; MM.exposure *= 0.99; MM.res = Math.round(MM.res);
+export const LOOKS = [MM, BASE[0], BASE[1], BASE[2]];

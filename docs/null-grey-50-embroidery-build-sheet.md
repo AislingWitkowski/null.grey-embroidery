@@ -99,3 +99,8 @@ Aisling: *"thinner smaller a tad darker, more like small ash...falkier...go ahea
 - **Closer to PS3:** up to about 1080 rows (soft and glow; grit 1000), each drawn pixel at most 1.25 screen pixels: only a hint of crunch.
 - Aisling: *"but this place looks great"*.
 - **New working rule** (Aisling): *"it would be helpful if you read all my like, umm things i like in my documents and such each place we build, also like all the coduments and such..its helps build each place"*. So before each place: its own docs and lore, plus her look loves and reference notes (docs 33, 50, 13). Written into the repo's CLAUDE.md as step 0.
+
+### Nov 17, 2026 — Missing Mile's own look
+Aisling: *"ok so i like soft..but can we add like 2% grit and like 2% glow and make it just like 1% darker? is this possible by darker like pump the contrast like a slight bit??"*
+- **Built:** a fourth look, **missing mile**: every setting is 96% soft, 2% grit, 2% glow, then contrast up 4% and exposure down 1% (a hair darker). It's the default and key **1**; soft, grit and glow are keys 2–4, side by side is 5. The difference from soft is small on purpose (a touch darker, a touch more glow round the lamps).
+- Aisling, earlier: *"ok so this is like the "baase level" correct this is before all the details and such"*. Yes: still to come are the Seam version's things and clickables, milestone 2's shared layer, and the kit's trees and better plants.

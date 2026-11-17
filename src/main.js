@@ -71,7 +71,7 @@ function start(){
   renderer.shadowMap.needsUpdate = true;
   document.getElementById('wait').classList.add('gone');
   setTimeout(() => caption('本町 · main street, missing mile. dusk. the lights under the canopy are coming on, one by one. nobody here.', 6500), 600);
-  setTimeout(() => caption(matchMedia('(pointer: coarse)').matches ? 'hold to walk · hold low to step back · drag to look' : 'w a s d · drag to look · shift run · c crouch · space jump · 1 2 3 looks · 4 side by side', 7000), 7600);
+  setTimeout(() => caption(matchMedia('(pointer: coarse)').matches ? 'hold to walk · hold low to step back · drag to look' : 'w a s d · drag to look · shift run · c crouch · space jump · 1 2 3 4 looks · 5 side by side', 7000), 7600);
   requestAnimationFrame(loop);
 }
 function clamp0(i){ return Math.max(0, Math.min(LOOKS.length - 1, i|0)); }
@@ -81,7 +81,7 @@ function setLook(i){
 function setSplit(){ split = true; resize(); hud(); }
 let CW = 0, CH = 0;
 function resize(){
-  const V = split ? LOOKS[1] : LOOKS[cur];
+  const V = split ? LOOKS[2] : LOOKS[cur];
   const asp = innerWidth/innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
   let h = Math.round(Math.min(V.res, innerHeight*dpr/1.25)*resK), w = Math.round(h*asp);   /* each drawn pixel is 1.25 screen pixels at most: only a hint of crunch (Nov 17, later: "turn it up close to ps3") */
   if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/1.25)*resK); h = Math.round(w/asp); }
@@ -115,7 +115,7 @@ function frame(now){
   if (!split) { camera.clearViewOffset(); look.draw(scene, camera, LOOKS[cur], 0, CW, CH, CW); }
   else {
     const w = CW/3;
-    for (let i = 0; i < 3; i++) { applyLook(scene, LOOKS[i]); camera.setViewOffset(CW, CH, i*w, 0, w, CH); look.draw(scene, camera, LOOKS[i], i*w, w, CH, CW); }
+    for (let i = 0; i < 3; i++) { const V = LOOKS[i + 1]; applyLook(scene, V); camera.setViewOffset(CW, CH, i*w, 0, w, CH); look.draw(scene, camera, V, i*w, w, CH, CW); }
     camera.clearViewOffset();
   }
   fpsCount(dt);
@@ -129,12 +129,12 @@ function caption(s, ms){ const c = document.getElementById('cap'); c.textContent
 function hud(){
   const b = document.getElementById('looks'); b.innerHTML = '';
   LOOKS.forEach((V, i) => { const e = document.createElement('button'); e.textContent = (i + 1) + ' · ' + V.label; if (!split && i === cur) e.className = 'on'; e.onclick = ev => { ev.stopPropagation(); setLook(i); caption(V.say, 4200); }; b.appendChild(e); });
-  const s = document.createElement('button'); s.textContent = '4 · side by side'; if (split) s.className = 'on'; s.onclick = ev => { ev.stopPropagation(); setSplit(); caption('soft · grit · glow, left to right', 3500); }; b.appendChild(s);
+  const s = document.createElement('button'); s.textContent = '5 · side by side'; if (split) s.className = 'on'; s.onclick = ev => { ev.stopPropagation(); setSplit(); caption('soft · grit · glow, left to right', 3500); }; b.appendChild(s);
   document.getElementById('names').style.display = split ? 'flex' : 'none';
 }
 addEventListener('keydown', e => {
-  if (e.code === 'Digit1' || e.code === 'Digit2' || e.code === 'Digit3') { const i = +e.code.slice(5) - 1; setLook(i); caption(LOOKS[i].say, 4200); }
-  if (e.code === 'Digit4') { setSplit(); caption('soft · grit · glow, left to right', 3500); }
+  if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) { const i = +e.code.slice(5) - 1; setLook(i); caption(LOOKS[i].say, 4200); }
+  if (e.code === 'Digit5') { setSplit(); caption('soft · grit · glow, left to right', 3500); }
   if (e.code === 'KeyF') document.getElementById('fps').classList.toggle('on');
 });
 if (matchMedia('(pointer: coarse)').matches) {

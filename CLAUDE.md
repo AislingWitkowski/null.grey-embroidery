@@ -43,7 +43,7 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
    doc 13's watch-list. Build from those.
 1. Pull first in every repo you'll touch.
 2. Make the change. Build: `npm install` once, then `bash build.sh` → `dist/missing-mile-station.html` (one self-contained page).
-3. Test with pictures: `node t/shots.js '[[x,z,yawDeg,pitch,look],...]' /tmp/p_` (look 1–3, 4 = side by side; x east,
+3. Test with pictures: `node t/shots.js '[[x,z,yawDeg,pitch,look],...]' /tmp/p_` (look 1 = Missing Mile's own (soft + 2% grit + 2% glow, a hair darker), 2–4 = soft, grit, glow, 5 = side by side; x east,
    z south, as Seam's map cells). `node t/walk.js` checks walking and collisions. `python3 t/bluescan.py /tmp/p_` checks for blue.
 4. Log it in doc 50 (nullgrey-lore `claude/`, copy in `docs/`, and the project).
 5. Commit and push every repo you touched (plain-language messages, with the session's attribution lines).
