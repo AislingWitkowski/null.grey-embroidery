@@ -111,3 +111,10 @@ Aisling: *"the pavement is a little too umm "italy" on the landing of the statio
 - The platform's concrete is painted in the station's neutral grey ink now (was the warm grey), so it reads as plain grey concrete and only the bulbs warm it. Nothing else changed.
 - Aisling asked: *"will thinhgs be more 3-d and more build and more actual shadows and such? when we build more?"* Yes: the kit (milestone 3) brings real 3D trees, plants, fences and props, and every new thing casts shadows from the lamps. A soft corner-darkening (ambient occlusion) can be added if frames allow.
 - **For the detail passes** (Aisling: *"the like holes ont he building with the breick..they look too..umm smooth and stuff not very natural and stuff we need work on making all that look real in the detail poasses!"*): the patches where the stucco has fallen off show smooth, rounded outlines. To do: ragged, chipped edges; the stucco standing proud of the brick with a broken lip and its own shadow; bricks of different colours, some cracked or missing; mortar sunk back; crumbs at the foot of the wall. Same care for every worn surface in the detail passes.
+
+### Nov 17, 2026 — milestone 1 done: the look is locked
+Aisling, asked honestly if the look is there: *"yep both look good, we could push it even a tad more if need be both phone and mac look good"*. Tested by her on her **Mac and phone: both run smooth**, with room to spare.
+- **Locked:** the look (Missing Mile's mix), the fog, the ash, the lighting, the smooth near-PS3 drawing.
+- **Headroom:** there's room for more cost, so next rounds can add ambient occlusion (corners darkening), better plants and real 3D props without dropping frames. Check the frame rate again after each.
+- **Weakest parts now** (Claude's honest read, Aisling agreed the look is right): grass and corn as cards; boxy buildings; textures that look "made in code" up close (the stucco holes first); the canopy ceiling close to black; little that moves.
+- **Next:** milestone 2 (the shared layer: pocket, captions on clicks, close-ups, sounds, the train) and the kit (milestone 3).
