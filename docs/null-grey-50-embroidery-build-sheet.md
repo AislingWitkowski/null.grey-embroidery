@@ -92,3 +92,10 @@ Aisling: *"ok runs smooth we can go smoother, and more like, flake like with sno
 - **Better textures:** every solid surface now gets a shared close-up grain (grit, scuffs, small stains, hairline scratches) laid on from three sides at its true place in the world, at two sizes, so walls, ground, wood and metal have texture up close without bigger pictures; it also roughens or smooths the shine a little. Grass, corn and leaves don't take it.
 - **Checked:** pictures in all three looks; no blue; no errors with gamepads forbidden.
 - **Still rough, honestly:** the grass and corn still read as painted cards up close; real-looking plants and trees come with the kit (milestone 3).
+
+### Nov 17, 2026 — the flakes become a little ash; up toward PS3
+Aisling: *"thinner smaller a tad darker, more like small ash...falkier...go ahead turn it up close to ps3?"* then *"oh and very slow drifty not much very few"*.
+- **The flakes are ash now:** only a few (about 520 round you), small and thin, a little darker than the fog, each with its own ragged edge. They drift very slowly and tumble slowly, so each goes from a sliver to a flake and back (never a flash). A little warmer near the lamps.
+- **Closer to PS3:** up to about 1080 rows (soft and glow; grit 1000), each drawn pixel at most 1.25 screen pixels: only a hint of crunch.
+- Aisling: *"but this place looks great"*.
+- **New working rule** (Aisling): *"it would be helpful if you read all my like, umm things i like in my documents and such each place we build, also like all the coduments and such..its helps build each place"*. So before each place: its own docs and lore, plus her look loves and reference notes (docs 33, 50, 13). Written into the repo's CLAUDE.md as step 0.

@@ -331,27 +331,32 @@ export function buildStation(scene){
     }
   })();
 
-  /* ---- flakes (Nov 17, later; Aisling: "more like, flake like with snow"): pale flakes drifting down through the fog
-     around you, the way they hang in Silent Hill 1's air. each its own size, falling slowly and swaying, turning so its
-     edge catches the light now and then (softly, never a flash), brighter near the lamps. they live in a box that
-     travels with you, so there are always some near and the far ones fade into the fog ---- */
+  /* ---- flakes of ash (Nov 17, later; Aisling: "thinner smaller a tad darker, more like small ash...falkier", then
+     "very slow drifty not much very few"): only a few, hanging and drifting very slowly. small,
+     thin, ragged grey flakes drifting down through the fog around you. each tumbles slowly as it falls, so it goes from a
+     sliver to a flake and back (a slow turn, never a flash); a little warmer near the lamps. they live in a box that
+     travels with you, so some are always close and the far ones fade into the fog ---- */
   (function flakes(){
-    const MR = rnd(99), N = 2600, pos = new Float32Array(N*3), ph = new Float32Array(N*2);
-    for (let i = 0; i < N; i++) { pos[i*3] = MR()*26; pos[i*3 + 1] = MR()*9; pos[i*3 + 2] = MR()*26; ph[i*2] = MR()*100; ph[i*2 + 1] = 0.018 + MR()*MR()*0.05; }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 2));
+    const MR = rnd(99), N = 520, pos = new Float32Array(N*3), ph = new Float32Array(N*3);
+    for (let i = 0; i < N; i++) { pos[i*3] = MR()*24; pos[i*3 + 1] = MR()*8; pos[i*3 + 2] = MR()*24; ph[i*3] = MR()*100; ph[i*3 + 1] = 0.007 + MR()*MR()*0.022; ph[i*3 + 2] = MR(); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 3));
     const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, fog:false,
       uniforms:{ uT:K.wind.uTime, uGust:K.wind.uGust, uPx:{ value:1 }, uC:{ value:new THREE.Color() }, uFogF:{ value:18 }, uL:{ value:[new THREE.Vector3(30.36, 3.9, 8.15), new THREE.Vector3(18, 2.6, 5.9), new THREE.Vector3(24, 2.6, 5.9), new THREE.Vector3(12, 2.6, 5.9), new THREE.Vector3(15, 2.6, 5.9), new THREE.Vector3(21, 2.6, 5.9)] } },
-      vertexShader:'attribute vec2 aPh; uniform float uT, uGust, uPx, uFogF; uniform vec3 uL[6]; varying float vA, vG, vTw;\n' +
+      vertexShader:'attribute vec3 aPh; uniform float uT, uGust, uPx, uFogF; uniform vec3 uL[6]; varying float vA, vG, vRot, vFlat, vSeed;\n' +
         'void main(){ float t = uT + aPh.x*13.0; vec3 p = position;\n' +
-        ' p.y -= t*(0.22 + aPh.y*4.0); p.x += sin(t*0.42 + aPh.x)*0.5 + t*(0.06 + uGust*0.25); p.z += cos(t*0.31 + aPh.x*1.7)*0.45 + t*0.03;\n' +
-        ' p = mod(p - cameraPosition + vec3(13.0, 4.0, 13.0), vec3(26.0, 9.0, 26.0)) + cameraPosition - vec3(13.0, 4.0, 13.0);\n' +   /* the box that travels with you */
+        ' p.y -= t*(0.045 + aPh.y*1.6); p.x += sin(t*0.16 + aPh.x)*0.6 + t*(0.02 + uGust*0.08); p.z += cos(t*0.12 + aPh.x*1.7)*0.55 + t*0.01;\n' +
+        ' p = mod(p - cameraPosition + vec3(12.0, 3.5, 12.0), vec3(24.0, 8.0, 24.0)) + cameraPosition - vec3(12.0, 3.5, 12.0);\n' +
         ' vec4 mv = viewMatrix*vec4(p, 1.0); float d = -mv.z;\n' +
-        ' vA = smoothstep(0.25, 1.2, d)*(1.0 - smoothstep(uFogF*0.5, uFogF*0.95, d));\n' +
-        ' float g = 0.0; for (int i = 0; i < 6; i++) { vec3 q = p - uL[i]; g += 1.0/(1.0 + dot(q, q)*0.45); } vG = g;\n' +
-        ' vTw = 0.75 + 0.25*sin(t*1.3 + aPh.x*5.0);\n' +   /* turning: a slow swell, well under a breath a second */
-        ' gl_PointSize = clamp(aPh.y*projectionMatrix[1][1]*0.5*uPx*300.0/max(d, 0.3), 1.0, 22.0); gl_Position = projectionMatrix*mv; }',
-      fragmentShader:'uniform vec3 uC; varying float vA, vG, vTw; void main(){ vec2 q = gl_PointCoord - 0.5; float r = length(q*vec2(1.0, 1.25)); float a = 1.0 - smoothstep(0.2, 0.5, r);\n' +
-        ' vec3 c = mix(uC*1.35 + vec3(0.1), vec3(0.95, 0.88, 0.78), 0.45) + vec3(1.0, 0.78, 0.5)*vG*0.6; gl_FragColor = vec4(c*vTw, a*vA*0.85); }' });
+        ' vA = smoothstep(0.2, 1.0, d)*(1.0 - smoothstep(uFogF*0.45, uFogF*0.9, d));\n' +
+        ' float g = 0.0; for (int i = 0; i < 6; i++) { vec3 q = p - uL[i]; g += 1.0/(1.0 + dot(q, q)*0.5); } vG = g;\n' +
+        ' float tb = t*(0.22 + aPh.z*0.3) + aPh.z*6.28; vRot = aPh.z*6.28 + t*0.12*(aPh.z - 0.5); vFlat = 0.18 + 0.82*abs(cos(tb)); vSeed = aPh.z*97.0;\n' +   /* the tumble: slow */
+        ' gl_PointSize = clamp(aPh.y*projectionMatrix[1][1]*0.5*uPx*300.0/max(d, 0.3), 1.0, 16.0); gl_Position = projectionMatrix*mv; }',
+      fragmentShader:'uniform vec3 uC; varying float vA, vG, vRot, vFlat, vSeed;\n' +
+        'float h1(float x){ return fract(sin(x)*43758.5453); }\n' +
+        'void main(){ vec2 q = gl_PointCoord - 0.5; float c = cos(vRot), s = sin(vRot); q = vec2(c*q.x - s*q.y, s*q.x + c*q.y);\n' +
+        ' q.y /= vFlat; float an = atan(q.y, q.x); float rag = 0.32 + 0.1*sin(an*3.0 + vSeed) + 0.06*sin(an*7.0 + vSeed*1.7);\n' +   /* a ragged edge, its own for each flake */
+        ' float r = length(q*vec2(1.0, 1.6)); float a = 1.0 - smoothstep(rag - 0.08, rag, r); if (a <= 0.01) discard;\n' +
+        ' vec3 col = uC*0.62 + vec3(0.06, 0.05, 0.045) + vec3(1.0, 0.72, 0.42)*vG*0.32; gl_FragColor = vec4(col, a*vA*0.9); }' });
     const pts = new THREE.Points(g, m); pts.frustumCulled = false; pts.renderOrder = 5; scene.add(pts); L.motes = m;
   })();
 

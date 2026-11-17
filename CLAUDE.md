@@ -30,12 +30,17 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
 - **Mostly overcast and dark** (Ukiyo's weather). Very few sunny places.
 - **First person only.** Small, locked-down places; edges hidden by corn, fences, ditches, fog, with an invisible stop.
 - **Smooth, close to real, a tiny crunch (Aisling, Nov 17):** Seam is the pixel world; Embroidery goes as close as it can
-  to PS3 Silent Hill 3 / Folklore while running smooth. Up to about 960p, each drawn pixel at most 1.5 screen pixels (Nov 17, later: smoother). The
+  to PS3 Silent Hill 3 / Folklore while running smooth. Up to about 1080p, each drawn pixel at most 1.25 screen pixels (Nov 17, later: "turn it up close to ps3"). The
   station's inks (`src/inks.js`, copied from `null.grey-furusatostation/src/a-head.html` RAMP_SRC; the master lives
   there) still grade every pixel's colour, mixed with the smooth picture (each look's `ink` amount), with a trace of
-  Seam's 4×4 dither. Keep the colours, fog, ash and snow.
+  Seam's 4×4 dither. Keep the colours, fog, ash and snow (the flakes are small, thin, darker ash).
 
 ## How a round goes
+0. **Before building a place** (Aisling, Nov 17: "it would be helpful if you read all my like, umm things i like in my
+   documents and such each place we build, also like all the coduments and such..its helps build each place"): read the
+   docs about that place and its lore (doc 00 lists them; e.g. doc 32 for the Furusato line's stops, doc 38 for every
+   stop, doc 24 for Limbo), and the things she loves: doc 33's look loves and references, doc 50's reference notes,
+   doc 13's watch-list. Build from those.
 1. Pull first in every repo you'll touch.
 2. Make the change. Build: `npm install` once, then `bash build.sh` → `dist/missing-mile-station.html` (one self-contained page).
 3. Test with pictures: `node t/shots.js '[[x,z,yawDeg,pitch,look],...]' /tmp/p_` (look 1–3, 4 = side by side; x east,

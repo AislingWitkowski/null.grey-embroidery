@@ -83,8 +83,8 @@ let CW = 0, CH = 0;
 function resize(){
   const V = split ? LOOKS[1] : LOOKS[cur];
   const asp = innerWidth/innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
-  let h = Math.round(Math.min(V.res, innerHeight*dpr/1.5)*resK), w = Math.round(h*asp);   /* each drawn pixel is 1.5 screen pixels at most: a tinier crunch (Nov 17, later: smoother) */
-  if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/1.5)*resK); h = Math.round(w/asp); }
+  let h = Math.round(Math.min(V.res, innerHeight*dpr/1.25)*resK), w = Math.round(h*asp);   /* each drawn pixel is 1.25 screen pixels at most: only a hint of crunch (Nov 17, later: "turn it up close to ps3") */
+  if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/1.25)*resK); h = Math.round(w/asp); }
   CW = split ? Math.floor(w/3)*3 : w; CH = h;
   renderer.setSize(CW, CH, false);
   camera.aspect = CW/CH; camera.fov = asp < 1 ? Math.min(100, 2*Math.atan(Math.tan(33*Math.PI/180)/asp)*180/Math.PI*0.8) : 66;
