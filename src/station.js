@@ -6,7 +6,7 @@
    looks, i mostly want pumped up graphics."
    ================================================================ */
 import * as THREE from 'three';
-import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd } from './kit.js';
+import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront } from './paint.js';
 import { inkRGB } from './inks.js';
 
@@ -29,33 +29,47 @@ export function groundAt(x, z){
   if (z < 9) h = h*sm(8, 9, z) + (-0.3)*(1 - sm(8, 9, z));   /* meets the building's foot and the platform's back evenly */
   return h;
 }
+/* where things meet the ground, it's darker (light can't get in): the foot of the building, the shed, the platform's
+   back, the poles */
+function contact(x, z){
+  const dB = Math.max(Math.max(9 - x, x - 25, 0), Math.max(8 - z, z - 13, 0)), dS = Math.max(Math.max(25 - x, x - 28.9, 0), Math.max(8 - z, z - 9.6, 0));
+  const dP = z > 8 && x > 9 && x < 32 ? z - 8 : 9;
+  let o = 0.45*sm(0.9, 0, Math.min(dB, dS)) + 0.3*sm(0.6, 0, dP);
+  for (const zp of [10.58, 17.58, 24.58]) { const d = Math.hypot(x - 31.98, z - zp); o += 0.35*sm(0.5, 0.05, d); }
+  return Math.min(0.6, o);
+}
 function paintGround(){
-  return paint(1536, 1228, TW, TD, (u, v) => {
+  return paint(2048, 1638, TW, TD, (u, v) => {
     const x = TX0 + u, z = TZ0 + (TD - v);
-    const n = vn(x*3, z*3), f = fbm(x*0.5, z*0.5), g = vn(x*14, z*14);
-    if (z < 0.9) return [f > 0.5 ? 'hwood' : 'hsage', clamp(0.2 + 0.12*n - 0.1*sm(0.9, -1, z), 0, 1)];   /* under the corn */
+    const n = vn(x*3, z*3), f = fbm(x*0.5, z*0.5), g = vn(x*14, z*14), fine = vn(x*60, z*60), c = contact(x, z);
+    const r = (ramp, t, ht, ro) => [ramp, clamp(t*(1 - c), 0, 1), 1, ht, ro];
+    if (z < 0.9) return r(f > 0.5 ? 'hwood' : 'hsage', 0.2 + 0.12*n - 0.1*sm(0.9, -1, z) + 0.04*fine, 0.4 + 0.3*g, 1);   /* under the corn */
     if (z < 3.05) {   /* ballast: stones, the dark between them, rust stain under the rails */
-      const st = vn(x*22, z*22), rust = Math.abs(z - 1.55) < 0.12 || Math.abs(z - 2.45) < 0.12;
-      return [rust && st > 0.45 ? 'hrust' : 'hgrey', clamp((st > 0.55 ? 0.42 : 0.22) + 0.12*g - (rust ? 0.08 : 0), 0, 1)];
+      const st = vn(x*22, z*22), st2 = vn(x*44 + 5, z*44), rust = Math.abs(z - 1.55) < 0.12 || Math.abs(z - 2.45) < 0.12;
+      const stone = Math.max(st, st2*0.9);
+      return r(rust && stone > 0.45 ? 'hrust' : 'hgrey', (stone > 0.55 ? 0.42 : 0.2) + 0.12*g + 0.05*fine - (rust ? 0.08 : 0), stone, stone > 0.55 ? 0.75 : 1);
     }
     if (z < 8) {   /* gravel, dead grass coming through */
-      if (f > 0.58) return ['hgold', clamp(0.25 + 0.15*g, 0, 1)];
-      return ['hgrey', clamp(0.3 + 0.18*vn(x*25, z*25) - 0.06*n, 0, 1)];
+      const gv = vn(x*40, z*40);
+      if (f > 0.58) return r('hgold', 0.25 + 0.15*g + 0.04*fine, 0.5 + 0.3*fine, 1);
+      return r('hgrey', 0.3 + 0.18*vn(x*25, z*25) - 0.06*n + 0.06*(gv - 0.5), gv, 0.95);
     }
-    if (x > ROAD[0] && x < ROAD[1]) {   /* the road: old asphalt, patched, a faded double yellow */
-      const c = x - 30, line = Math.abs(Math.abs(c) - 0.06) < 0.035 && fbm(x*2, z*0.8) < 0.68 && z > 9;
-      if (line) return ['hamber', clamp(0.42 - 0.12*vn(x*40, z*6), 0, 1)];
+    if (x > ROAD[0] && x < ROAD[1]) {   /* the road: old asphalt, patched, a faded double yellow; damp, a little sheen */
+      const cc = x - 30, line = Math.abs(Math.abs(cc) - 0.06) < 0.035 && fbm(x*2, z*0.8) < 0.68 && z > 9;
+      const crack = Math.abs(frac(x*0.9 + fbm(x, z*0.6)*1.4) - 0.5) < 0.01 && fbm(x*0.5 + 3, z*0.5) > 0.55;
+      if (line) return r('hamber', 0.42 - 0.12*vn(x*40, z*6), 0.6, 0.7);
       const patch = fbm(x*0.9 + 7, z*0.4) > 0.63, edge = Math.min(x - ROAD[0], ROAD[1] - x) < 0.12 && vn(x*10, z*10) > 0.4;
-      if (edge) return ['hgold', 0.3];
-      return ['sstone', clamp((patch ? 0.24 : 0.34) + 0.1*vn(x*30, z*30) - 0.06*f, 0, 1)];
+      if (edge) return r('hgold', 0.3, 0.6, 1);
+      const wet = sm(0.6, 0.7, fbm(x*0.7 + 2, z*0.5));
+      return r('sstone', (patch ? 0.24 : 0.34) + 0.1*vn(x*30, z*30) + 0.05*(fine - 0.5) - 0.06*f - (crack ? 0.12 : 0) - 0.04*wet, 0.5 + 0.2*fine - (crack ? 0.4 : 0), 0.72 - 0.45*wet);
     }
-    /* the fields: mud, dead grass, the odd puddle */
-    const pud = fbm(x*0.35 + 11, z*0.35) > 0.69;
-    if (pud) return ['hnight', clamp(0.22 + 0.16*vn(x*4, z*4), 0, 1)];
-    const mud = f > 0.55 || (Math.abs(frac(x*0.9) - 0.5) < 0.12 && z > 11);   /* old furrows */
-    if (mud) return ['hwood', clamp(0.22 + 0.12*n + 0.06*g, 0, 1)];
-    return [n > 0.62 ? 'hsage' : 'hgold', clamp(0.24 + 0.14*g + 0.06*n, 0, 1)];
-  });
+    /* the fields: mud, dead grass, the odd puddle (puddles are smooth and shine) */
+    const pud = fbm(x*0.35 + 11, z*0.35);
+    if (pud > 0.69) return r('hnight', 0.2 + 0.14*vn(x*4, z*4), 0.1, 0.08 + 0.2*sm(0.69, 0.75, pud)*0);
+    const mud = f > 0.55 || (Math.abs(frac(x*0.9) - 0.5) < 0.12 && z > 11), rim = pud > 0.64;
+    if (mud || rim) return r('hwood', 0.22 + 0.12*n + 0.06*g + 0.04*fine, 0.3 + 0.3*g + 0.2*fine, rim ? 0.45 : 0.75);
+    return r(n > 0.62 ? 'hsage' : 'hgold', 0.24 + 0.14*g + 0.06*n + 0.05*fine, 0.5 + 0.4*fine, 1);
+  }, { nrm:1.2 });
 }
 function groundMesh(){
   const g = new THREE.PlaneGeometry(TW, TD, TW*4, TD*4); g.rotateX(-Math.PI/2);
@@ -115,14 +129,20 @@ export function buildStation(scene){
 
   /* ---- the platform: concrete, the coping along the edge, the worn tactile strip ---- */
   box(9, 32, -0.62, 0, 3, 8, [M.face, M.face, M.conc, M.conc, M.face, M.face], { uvOff:[0, 0] });
-  box(9, 32, 0, 0.012, 3.0, 3.28, mat(T.conc, { color:0xc8c0b8 }), { solid:false, cast:false });
+  box(9, 32, -0.08, 0.012, 2.92, 3.28, mat(T.conc, { color:0xc8c0b8 }), { solid:false });   /* the coping, its lip over the track */
   plane(23, 0.3, M.strip, 20.5, 0.006, 3.62, 0, { world:true, cast:false }).rotation.x = -Math.PI/2;
 
   /* ---- the track: ballast (painted in the ground), sleepers, two rails ---- */
   const sl = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 0.1, 1.7), M.woodD, 90), m4 = new THREE.Matrix4();
   for (let i = 0; i < 90; i++) { m4.makeTranslation(-6 + i*0.6, -0.58, 2.0 + (hsh(i, 3) - 0.5)*0.04); sl.setMatrixAt(i, m4); }
   sl.receiveShadow = true; sl.castShadow = true; scene.add(sl);
-  for (const z of [1.55, 2.45]) { box(-6, 48, -0.53, -0.4, z - 0.035, z + 0.035, M.rail, { solid:false }); }
+  /* the rails in their real shape (foot, web, head), on tie plates */
+  const rs = new THREE.Shape(); [[-0.065, 0], [0.065, 0], [0.065, 0.012], [0.012, 0.03], [0.009, 0.11], [0.032, 0.12], [0.032, 0.15], [-0.032, 0.15], [-0.032, 0.12], [-0.009, 0.11], [-0.012, 0.03], [-0.065, 0.012]].forEach((p, i) => i ? rs.lineTo(p[0], p[1]) : rs.moveTo(p[0], p[1]));
+  const railG = new THREE.ExtrudeGeometry(rs, { depth:54, bevelEnabled:false }); railG.rotateY(Math.PI/2);
+  for (const z of [1.55, 2.45]) { const me = new THREE.Mesh(railG, M.rail); me.position.set(-6, -0.535, z); me.castShadow = me.receiveShadow = true; scene.add(me); }
+  const tp = new THREE.InstancedMesh(new THREE.BoxGeometry(0.17, 0.016, 0.24), M.iron, 180);
+  for (let i = 0; i < 90; i++) for (let k = 0; k < 2; k++) { m4.makeTranslation(-6 + i*0.6, -0.528, k ? 2.45 : 1.55); tp.setMatrixAt(i*2 + k, m4); }
+  tp.receiveShadow = true; scene.add(tp);
 
   /* ---- telephone poles along the line, wires between, sagging ---- */
   const PX = [4, 11, 18, 25, 32, 39];
@@ -133,7 +153,7 @@ export function buildStation(scene){
 
   /* ---- the station building: stucco over brick, shut doors, papered windows; a real gabled tin roof ---- */
   box(8.92, 25.08, -0.42, 0.02, 7.95, 13.08, mat(T.face), { solid:false });
-  box(9, 25, 0, 3.4, 8, 13, [M.stucco, M.stucco, M.dark, M.dark, M.facade, M.facade]);
+  box(9, 25, 0, 3.4, 8, 13, [M.stucco, M.stucco, M.dark, M.dark, M.facade, M.facade], { flipU:[5] });
   K.solids.push({ x0:9, x1:25, y0:-1, y1:3.4, z0:8, z1:13 });
   (function roof(){
     const ridgeY = 5.05, eaveY = 3.32, z0 = 7.78, z1 = 13.22, zr = 10.5, run = zr - z0, rise = ridgeY - eaveY, ln = Math.hypot(run, rise), ang = Math.atan2(rise, run);
@@ -148,6 +168,38 @@ export function buildStation(scene){
     }
     box(8.8, 25.2, ridgeY - 0.04, ridgeY + 0.08, zr - 0.09, zr + 0.09, M.iron, { solid:false });   /* the ridge cap */
   })();
+  /* (Nov 17, later) the building in the round: frames round the doors, sills and lintels at the windows, a stone step
+     at each back door, a chain and padlock across the front doors, the roof's eaves boards and barge boards, a rusted
+     gutter and downpipes, an old junction box with its conduit */
+  const doorsX = [9.95, 15.95, 21.95], winsX = [13.05, 19.05];
+  for (const [zf, s] of [[8, -1], [13, 1]]) {
+    const z0 = s < 0 ? zf - 0.06 : zf, z1 = s < 0 ? zf : zf + 0.06;
+    for (const x of doorsX) {
+      box(x - 0.09, x, 0, 2.55, z0, z1, M.woodD, { solid:false }); box(x + 1.1, x + 1.19, 0, 2.55, z0, z1, M.woodD, { solid:false });
+      box(x - 0.12, x + 1.22, 2.45, 2.6, s < 0 ? zf - 0.09 : zf, s < 0 ? zf : zf + 0.09, M.woodD, { solid:false });
+      if (s > 0) box(x - 0.2, x + 1.3, -0.42, -0.02, 13, 13.4, mat(T.face, { color:0xb8b0a8 }));   /* the step */
+      if (s < 0) {   /* the chain across, and its lock */
+        wire([x + 0.25, 1.15, 7.975], [x + 0.85, 1.15, 7.975], 0.12, M.iron, 0.012);
+        box(x + 0.52, x + 0.6, 0.92, 1.02, 7.95, 7.985, M.iron, { solid:false, cast:false });
+      }
+    }
+    for (const x of winsX) {
+      box(x - 0.06, x + 0.96, 0.9, 0.97, s < 0 ? zf - 0.1 : zf, s < 0 ? zf : zf + 0.1, mat(T.face, { color:0xd0c8c0 }), { solid:false });   /* the sill */
+      box(x - 0.05, x + 0.95, 2.25, 2.34, z0, z1, M.woodD, { solid:false });
+      box(x - 0.05, x + 0.01, 0.97, 2.25, z0, z1, M.woodD, { solid:false }); box(x + 0.89, x + 0.95, 0.97, 2.25, z0, z1, M.woodD, { solid:false });
+    }
+  }
+  box(8.8, 25.2, 3.18, 3.36, 13.18, 13.24, M.woodD, { solid:false });   /* the eaves board at the back */
+  const gut = cyl(0.07, 0.07, 16.4, M.iron, 17, 3.18, 13.3, 8, { open:true, rz:Math.PI/2 }); gut.position.y = 3.18;
+  for (const x of [9.15, 24.85]) { cyl(0.045, 0.045, 3.6, M.iron, x, -0.35, 13.3, 8); box(x - 0.06, x + 0.06, -0.33, -0.25, 13.25, 13.55, M.iron, { solid:false }); }   /* downpipes, a shoe at the foot */
+  for (const [x, s] of [[9, -1], [25, 1]]) {   /* barge boards up the gables */
+    for (const zs of [-1, 1]) { const g = new THREE.BoxGeometry(0.04, 0.16, Math.hypot(2.72, 1.73)); const me = new THREE.Mesh(g, M.woodD);
+      me.position.set(x + s*0.21, (3.32 + 5.05)/2 - 0.02, 10.5 + zs*1.36); me.rotation.x = zs*Math.atan2(1.73, 2.72); me.castShadow = me.receiveShadow = true; scene.add(me); }
+  }
+  box(24.2, 24.55, 2.0, 2.4, 7.9, 8.0, M.iron, { solid:false }); box(24.35, 24.4, 2.4, 3.15, 7.95, 7.99, M.iron, { solid:false, cast:false });   /* junction box, conduit up into the canopy */
+  /* the canopy's rafters, from the beam back to the wall */
+  for (const x of [10.5, 13.5, 16.5, 19.5, 22.5, 9.05, 24.95]) box(x - 0.05, x + 0.05, 2.98, 3.15, 4.21, 8, M.woodD, { solid:false });
+
   /* on the wall: the bench, the poster, the line map, the timetable (their pictures come with milestone 2's close-ups;
      for now plain aged paper, nothing written) */
   box(11.4, 12.76, 0.38, 0.43, 7.57, 7.95, M.wood); box(11.45, 11.55, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false }); box(12.61, 12.71, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false });
@@ -177,7 +229,7 @@ export function buildStation(scene){
     lathe([[0.012, 0.13], [0.04, 0.12], [0.08, 0.08], [0.15, 0.01], [0.16, 0]], shadeM, x, 2.66, 5.9, 12, { cast:false });
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 6), M.glass); b.position.set(x, 2.69, 5.9); scene.add(b);
     box(x - 0.006, x + 0.006, 2.79, C, 5.894, 5.906, M.wire, { solid:false, cast:false });
-    const s = spot(x, 2.66, 5.9, 1.25, 9, 0xffb878, 512); s.userData = { x, weak:i === 1 || i === 3, ph:i*1.7 };
+    const s = spot(x, 2.66, 5.9, 1.25, 9, 0xffb878, 1024); s.userData = { x, weak:i === 1 || i === 3, ph:i*1.7 };
     L.bulbs.push(s); halo(x, 2.67, 5.9, 0.42, 0xffc890);
   });
   /* the hanging sign, lit from inside, on two rods */

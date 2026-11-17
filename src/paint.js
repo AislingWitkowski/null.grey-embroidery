@@ -13,17 +13,37 @@ export function frac(v){ return v - Math.floor(v); }
 export function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
 export function sm(a, b, v){ const t = clamp((v - a)/(b - a), 0, 1); return t*t*(3 - 2*t); }
 
-/* fn(x, y) in metres across the texture → [ramp, t] or [ramp, t, alpha] or null (transparent) */
+/* fn(x, y) in metres across the texture → [ramp, t] or [ramp, t, alpha, height, rough] or null (transparent).
+   besides the colour, each painter gives the surface a relief (height: from the brightness unless it says otherwise)
+   and, where it says so, how rough or wet it is. the relief becomes a normal map, so bricks, boards, ribs and cracks
+   catch the lamps from the side; low roughness (damp, puddles) shines where the light falls. */
 export function paint(w, h, mw, mh, fn, opts = {}){
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const cx = cv.getContext('2d'), im = cx.createImageData(w, h), d = im.data;
+  const H = new Float32Array(w*h), Rg = new Float32Array(w*h); let anyRough = false;
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-    const r = fn((i + 0.5)/w*mw, (1 - (j + 0.5)/h)*mh, i, j), o = (j*w + i)*4;
-    if (!r) { d[o + 3] = 0; continue; }
-    const c = inkRGB(r[0], r[1]); d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = r.length > 2 ? Math.round(r[2]*255) : 255;
+    const r = fn((i + 0.5)/w*mw, (1 - (j + 0.5)/h)*mh, i, j), o = (j*w + i)*4, k = j*w + i;
+    if (!r) { d[o + 3] = 0; H[k] = 0; Rg[k] = 1; continue; }
+    const c = inkRGB(r[0], r[1]); d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = r.length > 2 && r[2] != null ? Math.round(r[2]*255) : 255;
+    H[k] = r.length > 3 && r[3] != null ? r[3] : r[1];
+    if (r.length > 4 && r[4] != null) { Rg[k] = r[4]; anyRough = true; } else Rg[k] = 1;
   }
   cx.putImageData(im, 0, 0);
-  return tex(cv, opts);
+  const t = tex(cv, opts);
+  if (opts.nrm !== 0) t.userData.normal = normalFrom(H, w, h, (opts.nrm || 1)*w/mw/64, opts);
+  if (anyRough) { const rc = document.createElement('canvas'); rc.width = w; rc.height = h; const rx = rc.getContext('2d'), ri = rx.createImageData(w, h);
+    for (let k = 0; k < w*h; k++) { const v = Math.round(clamp(Rg[k], 0, 1)*255); ri.data[k*4] = ri.data[k*4 + 1] = ri.data[k*4 + 2] = v; ri.data[k*4 + 3] = 255; }
+    rx.putImageData(ri, 0, 0); const rt = tex(rc, opts); rt.colorSpace = THREE.NoColorSpace; rt.magFilter = THREE.LinearFilter; t.userData.rough = rt; }
+  return t;
+}
+function normalFrom(H, w, h, k, opts){
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const c = cv.getContext('2d'), im = c.createImageData(w, h), d = im.data;
+  const at = (i, j) => H[((j + h) % h)*w + ((i + w) % w)];
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+    const dx = (at(i + 1, j) - at(i - 1, j))*k, dy = (at(i, j - 1) - at(i, j + 1))*k, l = Math.hypot(dx, dy, 1), o = (j*w + i)*4;
+    d[o] = (-dx/l*0.5 + 0.5)*255; d[o + 1] = (-dy/l*0.5 + 0.5)*255; d[o + 2] = (1/l*0.5 + 0.5)*255; d[o + 3] = 255;
+  }
+  c.putImageData(im, 0, 0); const t = tex(cv, opts); t.colorSpace = THREE.NoColorSpace; t.magFilter = THREE.LinearFilter; return t;
 }
 export function tex(cv, opts = {}){
   const t = new THREE.CanvasTexture(cv);
@@ -37,56 +57,68 @@ export function tex(cv, opts = {}){
 
 /* ---------------- the station building: stucco over brick in bands, the paint gone; tall shut doors in faded sage over
    grey boards, iron straps; windows blacked out with old newspaper, one pane broken. one 6 m tile = a door bay and a
-   window bay (Seam's f3Building, carried over). 3.4 m tall. ---------------- */
+   window bay (Seam's f3Building, carried over). 3.4 m tall. (Nov 17, later: twice the pixels, hairline cracks in the
+   stucco, salt bloom low down, grime run down from the sills and the straps, and a relief for every part.) ---------------- */
 export function paintFacade(){
-  return paint(384, 224, 6, 3.4, (x, h) => {
+  return paint(768, 448, 6, 3.4, (x, h) => {
     const bay = x % 3, isDoor = x < 3, win = !isDoor && bay > 1.05 && bay < 1.95 && h > 0.95 && h < 2.25;
     const door = isDoor && bay > 0.95 && bay < 2.05 && h < 2.45;
-    if (h < 0.14) return ['hgrey', 0.24 + 0.08*vn(x*20, h*30)];
+    if (h < 0.14) return ['hgrey', 0.24 + 0.08*vn(x*20, h*30) - 0.06*vn(x*90, h*90), 1, 0.5 + 0.3*vn(x*40, h*40)];
     if (door) {
       const dx = bay - 1.5, f = Math.abs(dx) > 0.5 || h > 2.37;
-      if (f) return ['hwood', 0.22 + 0.06*vn(x*20, h*6)];
-      if (Math.abs(dx) < 0.012) return ['hblack', 0.2];
-      if ((Math.abs(h - 0.45) < 0.03 || Math.abs(h - 1.95) < 0.03) && Math.abs(dx) > 0.2) return ['hblack', 0.5 + (vn(x*40, h*40) > 0.6 ? 0.2 : 0)];
-      const joint = frac(dx*10 + 0.5) < 0.06, gr = vn(x*60, h*3), wet = 1 - sm(0, 0.6, h);
-      const paintLeft = fbm(x*3, h*1.5) > 0.56;
-      return [paintLeft ? 'hsage' : 'hwood', clamp((joint ? 0.15 : 0.42 + 0.14*gr) - 0.14*wet, 0, 1)];
+      if (f) return ['hwood', 0.22 + 0.06*vn(x*20, h*6), 1, 0.9];
+      if (Math.abs(dx) < 0.012) return ['hblack', 0.2, 1, 0.0];
+      if ((Math.abs(h - 0.45) < 0.03 || Math.abs(h - 1.95) < 0.03) && Math.abs(dx) > 0.2) { const bolt = frac(dx*8) < 0.12; return ['hblack', 0.5 + (vn(x*40, h*40) > 0.6 ? 0.2 : 0) + (bolt ? 0.15 : 0), 1, bolt ? 1 : 0.85, 0.55]; }
+      const bd = frac(dx*10 + 0.5), joint = bd < 0.06, gr = vn(x*60, h*3) + 0.3*vn(x*200, h*8), wet = 1 - sm(0, 0.6, h);
+      const paintLeft = fbm(x*3, h*1.5) > 0.56, below = Math.min(Math.abs(h - 0.45), Math.abs(h - 1.95));
+      const rustRun = h < 1.95 && h > 0.45 && below < 0.5*vn(x*30, 3) && vn(x*30, 3) > 0.6 && Math.abs(dx) > 0.2;   /* rust run down from the straps */
+      const t = clamp((joint ? 0.15 : 0.42 + 0.14*gr) - 0.14*wet - (rustRun ? 0.06 : 0), 0, 1);
+      return [rustRun ? 'hrust' : (paintLeft ? 'hsage' : 'hwood'), t, 1, joint ? 0.1 : 0.55 + 0.25*gr + (paintLeft ? 0.08 : 0)];
     }
     if (win) {
-      if (Math.abs(bay - 1.5) > 0.4 || h < 1.03 || h > 2.17) return ['hwood', 0.3];
-      if (Math.abs(bay - 1.5) < 0.015 || Math.abs(h - 1.6) < 0.012) return ['hwood', 0.22];
+      if (Math.abs(bay - 1.5) > 0.4 || h < 1.03 || h > 2.17) return ['hwood', 0.3, 1, 0.95];
+      if (Math.abs(bay - 1.5) < 0.015 || Math.abs(h - 1.6) < 0.012) return ['hwood', 0.22, 1, 0.85];
       const pane = (bay > 1.5 ? 1 : 0) + (h > 1.6 ? 2 : 0);
-      if (pane === 1) { const cr = Math.abs(frac((bay - 1.1)*3 + h*2) - 0.5) < 0.04; return cr ? ['hcream', 0.45] : ['hblack', 0.05]; }   /* the broken pane */
+      if (pane === 1) { const cr = Math.abs(frac((bay - 1.1)*3 + h*2) - 0.5) < 0.04; return cr ? ['hcream', 0.45, 1, 0.5, 0.2] : ['hblack', 0.05, 1, 0.2, 0.15]; }   /* the broken pane */
       const line = frac(h*30) < 0.35 && frac((bay - 1.1)*16) > 0.15;
-      return ['hcream', clamp(0.42 + (line ? -0.1 : 0) - 0.14*fbm(x*6, h*6) + (hsh(Math.floor((bay - 1.1)*16), Math.floor(h*8)) > 0.85 ? -0.12 : 0), 0, 1)];   /* newspaper, gone brown */
+      return ['hcream', clamp(0.42 + (line ? -0.1 : 0) - 0.14*fbm(x*6, h*6) + (hsh(Math.floor((bay - 1.1)*16), Math.floor(h*8)) > 0.85 ? -0.12 : 0), 0, 1), 1, 0.4 + 0.1*vn(x*30, h*30), 0.3];   /* newspaper behind glass */
     }
-    return stucco(x, h);
+    /* grime run down from the window sill */
+    const drip = !isDoor && bay > 1.0 && bay < 2.0 && h < 0.95 && vn(x*24, 7) > 0.45 ? (0.95 - h)*0.0 + sm(0.95, 0.3, h)*0.1*vn(x*24, 7) : 0;
+    const st = stucco(x, h); st[1] = clamp(st[1] - drip, 0, 1); return st;
   });
 }
 function stucco(x, h){
   const band = (h > 1.2 && h < 1.32) || (h > 2.6 && h < 2.72), bare = fbm(x*0.9, h*1.3) > 0.66 && h < 2.5;
-  if (bare) { const bx = frac(x*4 + (Math.floor(h*12) & 1)*0.5), by = frac(h*12); return ['hrust', (bx < 0.06 || by < 0.12) ? 0.3 : 0.5 + 0.1*vn(x*10, h*10)]; }
-  const streak = vn(x*7, 1)*sm(3.4, 1.6, h)*0.12;   /* damp running down from the eaves */
-  const v = (band ? 0.62 : 0.8) - 0.22*(1 - sm(0.1, 0.9, h))*vn(x*3, h*2) - 0.12*fbm(x*1.6, h*0.9) - streak + 0.04*(vn(x*40, h*40) - 0.5);
-  return [band ? 'hgrey' : 'hcream', clamp(v, 0, 1)];
+  const edge = fbm(x*0.9, h*1.3) > 0.64 && !bare;   /* the broken lip of the stucco round the bare patches */
+  if (bare) { const bx = frac(x*4 + (Math.floor(h*12) & 1)*0.5), by = frac(h*12), mortar = bx < 0.06 || by < 0.12, b = hsh(Math.floor(x*4 + (Math.floor(h*12) & 1)*0.5), Math.floor(h*12));
+    return ['hrust', mortar ? 0.26 : 0.46 + 0.12*b + 0.08*vn(x*30, h*30), 1, mortar ? 0.1 : 0.45 + 0.1*vn(x*40, h*40)]; }
+  const crack = Math.abs(frac(x*1.3 + fbm(x*1.5, h*2.2)*1.6) - 0.5) < 0.006 && fbm(x*0.6 + 9, h*0.7) > 0.58;
+  const salt = (1 - sm(0.05, 0.7, h))*sm(0.5, 0.75, fbm(x*2.5 + 3, h*4));   /* salt bloom where the damp rises */
+  const streak = vn(x*7, 1)*sm(3.4, 1.6, h)*0.12;
+  let v = (band ? 0.62 : 0.8) - 0.22*(1 - sm(0.1, 0.9, h))*vn(x*3, h*2) - 0.12*fbm(x*1.6, h*0.9) - streak + 0.05*(vn(x*60, h*60) - 0.5) + 0.04*(vn(x*140, h*140) - 0.5);
+  if (crack) v -= 0.22; v += salt*0.08;
+  return [band ? 'hgrey' : 'hcream', clamp(v, 0, 1), 1, (edge ? 1 : 0.8) + 0.12*vn(x*50, h*50) + 0.08*vn(x*150, h*150) - (crack ? 0.4 : 0) + (band ? 0.15 : 0)];
 }
-export function paintStucco(){ return paint(256, 224, 4, 3.4, (x, h) => stucco(x + 13.7, h)); }
+export function paintStucco(){ return paint(512, 448, 4, 3.4, (x, h) => stucco(x + 13.7, h)); }
 
-/* corrugated tin: ribs, rust bleeding down from the nail lines, the odd lighter patched sheet */
+/* corrugated tin: real ribs in the relief, rust bleeding down from the nail lines, the odd lighter patched sheet; the
+   clean metal is a little shiny, the rust is not */
 export function paintTin(rusty){
-  return paint(128, 256, 1, 2, (x, y) => {
+  return paint(192, 384, 1, 2, (x, y) => {
     const rib = Math.sin(x*2*Math.PI*10)*0.5 + 0.5, sheet = Math.floor(y/1.0), nail = Math.abs(frac(y) - 0.08) < 0.012 && frac(x*10) < 0.15;
-    const rust = fbm(x*3 + sheet*7, y*1.2) + (rusty ? 0.18 : 0) + 0.25*sm(0.4, 0, frac(y))*vn(x*12, sheet) > 0.7;
-    if (nail) return ['hblack', 0.4];
-    if (rust) return ['hrust', clamp(0.32 + 0.16*rib + 0.08*vn(x*30, y*30), 0, 1)];
-    return ['hgrey', clamp(0.36 + 0.2*rib - 0.08*fbm(x*5, y*3) + (hsh(sheet, 3) > 0.7 ? 0.06 : 0), 0, 1)];
-  });
+    const run = sm(0.4, 0, frac(y) - 0.08)*vn(x*12, sheet)*(frac(y) > 0.08 ? 1 : 0);
+    const rust = fbm(x*3 + sheet*7, y*1.2) + (rusty ? 0.18 : 0) + 0.3*run > 0.7;
+    if (nail) return ['hblack', 0.4, 1, rib + 0.3, 0.6];
+    if (rust) return ['hrust', clamp(0.32 + 0.16*rib + 0.08*vn(x*30, y*30) + 0.05*vn(x*120, y*120), 0, 1), 1, rib*0.9 + 0.08*vn(x*60, y*60), 0.95];
+    return ['hgrey', clamp(0.36 + 0.2*rib - 0.08*fbm(x*5, y*3) + (hsh(sheet, 3) > 0.7 ? 0.06 : 0), 0, 1), 1, rib, 0.5 + 0.2*fbm(x*4, y*4)];
+  }, { nrm:1.6 });
 }
 /* the canopy's ceiling: boards running across, weathered dark, black between */
 export function paintBoards(){
-  return paint(64, 256, 0.5, 2, (x, y) => {
-    const b = frac(y*7), joint = b < 0.08, k = Math.floor(y*7);
-    return joint ? ['hblack', 0.3] : ['hwood', clamp(0.3 + 0.12*hsh(k, 9) + 0.1*vn(x*30, y*4 + k) - 0.08*fbm(x*4, y), 0, 1)];
+  return paint(128, 512, 0.5, 2, (x, y) => {
+    const b = frac(y*7), joint = b < 0.08, k = Math.floor(y*7), gr = vn(x*30, y*4 + k) + 0.4*vn(x*120, y*20 + k);
+    return joint ? ['hblack', 0.3, 1, 0] : ['hwood', clamp(0.3 + 0.12*hsh(k, 9) + 0.1*gr - 0.08*fbm(x*4, y), 0, 1), 1, 0.6 + 0.2*gr + 0.2*sm(0.08, 0.2, b)*sm(1, 0.85, b)];
   });
 }
 /* the scalloped fascia: tall boards, each with a fully rounded tongue and a hole through it, hairline gaps, grey and
@@ -104,23 +136,26 @@ export function paintFascia(){
   });
 }
 /* old rust-red iron paint, flaking to dark metal */
-export function paintIron(){ return paint(64, 128, 0.5, 1, (x, y) => fbm(x*8, y*5) > 0.64 ? ['metal', 0.22 + 0.08*vn(x*40, y*40)] : ['hrust', clamp(0.36 + 0.1*vn(x*20, y*6) - 0.08*fbm(x*3, y*2), 0, 1)]); }
+export function paintIron(){ return paint(128, 256, 0.5, 1, (x, y) => { const fl = fbm(x*8, y*5); return fl > 0.64 ? ['metal', 0.22 + 0.08*vn(x*40, y*40), 1, 0.3, 0.45] : ['hrust', clamp(0.36 + 0.1*vn(x*20, y*6) - 0.08*fbm(x*3, y*2) + 0.04*vn(x*90, y*90), 0, 1), 1, 0.7 + (fl > 0.6 ? 0.3 : 0) + 0.1*vn(x*90, y*90), 0.75]; }, { nrm:1.2 }); }
 /* weathered grey wood, grain running along y */
-export function paintWood(dark){ return paint(64, 256, 0.25, 1, (x, y) => ['hwood', clamp((dark ? 0.24 : 0.36) + 0.14*vn(x*90, y*3) + 0.08*vn(x*20, y*20) - (vn(x*30 + 3, y*30) > 0.85 ? 0.12 : 0), 0, 1)]); }
+export function paintWood(dark){ return paint(96, 384, 0.25, 1, (x, y) => { const g = vn(x*90, y*3) + 0.5*vn(x*300, y*6), split = Math.abs(frac(x*7 + vn(x, y*2)*0.3) - 0.5) < 0.02 && vn(x*5, y*0.7) > 0.6, knot = vn(x*30 + 3, y*30) > 0.85;
+  return ['hwood', clamp((dark ? 0.24 : 0.36) + 0.12*g + 0.08*vn(x*20, y*20) - (knot ? 0.12 : 0) - (split ? 0.15 : 0), 0, 1), 1, 0.5 + 0.35*g - (split ? 0.5 : 0) - (knot ? 0.2 : 0)]; }, { nrm:1.4 }); }
 /* the platform: concrete slabs, cracks, damp patches, the worn tactile strip near the edge (painted on its own mesh) */
 export function paintConcrete(){
-  return paint(920, 200, 23, 5, (x, y) => {
+  return paint(1380, 300, 23, 5, (x, y) => {
     const sx = frac(x/1.5), sy = frac(y/1.5), seam = sx < 0.012 || sy < 0.012;
-    const crack = Math.abs(frac(x*0.7 + fbm(x*2, y*2)*0.9) - 0.5) < 0.012 && fbm(x*0.8, y*0.8) > 0.55;
-    const damp = fbm(x*0.45 + 4, y*0.6) > 0.66;
-    if (seam || crack) return ['hgrey', 0.18];
+    const crack = Math.abs(frac(x*0.7 + fbm(x*2, y*2)*0.9) - 0.5) < 0.009 && fbm(x*0.8, y*0.8) > 0.55;
+    const dmp = fbm(x*0.45 + 4, y*0.6), damp = dmp > 0.66, wet = sm(0.6, 0.72, dmp);   /* damp patches: darker, and they shine under the bulbs */
+    const pit = vn(x*80, y*80) > 0.82, agg = vn(x*160, y*160);
+    if (seam || crack) return ['hgrey', 0.18, 1, 0.1, 0.6];
+    if (pit) return ['hgrey', 0.36, 1, 0.3, 0.9];
     const worn = sm(1.4, 2.6, y)*sm(4.6, 3.4, y)*0.06;   /* the middle, worn paler by feet */
-    return ['hgrey', clamp(0.5 + worn + 0.1*vn(x*30, y*30) - 0.1*fbm(x*1.5, y*1.5) + (vn(x*60, y*60) > 0.9 ? 0.08 : 0) - (damp ? 0.035 : 0), 0, 1)];
+    return ['hgrey', clamp(0.5 + worn + 0.1*vn(x*30, y*30) - 0.1*fbm(x*1.5, y*1.5) + 0.05*(agg - 0.5) + (vn(x*60, y*60) > 0.9 ? 0.08 : 0) - 0.06*wet, 0, 1), 1, 0.65 + 0.15*agg, 0.92 - 0.6*wet];
   });
 }
 export function paintStrip(){ return paint(64, 32, 1, 0.5, (x, y) => { const dot = frac(x*10) < 0.5 && frac(y*10) < 0.5; return ['hamber', clamp(0.42 + (dot ? 0.06 : -0.04) - 0.18*fbm(x*4, y*8), 0, 1)]; }); }
 /* the platform's face, down to the track: old concrete, stained dark green-black where water runs */
-export function paintFace(){ return paint(256, 64, 4, 1, (x, y) => { const st = fbm(x*2, y*0.5) > 0.58; return [st ? 'hsage' : 'hgrey', clamp(0.34 + 0.08*vn(x*20, y*20) - (st ? 0.1 : 0) - 0.12*sm(0.8, 0, y), 0, 1)]; }); }
+export function paintFace(){ return paint(512, 128, 4, 1, (x, y) => { const st = fbm(x*2, y*0.5) > 0.58, sp = vn(x*90, y*90) > 0.8; return [st ? 'hsage' : 'hgrey', clamp(0.34 + 0.08*vn(x*20, y*20) - (st ? 0.1 : 0) - 0.12*sm(0.8, 0, y) - (sp ? 0.08 : 0), 0, 1), 1, 0.6 + 0.2*vn(x*40, y*40) - (sp ? 0.3 : 0), st ? 0.55 : 0.9]; }); }
 
 /* grass, weeds: four clumps side by side (each 1 m × 1 m), dead gold, a little sage still. painted thick and dense,
    blades 2–3 pixels wide with a fuller base, so a clump keeps its body far away instead of breaking into specks */

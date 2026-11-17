@@ -8,6 +8,24 @@ import { K } from './kit.js';
 import { P, setWorld, initInput, stepPlayer, pressJump, toggleCrouch, simKeys } from './player.js';
 import { LOOKS } from './looks.js';
 
+/* the mist (Nov 17, later): the fog isn't one even wall. it drifts, very slowly (well under a breath a second), thicker
+   in some places than others and pooling low near the ground, the way Silent Hill's does */
+const MIST = { value:0 };
+THREE.ShaderChunk.fog_pars_vertex += '\n#ifdef USE_FOG\n varying vec3 vFogW;\n#endif\n';
+THREE.ShaderChunk.fog_vertex += '\n#ifdef USE_FOG\n vFogW = (inverse(viewMatrix)*mvPosition).xyz;\n#endif\n';
+THREE.ShaderChunk.fog_pars_fragment += '\n#ifdef USE_FOG\n varying vec3 vFogW; uniform float uMistT;\n' +
+  ' float mh(vec3 p){ p = fract(p*0.3183 + 0.1); p *= 17.0; return fract(p.x*p.y*p.z*(p.x + p.y + p.z)); }\n' +
+  ' float mn(vec3 x){ vec3 i = floor(x), f = fract(x); f = f*f*(3.0 - 2.0*f); return mix(mix(mix(mh(i), mh(i + vec3(1,0,0)), f.x), mix(mh(i + vec3(0,1,0)), mh(i + vec3(1,1,0)), f.x), f.y), mix(mix(mh(i + vec3(0,0,1)), mh(i + vec3(1,0,1)), f.x), mix(mh(i + vec3(0,1,1)), mh(i + vec3(1,1,1)), f.x), f.y), f.z); }\n#endif\n';
+THREE.ShaderChunk.fog_fragment = '#ifdef USE_FOG\n' +
+  ' float fogFactor = smoothstep(fogNear, fogFar, vFogDepth);\n' +
+  ' vec3 mp = vFogW*vec3(0.2, 0.45, 0.2) + vec3(uMistT*0.045, 0.0, uMistT*0.018);\n' +
+  ' float m = mn(mp)*0.62 + mn(mp*2.3 + 7.1)*0.38;\n' +
+  ' float low = 1.0 - smoothstep(-0.5, 2.0, vFogW.y);\n' +
+  ' float far = smoothstep(1.2, 7.0, vFogDepth);\n' +
+  ' fogFactor = clamp(fogFactor + (m - 0.5)*0.55*far*(1.0 - fogFactor) + low*0.16*far, 0.0, 1.0);\n' +
+  ' gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogFactor);\n#endif\n';
+function giveMist(root){ root.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { if (m.userData.mist) continue; m.userData.mist = true; const prev = m.onBeforeCompile; m.onBeforeCompile = (sh, r) => { sh.uniforms.uMistT = MIST; if (prev) prev(sh, r); }; } }); }
+
 const cv = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas:cv, antialias:false, alpha:false, powerPreference:'high-performance', preserveDrawingBuffer:true });
 renderer.setPixelRatio(1);
@@ -23,6 +41,7 @@ let look, world, cur = 0, split = false, resK = 1, frames = [], lastT = performa
 function start(){
   look = makeLook(renderer);
   world = buildStation(scene);
+  giveMist(scene);
   setWorld(world);
   P.x = 33.2; P.z = 5.6; P.yaw = Math.PI/2 - 0.12; P.y = world.ground(P.x, P.z);   /* off the platform's east end, looking back along it, as in the Seam version */
   P.y = 0;
@@ -66,7 +85,7 @@ function loop(now){
   if (!window.__frozen) { stepPlayer(dt); adapt(dt); }
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
   camera.rotation.set(P.pitch, P.yaw, 0);
-  K.wind.uTime.value = t; K.wind.uGust.value = gust(t);
+  K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = gust(t);
   tickLights(t); look.tick(dt);
   if (!split) { camera.clearViewOffset(); look.draw(scene, camera, LOOKS[cur], 0, CW, CH, CW); }
   else {

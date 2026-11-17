@@ -14,6 +14,8 @@ export function mat(map, o = {}){
     transparent:!!o.transparent, alphaTest:o.cut || 0, side:o.two ? THREE.DoubleSide : THREE.FrontSide,
     emissive:o.emit ? new THREE.Color(o.emit) : new THREE.Color(0), emissiveMap:o.emitMap || null, emissiveIntensity:o.emitK == null ? 1 : o.emitK });
   m.userData.m = o.m || (map && map.userData.m) || [1, 1];
+  if (map && map.userData.normal && o.nrm !== 0) { m.normalMap = map.userData.normal; m.normalScale = new THREE.Vector2(o.nrm || 1, o.nrm || 1); }
+  if (map && map.userData.rough) { m.roughnessMap = map.userData.rough; m.roughness = 1; }
   return m;
 }
 /* a texture's size in metres (how much world one copy of it covers) */
@@ -32,6 +34,8 @@ function worldUV(g, w, h, d, mats){
 export function box(x0, x1, y0, y1, z0, z1, mats, o = {}){
   const w = x1 - x0, h = y1 - y0, d = z1 - z0, g = new THREE.BoxGeometry(w, h, d);
   worldUV(g, w, h, d, mats);
+  if (o.flipU) { const uv = g.attributes.uv, dims = [d, d, w, w, w, w];   /* faces whose picture should run the other way (so the station's bays land where Seam has them) */
+    for (const f of o.flipU) { const M = Array.isArray(mats) ? mats[f] : mats, mu = dims[f]/((M && M.userData.m) || [1])[0]; for (let i = 0; i < 4; i++) { const k = f*4 + i; uv.setX(k, mu - uv.getX(k)); } } }
   if (o.uvOff) { const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) + o.uvOff[0], uv.getY(i) + o.uvOff[1]); }
   const me = new THREE.Mesh(g, mats); me.position.set((x0 + x1)/2, (y0 + y1)/2, (z0 + z1)/2);
   me.castShadow = o.cast !== false; me.receiveShadow = true; K.scene.add(me);
@@ -93,5 +97,9 @@ export function clumps(items, map, n, h, stiff, tile = 10){
     g.setAttribute('aVar', new THREE.InstancedBufferAttribute(vars, 1));
     im.castShadow = false; im.receiveShadow = true; im.computeBoundingSphere(); K.scene.add(im);
   }
+}
+export function cyl(r0, r1, h, m, x, y, z, seg = 8, o = {}){
+  const me = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, h, seg, 1, !!o.open), m); me.position.set(x, y + h/2, z);
+  if (o.rx) me.rotation.x = o.rx; if (o.rz) me.rotation.z = o.rz; me.castShadow = o.cast !== false; me.receiveShadow = true; K.scene.add(me); return me;
 }
 export function rnd(seed){ let s = (seed % 2147483646) + 1; return () => (s = (s*16807) % 2147483647)/2147483647; }
