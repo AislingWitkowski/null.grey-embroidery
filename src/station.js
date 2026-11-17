@@ -7,7 +7,7 @@
    ================================================================ */
 import * as THREE from 'three';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl } from './kit.js';
-import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront } from './paint.js';
+import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
 
 /* ---------------- the ground ---------------- */
@@ -278,6 +278,77 @@ export function buildStation(scene){
     wire([30.88, 4.15, 8.15], [31.98, 6.5, 10.58], 0.2, M.wire, 0.008);
     if (i < PY.length - 1) for (const k of [-0.4, 0.4]) wire([31.98 + k, 6.56, z + 0.08], [31.98 + k, 6.56, PY[i + 1] + 0.08], 0.45, M.wire); });
 
+  /* ---- (Nov 17, from Aisling's reference pictures) the wires get busier, the way country and Japanese town poles are:
+     glass insulators on the crossarms, a transformer can on two poles, more lines at different sags, service drops
+     to the shed and the building, a guy wire with its yellow-and-black striped guard ---- */
+  const insM = mat(null, { color:0x6e675e, rough:0.4 });
+  const insul = (x, y, z) => cyl(0.03, 0.025, 0.09, insM, x, y, z, 6, { cast:false });
+  PX.forEach(x => { for (const k of [-0.5, -0.2, 0.36, 0.66]) insul(x + 0.08 + k, 6.74, 1.1); });
+  PY.forEach(z => { for (const k of [-0.5, -0.2, 0.2, 0.5]) insul(31.98 + k, 6.52, z + 0.08); });
+  const can = (x, y, z) => { cyl(0.2, 0.2, 0.62, mat(T.tinG, { color:0x9a948c }), x, y, z, 10); cyl(0.21, 0.17, 0.06, M.iron, x, y + 0.62, z, 10); box(x - 0.04, x + 0.04, y + 0.1, y + 0.5, z - 0.24, z - 0.2, M.iron, { solid:false }); };
+  can(31.98, 5.4, 17.84); can(18.08, 5.5, 1.36);
+  for (let i = 0; i < PX.length - 1; i++) for (const [dx, y, sg] of [[-0.12, 6.78, 0.5], [0.66, 6.78, 0.3], [0.2, 6.3, 0.7], [0.08, 5.6, 0.9]]) wire([PX[i] + dx, y, 1.1], [PX[i + 1] + dx, y, 1.1], sg, M.wire, 0.009);
+  for (let i = 0; i < PY.length - 1; i++) for (const [dx, y, sg] of [[-0.2, 6.56, 0.6], [0.2, 6.56, 0.38], [0, 5.9, 0.8]]) wire([31.98 + dx, y, PY[i] + 0.08], [31.98 + dx, y, PY[i + 1] + 0.08], sg, M.wire, 0.009);
+  wire([31.98, 5.9, 10.58], [28.9, 2.4, 9.0], 0.3, M.wire, 0.008);   /* the service drop to the shed */
+  wire([31.98, 6.3, 10.58], [25.0, 3.0, 13.1], 0.5, M.wire, 0.008);  /* and to the building's back */
+  wire([32.08, 6.4, 1.1], [31.98, 6.4, 10.58], 0.6, M.wire, 0.009);  /* across the line to the road's poles */
+  wire([25.08, 6.0, 1.1], [31.98, 5.8, 10.58], 0.8, M.wire, 0.008);
+  wire([32.06, 5.0, 17.66], [33.6, -0.3, 17.66], 0, M.wire, 0.008);   /* the guy wire, and its guard */
+  const strT = sized(paint(16, 64, 0.1, 2, (x, y) => [frac(y*3.5) < 0.5 ? 'hamber' : 'hblack', frac(y*3.5) < 0.5 ? 0.5 - 0.15*fbm(x*30, y*6) : 0.15, 1, 0.5, 0.6]), 0.1, 2);
+  const gd = cyl(0.04, 0.04, 2.0, mat(strT), 0, 0, 0, 8); gd.position.set(33.6 - 1.92/2*0.29, -0.3 + 0.98, 17.66); gd.rotation.z = Math.atan2(1.54, 5.3);
+  box(28.9, 28.96, 1.3, 1.62, 8.4, 8.75, mat(T.tinG, { color:0xb8b0a4 }), { solid:false });   /* an electric meter box on the shed's side */
+
+  /* ---- fallen leaves, blown in: more against walls and in corners, a scatter on the platform and the road ---- */
+  (function leaves(){
+    const LR = rnd(777), L = [];
+    const put = (x, z, y) => L.push([x, y + 0.004 + LR()*0.004, z, 0.1 + LR()*0.07, LR()*6.3, Math.floor(LR()*4)]);
+    for (let i = 0; i < 1400; i++) { const x = 9.2 + LR()*22.6, z = 3.3 + LR()*4.6, near = sm(5.5, 7.95, z) + (x > 24 && x < 29 ? 0.5 : 0); if (LR() < 0.25 + 0.6*near) put(x, z, 0); }   /* on the platform, drifted toward the building */
+    for (let i = 0; i < 900; i++) { const x = ROAD[0] - 0.6 + LR()*3.2, z = 9 + LR()*14; if (LR() < 0.6) put(x, z, groundAt(x, z)); }
+    for (let i = 0; i < 700; i++) { const x = 8.5 + LR()*21, z = 13.05 + LR()*1.2; put(x, z, groundAt(x, z)); }
+    const g = new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI/2);
+    const lm = new THREE.MeshStandardMaterial({ map:paintLeafAtlas(), alphaTest:0.5, roughness:0.85, side:THREE.DoubleSide });
+    lm.onBeforeCompile = sh => { sh.vertexShader = 'attribute float aVar;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv.x = vMapUv.x*0.25 + aVar*0.25;'); };
+    const im = new THREE.InstancedMesh(g, lm, L.length), M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), vars = new Float32Array(L.length);
+    L.forEach((it, i) => { e.set((LR() - 0.5)*0.3, it[4], (LR() - 0.5)*0.3); q.setFromEuler(e); M4.compose(new THREE.Vector3(it[0], it[1], it[2]), q, new THREE.Vector3(it[3], 1, it[3])); im.setMatrixAt(i, M4); vars[i] = it[5]; });
+    g.setAttribute('aVar', new THREE.InstancedBufferAttribute(vars, 1)); im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im);
+  })();
+
+  /* ---- far away, past the corn: tree shapes standing in the fog, layer behind layer (not lit, just darker than the
+     fog, so they read as depth, as in Folklore and Aisling's other pictures) ---- */
+  (function far(){
+    const FR = rnd(31), ft = paintFarTrees(), ring = [];
+    for (let i = 0; i < 70; i++) { const a = FR()*Math.PI*2, r = 24 + FR()*16, x = 21 + Math.cos(a)*r*1.1, z = 11 + Math.sin(a)*r; ring.push([x, z, 0.7 + FR()*0.6, Math.floor(FR()*4), r]); }
+    L.farM = [];
+    for (const layer of [0, 1]) {
+      const m = new THREE.ShaderMaterial({ transparent:false, fog:false, side:THREE.DoubleSide, uniforms:{ uMap:{ value:ft }, uC:{ value:new THREE.Color() }, uF:{ value:new THREE.Color() } },
+        vertexShader:'attribute float aVar; varying vec2 vU; varying float vD; void main(){ vU = vec2(uv.x*0.25 + aVar*0.25, uv.y); vec4 w = instanceMatrix*vec4(position, 1.0); vec3 c = w.xyz; vec3 cam = cameraPosition; vec2 d = normalize(cam.xz - instanceMatrix[3].xz); vec3 p = instanceMatrix[3].xyz + vec3(-d.y, 0.0, d.x)*position.x*length(instanceMatrix[0].xyz) + vec3(0.0, position.y*length(instanceMatrix[1].xyz), 0.0); vD = length(cam.xz - instanceMatrix[3].xz); gl_Position = projectionMatrix*viewMatrix*vec4(p, 1.0); }',
+        fragmentShader:'uniform sampler2D uMap; uniform vec3 uC, uF; varying vec2 vU; varying float vD; void main(){ if (vD < 15.0 || texture2D(uMap, vU).a < 0.5) discard; float k = smoothstep(15.0, 46.0, vD); gl_FragColor = vec4(mix(uC, uF, 0.25 + 0.6*k), 1.0); }' });
+      const items = ring.filter(it => (it[4] > 32) === !!layer);
+      const g = new THREE.PlaneGeometry(6, 9); g.translate(0, 4.5, 0);
+      const im = new THREE.InstancedMesh(g, m, items.length), M4 = new THREE.Matrix4(), vars = new Float32Array(items.length);
+      items.forEach((it, i) => { M4.makeScale(it[2], it[2]*(0.9 + 0.3*FR()), 1); M4.setPosition(it[0], -0.6, it[1]); im.setMatrixAt(i, M4); vars[i] = it[3]; });
+      g.setAttribute('aVar', new THREE.InstancedBufferAttribute(vars, 1)); im.frustumCulled = false; im.renderOrder = -0.5; scene.add(im); L.farM.push(m);
+    }
+  })();
+
+  /* ---- motes: a little dust and ash hanging in the air, drifting down slowly and swaying (from Aisling's Silent Hill 1
+     rooftop picture, where flakes hang in the fog). they catch the fog's colour and glow faintly near the lamps.
+     slow: each takes a minute to fall, no flicker ---- */
+  (function motes(){
+    const MR = rnd(99), N = 900, pos = new Float32Array(N*3), ph = new Float32Array(N);
+    for (let i = 0; i < N; i++) { pos[i*3] = 2 + MR()*38; pos[i*3 + 1] = MR()*7; pos[i*3 + 2] = 1 + MR()*22; ph[i] = MR()*100; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 1));
+    const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, fog:false,
+      uniforms:{ uT:K.wind.uTime, uC:{ value:new THREE.Color() }, uL:{ value:[new THREE.Vector3(30.36, 3.9, 8.15), new THREE.Vector3(18, 2.6, 5.9), new THREE.Vector3(24, 2.6, 5.9), new THREE.Vector3(12, 2.6, 5.9)] } },
+      vertexShader:'attribute float aPh; uniform float uT; uniform vec3 uL[4]; varying float vA; varying float vG;\n' +
+        'void main(){ vec3 p = position; float t = uT + aPh*13.0; p.y = mod(p.y - t*0.11, 7.0); p.x += sin(t*0.35 + aPh)*0.4; p.z += cos(t*0.27 + aPh*1.7)*0.4;\n' +
+        ' vec4 mv = viewMatrix*vec4(p, 1.0); float d = -mv.z; vA = smoothstep(0.4, 2.0, d)*(1.0 - smoothstep(9.0, 16.0, d));\n' +
+        ' float g = 0.0; for (int i = 0; i < 4; i++) { vec3 q = p - uL[i]; g += 1.0/(1.0 + dot(q, q)*0.6); } vG = g;\n' +
+        ' gl_PointSize = clamp(2.2*' + '300.0' + '/max(d, 0.5)/100.0*1.6, 1.0, 3.0); gl_Position = projectionMatrix*mv; }',
+      fragmentShader:'uniform vec3 uC; varying float vA; varying float vG; void main(){ gl_FragColor = vec4((uC*0.35 + vec3(1.0, 0.75, 0.45)*vG*0.5)*vA, 1.0); }' });
+    const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts); L.motes = m;
+  })();
+
   /* ---- light everywhere else: overcast dusk, almost gone. a dim sky, a faint warmth from the west ---- */
   L.hemi = new THREE.HemisphereLight(0x9a8a84, 0x4e4036, 1);   /* (the ground colour: light bouncing up off the platform and the fields, so ceilings aren't a void) */ scene.add(L.hemi);
   L.west = new THREE.DirectionalLight(0xc89a70, 0.2); L.west.position.set(-30, 8, 4); scene.add(L.west);
@@ -315,6 +386,8 @@ export function applyLook(scene, V){
   if (!scene.fog) scene.fog = new THREE.Fog(fc, V.fogNear, V.fogFar); scene.fog.color.copy(fc); scene.fog.near = V.fogNear; scene.fog.far = V.fogFar;
   L.skyM.uniforms.uHor.value.copy(fc); L.skyM.uniforms.uTop.value.setRGB(V.skyTop[0], V.skyTop[1], V.skyTop[2], S); L.skyM.uniforms.uWest.value.setRGB(V.skyWest[0], V.skyWest[1], V.skyWest[2], S);
   L.hemi.intensity = V.hemi; L.west.intensity = V.west;
+  if (L.motes) L.motes.uniforms.uC.value.copy(fc);
+  if (L.farM) L.farM.forEach(m => { m.uniforms.uC.value.copy(fc).multiplyScalar(0.62); m.uniforms.uF.value.copy(fc); });   /* the nearer layer a little darker */
   L.lamp.intensity = V.lamp; L.vend.intensity = V.vend;
   for (const b of L.bulbs) if (b !== L.lamp) b.userData.base = V.bulb;
   for (const h of L.halos) h.material.opacity = V.halo;

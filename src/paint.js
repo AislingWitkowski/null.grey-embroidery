@@ -239,3 +239,34 @@ export function paintVendFront(){
     return ['pwhite', clamp(0.72 - 0.25*sm(0.6, 0, y)*fbm(x*6, y*6) - 0.15*fbm(x*3 + 5, y*2), 0, 1)];
   });
 }
+
+/* fallen leaves: four shapes (a lobed one, an oval, a long one, a curled scrap) in autumn's colours, each 0.12 m */
+export function paintLeafAtlas(){
+  return strokeAtlas(256, 64, 4, (c, ox, rnd, v) => {
+    const cx = ox + 32, cy = 32, ramps = ['hrust', 'hgold', 'hamber', 'hwood'];
+    c.fillStyle = rgb(ramps[v], 0.4 + rnd()*0.2); c.beginPath();
+    if (v === 0) { for (let i = 0; i <= 10; i++) { const a = i/10*Math.PI*2, r = (i % 2 ? 12 : 26) + rnd()*3; c.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r); } }
+    else if (v === 1) c.ellipse(cx, cy, 24, 15, 0.4, 0, Math.PI*2);
+    else if (v === 2) c.ellipse(cx, cy, 28, 9, -0.6, 0, Math.PI*2);
+    else { c.moveTo(cx - 20, cy); c.quadraticCurveTo(cx, cy - 26, cx + 20, cy - 4); c.quadraticCurveTo(cx + 4, cy + 18, cx - 20, cy); }
+    c.fill();
+    c.strokeStyle = rgb(ramps[v], 0.22); c.lineWidth = 2; c.beginPath(); c.moveTo(cx - 22, cy + 6); c.lineTo(cx + 20, cy - 6); c.stroke();   /* the stem and middle vein */
+    for (let i = 0; i < 30; i++) { c.fillStyle = rgb('hwood', 0.2 + rnd()*0.15); c.fillRect(cx - 20 + rnd()*40, cy - 12 + rnd()*24, 2, 2); }   /* spots of rot */
+  });
+}
+/* far trees as dark shapes in the fog: a bare one, two firs, a round one (4 variants, each 6 × 9 m) */
+export function paintFarTrees(){
+  return strokeAtlas(512, 192, 4, (c, ox, rnd, v) => {
+    c.fillStyle = c.strokeStyle = '#fff';
+    const x0 = ox + 64;
+    if (v === 0 || v === 3) {   /* bare: a trunk, limbs forking up and out */
+      const br = (x, y, a, l, w, d) => { if (d > 6 || l < 4) return; const x2 = x + Math.cos(a)*l, y2 = y - Math.sin(a)*l; c.lineWidth = w; c.beginPath(); c.moveTo(x, y); c.lineTo(x2, y2); c.stroke();
+        br(x2, y2, a + 0.3 + rnd()*0.4, l*0.72, w*0.68, d + 1); br(x2, y2, a - 0.3 - rnd()*0.4, l*0.7, w*0.66, d + 1); if (rnd() < 0.4) br(x2, y2, a + (rnd() - 0.5)*0.3, l*0.6, w*0.6, d + 1); };
+      br(x0, 192, Math.PI/2 + (rnd() - 0.5)*0.1, 60, 9, 0);
+      if (v === 3) for (let i = 0; i < 70; i++) { c.beginPath(); c.arc(x0 + (rnd() - 0.5)*90, 50 + rnd()*70, 6 + rnd()*10, 0, Math.PI*2); c.fill(); }   /* a few leaves left */
+    } else {   /* a fir: layered drooping tiers */
+      c.fillRect(x0 - 3, 120, 6, 72);
+      for (let k = 0; k < 9; k++) { const y = 20 + k*17, hw = 6 + k*6.5 + rnd()*5; c.beginPath(); c.moveTo(x0, y - 14); c.lineTo(x0 + hw, y + 10 + rnd()*6); c.lineTo(x0 - hw, y + 10 + rnd()*6); c.fill(); }
+    }
+  });
+}
