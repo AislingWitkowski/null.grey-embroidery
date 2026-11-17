@@ -147,10 +147,12 @@ export function paintConcrete(){
     const crack = Math.abs(frac(x*0.7 + fbm(x*2, y*2)*0.9) - 0.5) < 0.009 && fbm(x*0.8, y*0.8) > 0.55;
     const dmp = fbm(x*0.45 + 4, y*0.6), damp = dmp > 0.66, wet = sm(0.6, 0.72, dmp);   /* damp patches: darker, and they shine under the bulbs */
     const pit = vn(x*80, y*80) > 0.82, agg = vn(x*160, y*160);
-    if (seam || crack) return ['hgrey', 0.18, 1, 0.1, 0.6];
-    if (pit) return ['hgrey', 0.36, 1, 0.3, 0.9];
+    /* (Nov 17, later; Aisling: the platform was "a little too umm 'italy' ... too orange") plain grey concrete now: the
+       station's neutral grey ink instead of the warm one, so only the bulbs warm it */
+    if (seam || crack) return ['pwhite', 0.1, 1, 0.1, 0.6];
+    if (pit) return ['pwhite', 0.24, 1, 0.3, 0.9];
     const worn = sm(1.4, 2.6, y)*sm(4.6, 3.4, y)*0.06;   /* the middle, worn paler by feet */
-    return ['hgrey', clamp(0.5 + worn + 0.1*vn(x*30, y*30) - 0.1*fbm(x*1.5, y*1.5) + 0.05*(agg - 0.5) + (vn(x*60, y*60) > 0.9 ? 0.08 : 0) - 0.06*wet, 0, 1), 1, 0.65 + 0.15*agg, 0.92 - 0.6*wet];
+    return ['pwhite', clamp(0.36 + worn + 0.1*vn(x*30, y*30) - 0.1*fbm(x*1.5, y*1.5) + 0.05*(agg - 0.5) + (vn(x*60, y*60) > 0.9 ? 0.08 : 0) - 0.06*wet, 0, 1), 1, 0.65 + 0.15*agg, 0.92 - 0.6*wet];
   });
 }
 export function paintStrip(){ return paint(64, 32, 1, 0.5, (x, y) => { const dot = frac(x*10) < 0.5 && frac(y*10) < 0.5; return ['hamber', clamp(0.42 + (dot ? 0.06 : -0.04) - 0.18*fbm(x*4, y*8), 0, 1)]; }); }

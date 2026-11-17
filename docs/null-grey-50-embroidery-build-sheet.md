@@ -105,3 +105,8 @@ Aisling: *"ok so i like soft..but can we add like 2% grit and like 2% glow and m
 - **Built:** a fourth look, **missing mile**: every setting is 96% soft, 2% grit, 2% glow, then contrast up 4% and exposure down 1% (a hair darker). It's the default and key **1**; soft, grit and glow are keys 2–4, side by side is 5. The difference from soft is small on purpose (a touch darker, a touch more glow round the lamps).
 - Aisling, earlier: *"ok so this is like the "baase level" correct this is before all the details and such"*. Yes: still to come are the Seam version's things and clickables, milestone 2's shared layer, and the kit's trees and better plants.
 - Then Aisling: *"ok i think maybe like 3% more of same things?"* So now: 90% soft, 5% grit, 5% glow, contrast up 7%, exposure down 3%.
+
+### Nov 17, 2026 — the platform greyed
+Aisling: *"the pavement is a little too umm "italy" on the landing of the station like too orange, otherwise yes this is perfect! the mix is good"*.
+- The platform's concrete is painted in the station's neutral grey ink now (was the warm grey), so it reads as plain grey concrete and only the bulbs warm it. Nothing else changed.
+- Aisling asked: *"will thinhgs be more 3-d and more build and more actual shadows and such? when we build more?"* Yes: the kit (milestone 3) brings real 3D trees, plants, fences and props, and every new thing casts shadows from the lamps. A soft corner-darkening (ambient occlusion) can be added if frames allow.
