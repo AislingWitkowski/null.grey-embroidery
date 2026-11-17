@@ -73,6 +73,14 @@ export function simKeys(ks){ for (const k in keys) keys[k] = false; for (const k
 export function toggleCrouch(){ P.crouch = !P.crouch; }
 function look(dx, dy, k){ P.yaw -= dx*k; P.pitch = clamp(P.pitch - dy*k, -1.35, 1.35); }
 
+/* the gamepad, if the page is allowed one. inside a preview or an embedded frame the browser can forbid it outright
+   (a permissions error, not just an empty list); then gamepads are simply off and nothing else changes */
+let padsOk = true;
+function pads(){
+  if (!padsOk || !navigator.getGamepads) return null;
+  try { return [...navigator.getGamepads()].find(g => g && g.connected) || null; } catch (e) { padsOk = false; return null; }
+}
+
 /* ---------------- each frame ---------------- */
 export function stepPlayer(dt){
   let fwd = 0, side = 0;
@@ -82,7 +90,7 @@ export function stepPlayer(dt){
   P.running = !!(keys.ShiftLeft || keys.ShiftRight);
   if (touch.id !== null && !touch.look && performance.now() - touch.t0 > 160) fwd = touch.low ? -1 : 1;
   /* gamepad: left stick walks, right stick looks, A jumps, B crouches, left stick pressed (or LT) runs */
-  const gp = navigator.getGamepads ? [...navigator.getGamepads()].find(g => g && g.connected) : null;
+  const gp = pads();
   if (gp) {
     const dz = v => Math.abs(v) < 0.15 ? 0 : v;
     side += dz(gp.axes[0]); fwd -= dz(gp.axes[1]);
