@@ -50,7 +50,7 @@ payphone, posters), sounds with captions, travel by train to and from the Seam p
 autumn phases, the windmill, mailbox, mileage signs, crossing) and the rest of Missing Mile.
 **Repo:** this session couldn't create GitHub repos, so Aisling made the empty private repo `null.grey-embroidery`
 and the work was pushed there (it sat on the branch `backup/embroidery-m1` in nullgrey-lore meanwhile; that branch is
-now deleted).
+now just an old copy, which Aisling can delete on GitHub).
 
 ### Nov 17, 2026 — fix: gamepads forbidden
 Aisling opened the page and got *"Uncaught SecurityError: Failed to execute 'getGamepads' on 'Navigator': Access to
