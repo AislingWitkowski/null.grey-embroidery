@@ -48,5 +48,13 @@ corn all round the edges. You can't leave: the corn and the fog hide an invisibl
 **Next (milestone 2, doc 33):** the shared layer: the pocket, captions on clicks, the close-ups (drinks machine,
 payphone, posters), sounds with captions, travel by train to and from the Seam pages. Then the kit (trees in four
 autumn phases, the windmill, mailbox, mileage signs, crossing) and the rest of Missing Mile.
-**Repo:** this session couldn't create GitHub repos; the work was kept on the branch `backup/embroidery-m1` in
-nullgrey-lore until Aisling made the empty private repo `null.grey-embroidery`.
+**Repo:** this session couldn't create GitHub repos, so Aisling made the empty private repo `null.grey-embroidery`
+and the work was pushed there (it sat on the branch `backup/embroidery-m1` in nullgrey-lore meanwhile; that branch is
+now deleted).
+
+### Nov 17, 2026 — fix: gamepads forbidden
+Aisling opened the page and got *"Uncaught SecurityError: Failed to execute 'getGamepads' on 'Navigator': Access to
+the feature "gamepad" is disallowed by permissions policy."* Inside a preview or an embedded frame the browser can
+forbid gamepads outright, and asking for them throws an error instead of returning nothing; that stopped the page.
+Now the error is caught once and gamepads are just off on that page. Checked with `t/gamepad-blocked.js` (the page
+loaded with gamepads forbidden: no errors, walking works).
