@@ -3,9 +3,13 @@
    ================================================================ */
 import * as THREE from 'three';
 import { makeLook } from './look.js';
-import { buildStation, applyLook, tickLights, L } from './station.js';
+import { buildStation, applyLook, tickLights, L, CLICK } from './station.js';
+import { F3_SAYS, F3_WALL } from './f03-says.js';
+import { UI, initUI, say, tickUI } from './ui.js';
+import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
+import { SOUND_FILES } from './sound-files.js';
 import { K } from './kit.js';
-import { P, setWorld, initInput, stepPlayer, pressJump, toggleCrouch, simKeys } from './player.js';
+import { P, setWorld, initInput, stepPlayer, pressJump, toggleCrouch, simKeys, TAP } from './player.js';
 import { LOOKS } from './looks.js';
 import { paintDetail } from './paint.js';
 
@@ -64,14 +68,17 @@ function start(){
   P.x = 33.2; P.z = 5.6; P.yaw = Math.PI/2 - 0.12; P.y = world.ground(P.x, P.z);   /* off the platform's east end, looking back along it, as in the Seam version */
   P.y = 0;
   initInput(cv);
+  initUI(); setSoundFiles(SOUND_FILES); UI.onChange = soundSync;
+  ['pointerdown', 'keydown', 'touchstart'].forEach(t => addEventListener(t, soundWake, { once:true }));
+  TAP.fn = reach;
   const q = new URLSearchParams(location.search);
   if (q.has('look')) cur = clamp0(+q.get('look') - 1);
   if (q.has('split')) split = true;
   setLook(cur);
   renderer.shadowMap.needsUpdate = true;
   document.getElementById('wait').classList.add('gone');
-  setTimeout(() => caption('本町 · main street, missing mile. dusk. the lights under the canopy are coming on, one by one. nobody here.', 6500), 600);
-  setTimeout(() => caption(matchMedia('(pointer: coarse)').matches ? 'hold to walk · hold low to step back · drag to look' : 'w a s d · drag to look · shift run · c crouch · space jump · 1 2 3 4 looks · 5 side by side', 7000), 7600);
+  setTimeout(() => say('本町 · main street, missing mile. dusk. the lights under the canopy are coming on, one by one. nobody here.', 6500), 600);
+  setTimeout(() => say(matchMedia('(pointer: coarse)').matches ? 'hold to walk · hold low to step back · drag to look' : 'w a s d · drag to look · shift run · c crouch · space jump · 1 2 3 4 looks · 5 side by side', 7000), 7600);
   requestAnimationFrame(loop);
 }
 function clamp0(i){ return Math.max(0, Math.min(LOOKS.length - 1, i|0)); }
@@ -111,7 +118,8 @@ function frame(now){
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
   camera.rotation.set(P.pitch, P.yaw, 0);
   K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = gust(t);
-  tickLights(t); look.tick(dt);
+  tickLights(t); look.tick(dt); tickUI(now);
+  try { soundTick(camera, P, t, K.wind.uGust.value, L.bulbs.slice(0, 5).map(b => b.intensity/(b.userData.base || 1)), surfaceAt(P.x, P.z, P.y)); } catch (e) {}
   if (!split) { camera.clearViewOffset(); look.draw(scene, camera, LOOKS[cur], 0, CW, CH, CW); }
   else {
     const w = CW/3;
@@ -120,21 +128,41 @@ function frame(now){
   }
   fpsCount(dt);
 }
+/* what you're standing on, for footsteps */
+function surfaceAt(x, z, y){
+  if (x > 9 && x < 32 && z > 3 && z < 8 && y > -0.05) return 'concrete';
+  if (z < 8) return 'gravel';
+  if (x > 28.8 && x < 31.2) return 'road';
+  return 'grass';
+}
 /* the wind: mostly still; now and then a slow gust builds over a few seconds and dies away */
 function gust(t){ const a = Math.sin(t*0.071)*0.5 + Math.sin(t*0.043 + 1.3)*0.5; return Math.max(0, a - 0.35)/0.65; }
 
 /* ---------------- captions, the look buttons, touch buttons ---------------- */
-let capT = 0;
-function caption(s, ms){ const c = document.getElementById('cap'); c.textContent = s; c.classList.add('on'); clearTimeout(capT); capT = setTimeout(() => c.classList.remove('on'), ms); }
+/* reaching for things (a click or a tap): the first thing under your finger, if it's within reach (Seam's 3.6 m; the
+   bench 2.6 m), says its next line, word for word from the Seam version. the bench, clicked again, sits you down. */
+const RAY = new THREE.Raycaster(), V2 = new THREE.Vector2();
+function reach(cx, cy){
+  const r = cv.getBoundingClientRect(); V2.set((cx - r.left)/r.width*2 - 1, -((cy - r.top)/r.height*2 - 1));
+  RAY.setFromCamera(V2, camera); RAY.far = 6;
+  const hit = RAY.intersectObjects(CLICK, false)[0]; if (!hit) return;
+  const o = hit.object, k = o.userData.say, near = k === 'bench' ? 2.6 : 3.6; if (hit.distance > near) return;
+  if (typeof k === 'function') { say(k(hit), 4600); return; }
+  const Ls = F3_SAYS[k]; if (!Ls) return;
+  const sib = CLICK.filter(c => c.userData.say === k && c.position.distanceTo(o.position) < 0.6);   /* (a thing made of several parts shares its count) */
+  const i = o.userData.sayI || 0;
+  if (k === 'bench' && i >= 1) { say(F3_WALL.sit[0], 5200); P.sit = true; sib.forEach(c => c.userData.sayI = 0); return; }
+  say(Ls[i % Ls.length], 4200); sib.forEach(c => c.userData.sayI = i + 1);
+}
 function hud(){
   const b = document.getElementById('looks'); b.innerHTML = '';
-  LOOKS.forEach((V, i) => { const e = document.createElement('button'); e.textContent = (i + 1) + ' · ' + V.label; if (!split && i === cur) e.className = 'on'; e.onclick = ev => { ev.stopPropagation(); setLook(i); caption(V.say, 4200); }; b.appendChild(e); });
-  const s = document.createElement('button'); s.textContent = '5 · side by side'; if (split) s.className = 'on'; s.onclick = ev => { ev.stopPropagation(); setSplit(); caption('soft · grit · glow, left to right', 3500); }; b.appendChild(s);
+  LOOKS.forEach((V, i) => { const e = document.createElement('button'); e.textContent = (i + 1) + ' · ' + V.label; if (!split && i === cur) e.className = 'on'; e.onclick = ev => { ev.stopPropagation(); setLook(i); say(V.say, 4200); }; b.appendChild(e); });
+  const s = document.createElement('button'); s.textContent = '5 · side by side'; if (split) s.className = 'on'; s.onclick = ev => { ev.stopPropagation(); setSplit(); say('soft · grit · glow, left to right', 3500); }; b.appendChild(s);
   document.getElementById('names').style.display = split ? 'flex' : 'none';
 }
 addEventListener('keydown', e => {
-  if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) { const i = +e.code.slice(5) - 1; setLook(i); caption(LOOKS[i].say, 4200); }
-  if (e.code === 'Digit5') { setSplit(); caption('soft · grit · glow, left to right', 3500); }
+  if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) { const i = +e.code.slice(5) - 1; setLook(i); say(LOOKS[i].say, 4200); }
+  if (e.code === 'Digit5') { setSplit(); say('soft · grit · glow, left to right', 3500); }
   if (e.code === 'KeyF') document.getElementById('fps').classList.toggle('on');
 });
 if (matchMedia('(pointer: coarse)').matches) {
@@ -146,7 +174,7 @@ let fAcc = 0, fN = 0;
 function fpsCount(dt){ fAcc += dt; fN++; if (fAcc > 0.5) { document.getElementById('fps').textContent = Math.round(fN/fAcc) + ' fps · ' + CW + '×' + CH; fAcc = 0; fN = 0; } }
 
 /* test hooks: pictures from fixed spots (t/shots.js) */
-window.__eg = { pause(v){ window.__paused = v; }, renderOnce(){ frame(performance.now()); }, sim(ks, sec){ window.__frozen = true; simKeys(ks); for (let i = 0; i < sec*60; i++) { if (i === 20) simKeys(ks.filter(k => k !== 'Space')); stepPlayer(1/60); } simKeys([]); for (let i = 0; i < 60; i++) stepPlayer(1/60); window.__frozen = false; return [P.x, P.y, P.z].map(v => +v.toFixed(2)); }, ground:(x, z) => world.ground(x, z), P, setLook, setSplit, freeze(v){ window.__frozen = v; }, info(){ return { CW, CH, resK, cur, split }; }, renderer };
+window.__eg = { tapCenter(){ const r = cv.getBoundingClientRect(); reach(r.left + r.width/2, r.top + r.height/2); return document.getElementById('caption').textContent; }, soundOn(){ UI.heard = true; UI.cc = true; soundSync(); }, pause(v){ window.__paused = v; }, renderOnce(){ frame(performance.now()); }, sim(ks, sec){ window.__frozen = true; simKeys(ks); for (let i = 0; i < sec*60; i++) { if (i === 20) simKeys(ks.filter(k => k !== 'Space')); stepPlayer(1/60); } simKeys([]); for (let i = 0; i < 60; i++) stepPlayer(1/60); window.__frozen = false; return [P.x, P.y, P.z].map(v => +v.toFixed(2)); }, ground:(x, z) => world.ground(x, z), P, setLook, setSplit, freeze(v){ window.__frozen = v; }, info(){ return { CW, CH, resK, cur, split }; }, renderer };
 
 setWait('mixing the inks…');
 setTimeout(() => { try { start(); } catch (e) { setWait('something went wrong: ' + e.message); console.error(e); } }, 30);

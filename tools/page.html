@@ -7,14 +7,12 @@ html,body{margin:0;height:100%;background:#130d0a;overflow:hidden;touch-action:n
 #c{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 #wait{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#a39a8c;font-size:13px;letter-spacing:2px;background:#130d0a;transition:opacity 1.2s}
 #wait.gone{opacity:0;pointer-events:none}
-#cap{position:fixed;left:50%;bottom:6%;transform:translateX(-50%);max-width:min(86vw,760px);text-align:center;color:#d9cfbf;background:rgba(19,13,10,.72);padding:6px 14px;font-size:12px;letter-spacing:1.5px;line-height:1.5;opacity:0;transition:opacity 1.4s;pointer-events:none}
-#cap.on{opacity:1}
-#looks{position:fixed;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;align-items:flex-end}
-#looks button{font:inherit;font-size:11px;letter-spacing:1px;color:#b8ad9c;background:rgba(19,13,10,.7);border:1px solid #3c2f27;padding:4px 9px;cursor:pointer}
+#looks{position:fixed;top:10px;left:10px;display:flex;flex-direction:column;gap:3px;align-items:flex-start;opacity:.75}
+#looks button{font:inherit;font-size:10px;letter-spacing:1px;color:#b8ad9c;background:rgba(19,13,10,.7);border:1px solid #3c2f27;padding:4px 9px;cursor:pointer}
 #looks button.on{color:#efe3cc;border-color:#8b6838}
-#names{position:fixed;top:10px;left:0;right:160px;display:none;justify-content:space-around;pointer-events:none;color:#d9cfbf;font-size:11px;letter-spacing:2px}
+#names{position:fixed;top:10px;left:160px;right:160px;display:none;justify-content:space-around;pointer-events:none;color:#d9cfbf;font-size:11px;letter-spacing:2px}
 #names span{background:rgba(19,13,10,.6);padding:2px 8px}
-#fps{position:fixed;left:10px;top:10px;color:#a39a8c;font-size:10px;display:none}
+#fps{position:fixed;left:10px;bottom:10px;color:#a39a8c;font-size:10px;display:none}
 #fps.on{display:block}
 #tbtn{position:fixed;right:12px;bottom:14%;display:none;flex-direction:column;gap:10px}
 #tbtn div{width:54px;height:54px;border-radius:50%;background:rgba(19,13,10,.55);border:1px solid #4b3840;color:#c9bca8;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:1px}
@@ -23,7 +21,6 @@ html,body{margin:0;height:100%;background:#130d0a;overflow:hidden;touch-action:n
 <div id="names"><span>soft</span><span>grit</span><span>glow</span></div>
 <div id="looks"></div><div id="fps"></div>
 <div id="tbtn"><div id="bj">jump</div><div id="bc">crouch</div></div>
-<div id="cap"></div>
 <div id="wait"><span>loading…</span></div>
 <script>/*BUNDLE*/</script>
 </body></html>

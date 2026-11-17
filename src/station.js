@@ -9,6 +9,26 @@ import * as THREE from 'three';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
+import { F3_SAYS, F3_WALL } from './f03-says.js';
+import { SRC } from './sound.js';
+
+/* (milestone 2) what you can click: a mesh carries the key of its lines in F3_SAYS (the Seam version's, word for word),
+   or a function that picks a line from where you clicked it */
+export const CLICK = [];
+function tag(me, say, start){ me.userData.say = say; if (start) me.userData.sayI = start; CLICK.push(me); return me; }
+/* the station building's walls: which bay you clicked (the same sums as Seam's f03-road lookAction) */
+function wallSay(hit){
+  const x = hit.point.x, y = hit.point.y, z = hit.point.z;
+  if (z > 12.9) return F3_WALL.back[0];
+  if (z < 8.1) {
+    const bay = ((x - 9) % 3 + 3) % 3, door = bay > 0.95 && bay < 2.05 && Math.floor((x - 9)/3) % 2 === 0 && y < 2.45, win = !door && bay > 1.05 && bay < 1.95 && y > 0.95 && y < 2.25;
+    if (door) return F3_WALL.doors[(Math.random()*2) | 0];
+    if (win) return F3_WALL.window[0];
+    if (x > 9.3 && x < 9.85 && y > 1.5 && y < 1.8) return F3_WALL.plaque[0];
+    return F3_WALL.stucco[0];
+  }
+  return F3_WALL.stucco[0];
+}
 
 /* ---------------- the ground ---------------- */
 const TX0 = -10, TZ0 = -14, TW = 60, TD = 48;
@@ -147,13 +167,13 @@ export function buildStation(scene){
   /* ---- telephone poles along the line, wires between, sagging ---- */
   const PX = [4, 11, 18, 25, 32, 39];
   PX.forEach((x, i) => {
-    cyl(0.11, 0.09, 7.7, M.woodD, x + 0.08, -0.5, 1.1, 14); K.solids.push({ x0:x, x1:x + 0.16, y0:-0.5, y1:7.2, z0:1.02, z1:1.18 }); box(x - 0.6, x + 0.76, 6.62, 6.74, 1.05, 1.15, M.woodD, { solid:false });
+    tag(cyl(0.11, 0.09, 7.7, M.woodD, x + 0.08, -0.5, 1.1, 14), 'pole'); SRC.poles.push({ x:x + 0.08, y:6.7, z:1.1 }); K.solids.push({ x0:x, x1:x + 0.16, y0:-0.5, y1:7.2, z0:1.02, z1:1.18 }); box(x - 0.6, x + 0.76, 6.62, 6.74, 1.05, 1.15, M.woodD, { solid:false });
     if (i < PX.length - 1) [6.78, 6.78].forEach((y, k) => wire([x - 0.45 + k*1.05, y, 1.1], [PX[i + 1] - 0.45 + k*1.05, y, 1.1], 0.35, M.wire));
   });
 
   /* ---- the station building: stucco over brick, shut doors, papered windows; a real gabled tin roof ---- */
   box(8.92, 25.08, -0.42, 0.02, 7.95, 13.08, mat(T.face), { solid:false });
-  box(9, 25, 0, 3.4, 8, 13, [M.stucco, M.stucco, M.dark, M.dark, M.facade, M.facade], { flipU:[5] });
+  tag(box(9, 25, 0, 3.4, 8, 13, [M.stucco, M.stucco, M.dark, M.dark, M.facade, M.facade], { flipU:[5] }), wallSay);
   K.solids.push({ x0:9, x1:25, y0:-1, y1:3.4, z0:8, z1:13 });
   (function roof(){
     const ridgeY = 5.05, eaveY = 3.32, z0 = 7.78, z1 = 13.22, zr = 10.5, run = zr - z0, rise = ridgeY - eaveY, ln = Math.hypot(run, rise), ang = Math.atan2(rise, run);
@@ -202,15 +222,15 @@ export function buildStation(scene){
 
   /* on the wall: the bench, the poster, the line map, the timetable (their pictures come with milestone 2's close-ups;
      for now plain aged paper, nothing written) */
-  box(11.4, 12.76, 0.38, 0.43, 7.57, 7.95, M.wood); box(11.45, 11.55, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false }); box(12.61, 12.71, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false });
-  box(11.4, 12.76, 0.5, 0.81, 7.9, 7.95, M.wood, { solid:false });
+  tag(box(11.4, 12.76, 0.38, 0.43, 7.57, 7.95, M.wood), 'bench'); box(11.45, 11.55, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false }); box(12.61, 12.71, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false });
+  tag(box(11.4, 12.76, 0.5, 0.81, 7.9, 7.95, M.wood, { solid:false }), 'bench');
   const paperT = sized(paint(48, 64, 0.7, 0.95, (x, y) => ['paper', clamp(0.55 - 0.25*fbm(x*5, y*4) - (frac(y*14) < 0.3 && x > 0.08 && x < 0.62 && y > 0.12 && y < 0.8 ? 0.12 : 0), 0, 1)]), 0.7, 0.95);
-  [[14.6, 1.48, 0.7, 0.95], [18, 1.65, 1.6, 0.6], [20.7, 1.48, 0.8, 0.95]].forEach(p => plane(p[2], p[3], mat(paperT), p[0], p[1], 7.985, Math.PI, { cast:false }));
+  [[14.6, 1.48, 0.7, 0.95, 'poster'], [18, 1.65, 1.6, 0.6, 'linemap'], [20.7, 1.48, 0.8, 0.95, 'time']].forEach(p => tag(plane(p[2], p[3], mat(paperT), p[0], p[1], 7.985, Math.PI, { cast:false }), p[4]));
 
   /* ---- the canopy: five rust-red iron columns, curved wooden brackets, the beam, the scalloped fascia, the roof ---- */
   const C = 3.15;
   [10.5, 13.5, 16.5, 19.5, 22.5].forEach(x => {
-    lathe([[0, 0], [0.13, 0], [0.13, 0.06], [0.1, 0.1], [0.075, 0.24], [0.058, 0.32], [0.058, 2.74], [0.075, 2.8], [0.1, 2.88], [0.11, 2.92], [0, 2.92]], M.iron, x, 0, 4.13, 12);
+    tag(lathe([[0, 0], [0.13, 0], [0.13, 0.06], [0.1, 0.1], [0.075, 0.24], [0.058, 0.32], [0.058, 2.74], [0.075, 2.8], [0.1, 2.88], [0.11, 2.92], [0, 2.92]], M.iron, x, 0, 4.13, 12), 'column');
     K.solids.push({ x0:x - 0.1, x1:x + 0.1, y0:0, y1:C, z0:4.03, z1:4.23 });
     for (const s of [-1, 1]) {   /* the brackets, out both ways along the beam */
       const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(0, 0.78); sh.lineTo(0.68, 0.78); sh.lineTo(0.68, 0.7); sh.absellipse(0.68, 0, 0.6, 0.7, Math.PI/2, Math.PI, false); sh.lineTo(0.08, 0); sh.lineTo(0, 0);
@@ -226,29 +246,29 @@ export function buildStation(scene){
   /* the bulbs: a tin shade, a bulb hot inside it, its flex up to the canopy */
   const shadeM = mat(T.tinG, { rough:0.6, metal:0.4, two:true });
   [12, 15, 18, 21, 24].forEach((x, i) => {
-    lathe([[0.012, 0.13], [0.04, 0.12], [0.08, 0.08], [0.15, 0.01], [0.16, 0]], shadeM, x, 2.66, 5.9, 12, { cast:false });
-    const b = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 6), M.glass); b.position.set(x, 2.69, 5.9); scene.add(b);
+    tag(lathe([[0.012, 0.13], [0.04, 0.12], [0.08, 0.08], [0.15, 0.01], [0.16, 0]], shadeM, x, 2.66, 5.9, 12, { cast:false }), 'bulb', i === 1 || i === 3 ? 1 : 0);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 6), M.glass); b.position.set(x, 2.69, 5.9); scene.add(b); tag(b, 'bulb', i === 1 || i === 3 ? 1 : 0); SRC.bulbs.push({ x, y:2.66, z:5.9 });
     box(x - 0.006, x + 0.006, 2.79, C, 5.894, 5.906, M.wire, { solid:false, cast:false });
     const s = spot(x, 2.66, 5.9, 1.25, 9, 0xffb878, 1024); s.userData = { x, weak:i === 1 || i === 3, ph:i*1.7 };
     L.bulbs.push(s); halo(x, 2.67, 5.9, 0.42, 0xffc890);
   });
   /* the hanging sign, lit from inside, on two rods */
   const hs = paintHangSign(); const hsM = new THREE.MeshStandardMaterial({ map:hs, emissiveMap:hs, emissive:new THREE.Color(1, 0.86, 0.62), emissiveIntensity:1.1, roughness:0.8 });
-  box(15.2, 17.4, 2.18, 2.66, 5.9, 5.96, [M.dark, M.dark, M.dark, M.dark, hsM, hsM], { solid:false, cast:false });
+  tag(box(15.2, 17.4, 2.18, 2.66, 5.9, 5.96, [M.dark, M.dark, M.dark, M.dark, hsM, hsM], { solid:false, cast:false }), 'sign');
   for (const x of [15.5, 17.1]) box(x, x + 0.02, 2.66, C, 5.92, 5.94, M.wire, { solid:false, cast:false });
 
   /* ---- the corner: the shed, its awning, the phone, the bin, the jerry can, the drinks machine ---- */
-  box(25, 28.9, -0.3, 2.62, 8, 9.6, M.tinG);
+  tag(box(25, 28.9, -0.3, 2.62, 8, 9.6, M.tinG), () => F3_WALL.back[1]);
   box(24.95, 29.05, 2.62, 2.7, 7, 9.7, [M.tinG, M.tinG, M.tin, M.tinG, M.tinG, M.tinG], { solid:false });
   box(25, 29, 2.48, 2.62, 6.98, 7.02, M.tin, { solid:false });
   for (const x of [25.05, 28.9]) box(x, x + 0.05, 0, 2.62, 7.0, 7.05, M.iron);
-  box(25.15, 25.75, 0, 1.75, 7.38, 7.95, mat(null, { color:0x5a504a }));   /* the payphone (its close-up: milestone 2) */
-  box(26.0, 26.4, 0, 0.85, 7.55, 7.95, mat(T.tinG, { color:0x8a8078 }));   /* the bin */
-  box(26.45, 26.65, 0, 0.32, 7.76, 7.95, mat(T.iron, { color:0xd08070 }));   /* the jerry can */
-  const vf = paintVendFront(); sized(vf, 1.02, 1.86);
+  tag(box(25.15, 25.75, 0, 1.75, 7.38, 7.95, mat(null, { color:0x5a504a })), 'phone');   /* the payphone (its close-up: milestone 2) */
+  tag(box(26.0, 26.4, 0, 0.85, 7.55, 7.95, mat(T.tinG, { color:0x8a8078 })), 'bin');   /* the bin */
+  tag(box(26.45, 26.65, 0, 0.32, 7.76, 7.95, mat(T.iron, { color:0xd08070 })), 'jerry');   /* the jerry can */
+  const vf = paintVendFront(); sized(vf, 1.02, 1.86); vf.wrapS = vf.wrapT = THREE.ClampToEdgeWrapping;
   const vfM = new THREE.MeshStandardMaterial({ map:vf, emissiveMap:vf, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.32, roughness:0.5 });
   const vs = mat(null, { color:0xd8d2c8 });
-  box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vs, vs, vs, vs, vs, vfM]);
+  tag(box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vs, vs, vs, vs, vs, vfM]), 'vending'); SRC.vend = { x:27.43, y:1.2, z:7.15 };
   L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.9); scene.add(L.vend);
   const ab = spot(26.6, 2.42, 7.4, 1.2, 6, 0xffb070, 512); ab.userData = { weak:false, ph:4 }; L.bulbs.push(ab);
   lathe([[0.01, 0.1], [0.06, 0.07], [0.12, 0.0]], shadeM, 26.6, 2.42, 7.4, 10, { cast:false });
@@ -256,13 +276,13 @@ export function buildStation(scene){
 
   /* ---- the name board by the track, in its rusted frame ---- */
   const nb = paintNameBoard(); const nbM = mat(nb, { rough:0.5, emit:0x8a8278, emitMap:nb, emitK:0.35 });   /* white enamel holds the last of the light */ nbM.userData.m = [1.7, 0.95];
-  box(27.0, 28.7, 0.8, 1.75, 3.55, 3.6, [M.iron, M.iron, M.iron, M.iron, nbM, nbM], { solid:false });
-  for (const x of [27.0, 28.63]) box(x, x + 0.07, 0, 1.75, 3.54, 3.61, M.iron);
+  tag(box(27.0, 28.7, 0.8, 1.75, 3.55, 3.6, [M.iron, M.iron, M.iron, M.iron, nbM, nbM], { solid:false }), 'name');
+  for (const x of [27.0, 28.63]) tag(box(x, x + 0.07, 0, 1.75, 3.54, 3.61, M.iron), 'name');
 
   /* ---- the street lamp where the road leaves the platform: the one real lamp out here ---- */
-  cyl(0.075, 0.06, 4.6, M.woodD, 30.87, -0.3, 8.15, 12); K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
+  tag(cyl(0.075, 0.06, 4.6, M.woodD, 30.87, -0.3, 8.15, 12), 'streetlamp'); SRC.lamp = { x:30.36, y:3.95, z:8.15 }; K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
   box(30.25, 30.88, 4.12, 4.2, 8.13, 8.17, M.iron, { solid:false });
-  lathe([[0.012, 0.16], [0.05, 0.15], [0.12, 0.07], [0.21, 0.0]], shadeM, 30.36, 3.96, 8.15, 12, { cast:false });
+  tag(lathe([[0.012, 0.16], [0.05, 0.15], [0.12, 0.07], [0.21, 0.0]], shadeM, 30.36, 3.96, 8.15, 12, { cast:false }), 'streetlamp');
   const lb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), M.glass); lb.position.set(30.36, 3.99, 8.15); scene.add(lb);
   L.lamp = spot(30.36, 3.95, 8.15, 0.95, 16, 0xffbe80, 2048); L.lamp.userData = { weak:false, ph:0 };
   halo(30.36, 3.99, 8.15, 0.7, 0xffc890);
@@ -274,7 +294,7 @@ export function buildStation(scene){
   L.shaft = new THREE.Mesh(cg, cm); L.shaft.position.set(30.36, 3.95, 8.15); scene.add(L.shaft);
   /* poles down the road, wires going off into the dusk */
   const PY = [10.5, 17.5, 24.5, 31.5];
-  PY.forEach((z, i) => { cyl(0.11, 0.09, 7.5, M.woodD, 31.98, -0.5, z + 0.08, 14); K.solids.push({ x0:31.9, x1:32.06, y0:-0.5, y1:7, z0:z, z1:z + 0.16 }); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false });
+  PY.forEach((z, i) => { tag(cyl(0.11, 0.09, 7.5, M.woodD, 31.98, -0.5, z + 0.08, 14), 'pole'); SRC.poles.push({ x:31.98, y:6.4, z:z + 0.08 }); K.solids.push({ x0:31.9, x1:32.06, y0:-0.5, y1:7, z0:z, z1:z + 0.16 }); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false });
     wire([30.88, 4.15, 8.15], [31.98, 6.5, 10.58], 0.2, M.wire, 0.008);
     if (i < PY.length - 1) for (const k of [-0.4, 0.4]) wire([31.98 + k, 6.56, z + 0.08], [31.98 + k, 6.56, PY[i + 1] + 0.08], 0.45, M.wire); });
 

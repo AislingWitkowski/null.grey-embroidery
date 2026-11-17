@@ -43,12 +43,14 @@ function pushOut(nx, nz, feet){
 /* ---------------- input ---------------- */
 const keys = {};
 const touch = { id:null, sx:0, sy:0, lx:0, ly:0, t0:0, look:false, low:false, walking:false };
-let jumpReq = false, mouseDown = false, mx = 0, my = 0;
+let jumpReq = false, mouseDown = false, mx = 0, my = 0, md = null;
+export const TAP = { fn:null };   /* (milestone 2) a quick press that didn't drag is a click: reaching for things, as in Seam */
 export function initInput(el){
   addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') { jumpReq = true; e.preventDefault(); } if (e.code === 'KeyC' || e.code === 'ControlLeft') P.crouch = !P.crouch; });
   addEventListener('keyup', e => { keys[e.code] = false; });
-  el.addEventListener('mousedown', e => { mouseDown = true; mx = e.clientX; my = e.clientY; });
-  addEventListener('mouseup', () => { mouseDown = false; });
+  el.addEventListener('mousedown', e => { mouseDown = true; mx = e.clientX; my = e.clientY; md = { x:e.clientX, y:e.clientY, t:performance.now() }; });
+  addEventListener('mouseup', e => { mouseDown = false;
+    if (md && Math.hypot(e.clientX - md.x, e.clientY - md.y) < 8 && performance.now() - md.t < 400 && TAP.fn) TAP.fn(e.clientX, e.clientY); md = null; });
   addEventListener('mousemove', e => {
     if (document.pointerLockElement === el) { look(e.movementX, e.movementY, 0.0024); return; }
     if (!mouseDown) return; look(e.clientX - mx, e.clientY - my, 0.0042); mx = e.clientX; my = e.clientY;
@@ -65,7 +67,7 @@ export function initInput(el){
     if (!touch.look && Math.hypot(t.clientX - touch.sx, t.clientY - touch.sy) > 10) touch.look = true;
     if (touch.look) look(t.clientX - touch.lx, t.clientY - touch.ly, 0.006);
     touch.lx = t.clientX; touch.ly = t.clientY; } }, { passive:false });
-  const end = e => { for (const t of e.changedTouches) if (t.identifier === touch.id) touch.id = null; };
+  const end = e => { for (const t of e.changedTouches) if (t.identifier === touch.id) { if (!touch.look && performance.now() - touch.t0 < 220 && TAP.fn) TAP.fn(t.clientX, t.clientY); touch.id = null; } };
   el.addEventListener('touchend', end); el.addEventListener('touchcancel', end);
 }
 export function pressJump(){ jumpReq = true; }
@@ -100,11 +102,13 @@ export function stepPlayer(dt){
     if ((gp.buttons[10] && gp.buttons[10].pressed) || (gp.buttons[6] && gp.buttons[6].value > 0.5)) P.running = true;
   }
   const len = Math.hypot(fwd, side); if (len > 1) { fwd /= len; side /= len; }
+  if (P.sit && (len > 0.1 || jumpReq)) P.sit = false;   /* (the bench: moving stands you up) */
+  P._spd = len;
   const sp = P.crouch ? P.crouchSpeed : (P.running ? P.run : P.walk);
   const fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), rx = Math.cos(P.yaw), rz = -Math.sin(P.yaw);
   let nx = P.x + (fx*fwd + rx*side)*sp*dt, nz = P.z + (fz*fwd + rz*side)*sp*dt;
   /* standing up needs room overhead */
-  const want = P.crouch ? P.eyeCrouch : P.eyeStand; P.eye += clamp(want - P.eye, -dt*3, dt*3);
+  const want = P.sit ? 1.12 : (P.crouch ? P.eyeCrouch : P.eyeStand); P.eye += clamp(want - P.eye, -dt*3, dt*3);
   [nx, nz] = pushOut(nx, nz, P.y);
   if (W.bounds) { nx = clamp(nx, W.bounds.x0, W.bounds.x1); nz = clamp(nz, W.bounds.z0, W.bounds.z1); }
   /* a step up only if it's low enough; a drop is fine (you fall) */
