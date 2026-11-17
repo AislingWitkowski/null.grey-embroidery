@@ -32,6 +32,7 @@ renderer.setPixelRatio(1);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; renderer.shadowMap.autoUpdate = false;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(66, 16/9, 0.05, 80);
+THREE.Texture.DEFAULT_ANISOTROPY = 4;
 camera.rotation.order = 'YXZ';
 
 function setWait(t){ const w = document.getElementById('wait'); if (w) w.querySelector('span').textContent = t; }
@@ -64,11 +65,13 @@ function setSplit(){ split = true; resize(); hud(); }
 let CW = 0, CH = 0;
 function resize(){
   const V = split ? LOOKS[1] : LOOKS[cur];
-  const asp = innerWidth/innerHeight; let h = Math.round(V.res*resK), w = Math.round(h*asp);
-  if (asp < 1) { w = Math.round(V.res*0.8*resK); h = Math.round(w/asp); }   /* a phone held upright: the pixels stay the same size, not huge */
+  const asp = innerWidth/innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
+  let h = Math.round(Math.min(V.res, innerHeight*dpr/2)*resK), w = Math.round(h*asp);   /* each drawn pixel is 2 screen pixels at most: a tiny crunch */
+  if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/2)*resK); h = Math.round(w/asp); }
   CW = split ? Math.floor(w/3)*3 : w; CH = h;
   renderer.setSize(CW, CH, false);
-  camera.aspect = CW/CH; camera.fov = asp < 1 ? Math.min(100, 2*Math.atan(Math.tan(33*Math.PI/180)/asp)*180/Math.PI*0.8) : 66; camera.updateProjectionMatrix();
+  camera.aspect = CW/CH; camera.fov = asp < 1 ? Math.min(100, 2*Math.atan(Math.tan(33*Math.PI/180)/asp)*180/Math.PI*0.8) : 66;
+  if (L.motes) L.motes.uniforms.uPx.value = CH/300; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
 
@@ -77,10 +80,15 @@ function adapt(dt){
   if (FIXED) return;
   frames.push(dt); if (frames.length < 40) return;
   frames.sort((a, b) => a - b); const med = frames[20]; frames = [];
-  if (med > 1/45 && resK > 0.6) { resK = Math.max(0.6, resK - 0.1); resize(); }
+  if (med > 1/45 && resK > 0.45) { resK = Math.max(0.45, resK - 0.1); resize(); }
   else if (med < 1/58 && resK < 1) { resK = Math.min(1, resK + 0.05); resize(); }
 }
 function loop(now){
+  if (window.__paused) { requestAnimationFrame(loop); return; }   /* (tests: frames only on request) */
+  frame(now);
+  requestAnimationFrame(loop);
+}
+function frame(now){
   const dt = Math.min(0.05, (now - lastT)/1000); lastT = now; const t = (now - T0)/1000;
   if (!window.__frozen) { stepPlayer(dt); adapt(dt); }
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
@@ -94,7 +102,6 @@ function loop(now){
     camera.clearViewOffset();
   }
   fpsCount(dt);
-  requestAnimationFrame(loop);
 }
 /* the wind: mostly still; now and then a slow gust builds over a few seconds and dies away */
 function gust(t){ const a = Math.sin(t*0.071)*0.5 + Math.sin(t*0.043 + 1.3)*0.5; return Math.max(0, a - 0.35)/0.65; }
@@ -122,7 +129,7 @@ let fAcc = 0, fN = 0;
 function fpsCount(dt){ fAcc += dt; fN++; if (fAcc > 0.5) { document.getElementById('fps').textContent = Math.round(fN/fAcc) + ' fps · ' + CW + '×' + CH; fAcc = 0; fN = 0; } }
 
 /* test hooks: pictures from fixed spots (t/shots.js) */
-window.__eg = { sim(ks, sec){ window.__frozen = true; simKeys(ks); for (let i = 0; i < sec*60; i++) { if (i === 20) simKeys(ks.filter(k => k !== 'Space')); stepPlayer(1/60); } simKeys([]); for (let i = 0; i < 60; i++) stepPlayer(1/60); window.__frozen = false; return [P.x, P.y, P.z].map(v => +v.toFixed(2)); }, ground:(x, z) => world.ground(x, z), P, setLook, setSplit, freeze(v){ window.__frozen = v; }, info(){ return { CW, CH, resK, cur, split }; }, renderer };
+window.__eg = { pause(v){ window.__paused = v; }, renderOnce(){ frame(performance.now()); }, sim(ks, sec){ window.__frozen = true; simKeys(ks); for (let i = 0; i < sec*60; i++) { if (i === 20) simKeys(ks.filter(k => k !== 'Space')); stepPlayer(1/60); } simKeys([]); for (let i = 0; i < 60; i++) stepPlayer(1/60); window.__frozen = false; return [P.x, P.y, P.z].map(v => +v.toFixed(2)); }, ground:(x, z) => world.ground(x, z), P, setLook, setSplit, freeze(v){ window.__frozen = v; }, info(){ return { CW, CH, resK, cur, split }; }, renderer };
 
 setWait('mixing the inks…');
 setTimeout(() => { try { start(); } catch (e) { setWait('something went wrong: ' + e.message); console.error(e); } }, 30);

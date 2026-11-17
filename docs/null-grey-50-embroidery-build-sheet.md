@@ -75,3 +75,12 @@ Aisling, on her Bloodborne pictures: *"so mostly like colors and weirdness of bl
 - So: Bloodborne's **colours, weirdness, lighting feel and effects** (glowing translucent figures trailing wisps, candlelit gloom, cobwebs, the great eyed flesh) are a direction for **Limbo and the more surreal places**, not one-to-one, and much less for Missing Mile. Missing Mile stays the country station in Silent Hill / Folklore fog.
 - (No blue still applies outside Null's places; inside Limbo blue is allowed, doc 24.)
 - Aisling, straight after: *"but our colors are more dull i know this"* — our inks stay duller than Bloodborne's; take its feel, not its saturation.
+
+### Nov 17, 2026 — smooth: close to PS3, a tiny crunch
+Aisling asked for Embroidery to lose most of the pixel and go as close to real as it can while running smooth (her words are in doc 33). Colours, fog, ash and atmosphere stay.
+- **Resolution:** drawn at up to about 720 rows (soft 660, grit 600, glow 720), each drawn pixel at most 2 screen pixels: that 2-pixel step is the tiny crunch. On a Mac with a Retina screen that's the full 720. If frames run long, it now steps down as far as 45%.
+- **The inks:** they now grade the colour instead of replacing it. Each pixel takes its ink's colour at the smooth picture's own brightness (no banding, no dot pattern), and only a trace of the snapped, dithered ink stays mixed in (soft 35%, grit 42%, glow 30% of the grade). Film grain stays.
+- **Textures** are smooth up close (filtered, not blocky), sharper at angles, and the building's are finer again. Grass and corn are drawn three and two times finer, with more, thinner blades.
+- **Glow** is worked out at an eighth of the size and spread smooth (the first try at high resolution left a grid of dots round the bulbs; fixed). Dust motes are soft and round and sized to the screen. The street lamp's shadows are finer. Telephone and lamp poles are round now.
+- **Tests:** the test machine has no graphics card, so pictures are now taken as still frames (`pause`/`renderOnce` hooks) at Retina size. Real speed still has to be seen on her Mac and phone (press **f**).
+- **Checked:** pictures in all three looks at four spots; no blue; walking checks; no errors with gamepads forbidden.

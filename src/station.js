@@ -147,7 +147,7 @@ export function buildStation(scene){
   /* ---- telephone poles along the line, wires between, sagging ---- */
   const PX = [4, 11, 18, 25, 32, 39];
   PX.forEach((x, i) => {
-    box(x, x + 0.16, -0.5, 7.2, 1.02, 1.18, M.woodD); box(x - 0.6, x + 0.76, 6.62, 6.74, 1.05, 1.15, M.woodD, { solid:false });
+    cyl(0.11, 0.09, 7.7, M.woodD, x + 0.08, -0.5, 1.1, 14); K.solids.push({ x0:x, x1:x + 0.16, y0:-0.5, y1:7.2, z0:1.02, z1:1.18 }); box(x - 0.6, x + 0.76, 6.62, 6.74, 1.05, 1.15, M.woodD, { solid:false });
     if (i < PX.length - 1) [6.78, 6.78].forEach((y, k) => wire([x - 0.45 + k*1.05, y, 1.1], [PX[i + 1] - 0.45 + k*1.05, y, 1.1], 0.35, M.wire));
   });
 
@@ -260,11 +260,11 @@ export function buildStation(scene){
   for (const x of [27.0, 28.63]) box(x, x + 0.07, 0, 1.75, 3.54, 3.61, M.iron);
 
   /* ---- the street lamp where the road leaves the platform: the one real lamp out here ---- */
-  box(30.82, 30.92, -0.3, 4.3, 8.1, 8.2, M.woodD);
+  cyl(0.075, 0.06, 4.6, M.woodD, 30.87, -0.3, 8.15, 12); K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
   box(30.25, 30.88, 4.12, 4.2, 8.13, 8.17, M.iron, { solid:false });
   lathe([[0.012, 0.16], [0.05, 0.15], [0.12, 0.07], [0.21, 0.0]], shadeM, 30.36, 3.96, 8.15, 12, { cast:false });
   const lb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), M.glass); lb.position.set(30.36, 3.99, 8.15); scene.add(lb);
-  L.lamp = spot(30.36, 3.95, 8.15, 0.95, 16, 0xffbe80, 1024); L.lamp.userData = { weak:false, ph:0 };
+  L.lamp = spot(30.36, 3.95, 8.15, 0.95, 16, 0xffbe80, 2048); L.lamp.userData = { weak:false, ph:0 };
   halo(30.36, 3.99, 8.15, 0.7, 0xffc890);
   /* its light falling through the fog: a faint cone */
   const cg = new THREE.ConeGeometry(2.6, 3.9, 20, 1, true); cg.translate(0, -1.95, 0);
@@ -274,7 +274,7 @@ export function buildStation(scene){
   L.shaft = new THREE.Mesh(cg, cm); L.shaft.position.set(30.36, 3.95, 8.15); scene.add(L.shaft);
   /* poles down the road, wires going off into the dusk */
   const PY = [10.5, 17.5, 24.5, 31.5];
-  PY.forEach((z, i) => { box(31.9, 32.06, -0.5, 7.0, z, z + 0.16, M.woodD); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false });
+  PY.forEach((z, i) => { cyl(0.11, 0.09, 7.5, M.woodD, 31.98, -0.5, z + 0.08, 14); K.solids.push({ x0:31.9, x1:32.06, y0:-0.5, y1:7, z0:z, z1:z + 0.16 }); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false });
     wire([30.88, 4.15, 8.15], [31.98, 6.5, 10.58], 0.2, M.wire, 0.008);
     if (i < PY.length - 1) for (const k of [-0.4, 0.4]) wire([31.98 + k, 6.56, z + 0.08], [31.98 + k, 6.56, PY[i + 1] + 0.08], 0.45, M.wire); });
 
@@ -339,13 +339,13 @@ export function buildStation(scene){
     for (let i = 0; i < N; i++) { pos[i*3] = 2 + MR()*38; pos[i*3 + 1] = MR()*7; pos[i*3 + 2] = 1 + MR()*22; ph[i] = MR()*100; }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 1));
     const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, fog:false,
-      uniforms:{ uT:K.wind.uTime, uC:{ value:new THREE.Color() }, uL:{ value:[new THREE.Vector3(30.36, 3.9, 8.15), new THREE.Vector3(18, 2.6, 5.9), new THREE.Vector3(24, 2.6, 5.9), new THREE.Vector3(12, 2.6, 5.9)] } },
-      vertexShader:'attribute float aPh; uniform float uT; uniform vec3 uL[4]; varying float vA; varying float vG;\n' +
+      uniforms:{ uT:K.wind.uTime, uPx:{ value:1 }, uC:{ value:new THREE.Color() }, uL:{ value:[new THREE.Vector3(30.36, 3.9, 8.15), new THREE.Vector3(18, 2.6, 5.9), new THREE.Vector3(24, 2.6, 5.9), new THREE.Vector3(12, 2.6, 5.9)] } },
+      vertexShader:'attribute float aPh; uniform float uT; uniform float uPx; uniform vec3 uL[4]; varying float vA; varying float vG;\n' +
         'void main(){ vec3 p = position; float t = uT + aPh*13.0; p.y = mod(p.y - t*0.11, 7.0); p.x += sin(t*0.35 + aPh)*0.4; p.z += cos(t*0.27 + aPh*1.7)*0.4;\n' +
         ' vec4 mv = viewMatrix*vec4(p, 1.0); float d = -mv.z; vA = smoothstep(0.4, 2.0, d)*(1.0 - smoothstep(9.0, 16.0, d));\n' +
         ' float g = 0.0; for (int i = 0; i < 4; i++) { vec3 q = p - uL[i]; g += 1.0/(1.0 + dot(q, q)*0.6); } vG = g;\n' +
-        ' gl_PointSize = clamp(2.2*' + '300.0' + '/max(d, 0.5)/100.0*1.6, 1.0, 3.0); gl_Position = projectionMatrix*mv; }',
-      fragmentShader:'uniform vec3 uC; varying float vA; varying float vG; void main(){ gl_FragColor = vec4((uC*0.35 + vec3(1.0, 0.75, 0.45)*vG*0.5)*vA, 1.0); }' });
+        ' gl_PointSize = clamp(14.0/max(d, 0.5), 1.5, 4.0)*uPx; gl_Position = projectionMatrix*mv; }',
+      fragmentShader:'uniform vec3 uC; varying float vA; varying float vG; void main(){ vec2 q = gl_PointCoord - 0.5; float r = 1.0 - smoothstep(0.15, 0.5, length(q)); gl_FragColor = vec4((uC*0.28 + vec3(1.0, 0.75, 0.45)*vG*0.45)*vA*r, 1.0); }' });
     const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts); L.motes = m;
   })();
 

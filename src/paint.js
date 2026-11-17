@@ -48,10 +48,10 @@ function normalFrom(H, w, h, k, opts){
 export function tex(cv, opts = {}){
   const t = new THREE.CanvasTexture(cv);
   t.colorSpace = THREE.SRGBColorSpace;
-  t.magFilter = THREE.NearestFilter;   /* crisp up close: the pixel crunch */
+  t.magFilter = THREE.LinearFilter;   /* (Nov 17, later) smooth up close now; the crunch comes from the 2-pixel drawing */
   t.minFilter = THREE.LinearMipmapLinearFilter;   /* and no shimmer far away */
   t.wrapS = t.wrapT = opts.clampEdge ? THREE.ClampToEdgeWrapping : THREE.RepeatWrapping;
-  t.anisotropy = 2;
+  t.anisotropy = 4;
   return t;
 }
 
@@ -60,7 +60,7 @@ export function tex(cv, opts = {}){
    window bay (Seam's f3Building, carried over). 3.4 m tall. (Nov 17, later: twice the pixels, hairline cracks in the
    stucco, salt bloom low down, grime run down from the sills and the straps, and a relief for every part.) ---------------- */
 export function paintFacade(){
-  return paint(768, 448, 6, 3.4, (x, h) => {
+  return paint(1024, 600, 6, 3.4, (x, h) => {
     const bay = x % 3, isDoor = x < 3, win = !isDoor && bay > 1.05 && bay < 1.95 && h > 0.95 && h < 2.25;
     const door = isDoor && bay > 0.95 && bay < 2.05 && h < 2.45;
     if (h < 0.14) return ['hgrey', 0.24 + 0.08*vn(x*20, h*30) - 0.06*vn(x*90, h*90), 1, 0.5 + 0.3*vn(x*40, h*40)];
@@ -100,7 +100,7 @@ function stucco(x, h){
   if (crack) v -= 0.22; v += salt*0.08;
   return [band ? 'hgrey' : 'hcream', clamp(v, 0, 1), 1, (edge ? 1 : 0.8) + 0.12*vn(x*50, h*50) + 0.08*vn(x*150, h*150) - (crack ? 0.4 : 0) + (band ? 0.15 : 0)];
 }
-export function paintStucco(){ return paint(512, 448, 4, 3.4, (x, h) => stucco(x + 13.7, h)); }
+export function paintStucco(){ return paint(640, 544, 4, 3.4, (x, h) => stucco(x + 13.7, h)); }
 
 /* corrugated tin: real ribs in the relief, rust bleeding down from the nail lines, the odd lighter patched sheet; the
    clean metal is a little shiny, the rust is not */
@@ -159,15 +159,18 @@ export function paintFace(){ return paint(512, 128, 4, 1, (x, y) => { const st =
 
 /* grass, weeds: four clumps side by side (each 1 m × 1 m), dead gold, a little sage still. painted thick and dense,
    blades 2–3 pixels wide with a fuller base, so a clump keeps its body far away instead of breaking into specks */
-function strokeAtlas(W, H, nv, draw){
-  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+function strokeAtlas(W, H, nv, draw, k = 1, thin = 1){
+  /* (Nov 17, later) drawn k times finer for the smooth look; strokes `thin` times as wide, so blades stay blades */
+  const cv = document.createElement('canvas'); cv.width = W*k; cv.height = H*k; const c = cv.getContext('2d'); c.scale(k, k);
+  const lw = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'lineWidth');
+  Object.defineProperty(c, 'lineWidth', { get(){ return lw.get.call(c); }, set(v){ lw.set.call(c, v*thin); } });
   for (let v = 0; v < nv; v++) { let s = 17 + v*31; const rnd = () => (s = (s*16807) % 2147483647)/2147483647; c.save(); c.beginPath(); c.rect(v*W/nv, 0, W/nv, H); c.clip(); draw(c, v*W/nv, rnd, v); c.restore(); }
   const t = tex(cv, { clampEdge:true }); t.generateMipmaps = false; t.minFilter = THREE.LinearFilter; return t;
 }
 const rgb = (r, t) => 'rgb(' + inkRGB(r, t).map(Math.round).join(',') + ')';
 export function paintGrassAtlas(){
   return strokeAtlas(512, 128, 4, (c, ox, rnd, v) => {
-    const n = 70 + v*14;
+    const n = 130 + v*24;
     for (let i = 0; i < n; i++) {
       const back = i < n*0.45;   /* the ones behind are darker: depth inside the clump */
       const bx = ox + 18 + rnd()*92, hgt = (back ? 40 : 20) + rnd()*rnd()*96 - (v === 3 ? 16 : 0), lean = (rnd() - 0.5)*46, green = rnd() < 0.2;
@@ -176,8 +179,8 @@ export function paintGrassAtlas(){
       c.beginPath(); c.moveTo(bx, 128); c.quadraticCurveTo(bx + lean*0.25, 128 - hgt*0.6, bx + lean, 128 - hgt); c.stroke();
       if (!green && rnd() < 0.2) { c.fillStyle = rgb('hcream', 0.62); c.fillRect(bx + lean - 2, 128 - hgt - 8, 4, 9); }   /* a seed head */
     }
-    c.fillStyle = rgb('hwood', 0.3); for (let i = 0; i < 40; i++) c.fillRect(ox + 26 + rnd()*76, 116 + rnd()*12, 3, 12);   /* the thatch at its foot */
-  });
+    c.fillStyle = rgb('hwood', 0.3); for (let i = 0; i < 40; i++) c.fillRect(ox + 26 + rnd()*76, 116 + rnd()*12, 1.5, 12);   /* the thatch at its foot */
+  }, 3, 0.45);
 }
 /* corn: a wall of stalks and long hanging leaves, tassels on top, mostly gone gold, some still olive. 4 variants,
    each 1 × 3 m, three or four stalks to a card, leaves wide (they're what you see of corn) */
@@ -198,7 +201,7 @@ export function paintCornAtlas(){
       for (let q = 0; q < 5; q++) { c.beginPath(); c.moveTo(x0, top); c.lineTo(x0 + (q - 2)*6, top - 14 - rnd()*10); c.stroke(); }
       if (rnd() < 0.8) { c.fillStyle = rgb('hcream', 0.52); c.fillRect(x0 + 2, top + 110 + rnd()*60, 6, 22); }   /* an ear, the husk gone pale */
     }
-  });
+  }, 2, 0.6);
 }
 
 /* the name board by the track: white enamel, ほんまち large, the line's green band, its rusted frame */
@@ -252,7 +255,7 @@ export function paintLeafAtlas(){
     c.fill();
     c.strokeStyle = rgb(ramps[v], 0.22); c.lineWidth = 2; c.beginPath(); c.moveTo(cx - 22, cy + 6); c.lineTo(cx + 20, cy - 6); c.stroke();   /* the stem and middle vein */
     for (let i = 0; i < 30; i++) { c.fillStyle = rgb('hwood', 0.2 + rnd()*0.15); c.fillRect(cx - 20 + rnd()*40, cy - 12 + rnd()*24, 2, 2); }   /* spots of rot */
-  });
+  }, 2, 0.6);
 }
 /* far trees as dark shapes in the fog: a bare one, two firs, a round one (4 variants, each 6 × 9 m) */
 export function paintFarTrees(){
