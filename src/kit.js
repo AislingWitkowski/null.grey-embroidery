@@ -71,7 +71,7 @@ function cardGeo(n, h){
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setIndex(idx); return g;
 }
 function windMat(map, stiff){
-  const m = new THREE.MeshStandardMaterial({ map, alphaTest:0.5, side:THREE.DoubleSide, roughness:1 });
+  const m = new THREE.MeshStandardMaterial({ map, alphaTest:0.5, side:THREE.DoubleSide, roughness:1 }); m.userData.noDetail = true;
   m.onBeforeCompile = s => {
     s.uniforms.uTime = K.wind.uTime; s.uniforms.uGust = K.wind.uGust;
     s.vertexShader = 'attribute float aVar; uniform float uTime; uniform float uGust;\n' + s.vertexShader

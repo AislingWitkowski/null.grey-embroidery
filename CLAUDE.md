@@ -30,7 +30,7 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
 - **Mostly overcast and dark** (Ukiyo's weather). Very few sunny places.
 - **First person only.** Small, locked-down places; edges hidden by corn, fences, ditches, fog, with an invisible stop.
 - **Smooth, close to real, a tiny crunch (Aisling, Nov 17):** Seam is the pixel world; Embroidery goes as close as it can
-  to PS3 Silent Hill 3 / Folklore while running smooth. About 720p, each drawn pixel at most 2 screen pixels. The
+  to PS3 Silent Hill 3 / Folklore while running smooth. Up to about 960p, each drawn pixel at most 1.5 screen pixels (Nov 17, later: smoother). The
   station's inks (`src/inks.js`, copied from `null.grey-furusatostation/src/a-head.html` RAMP_SRC; the master lives
   there) still grade every pixel's colour, mixed with the smooth picture (each look's `ink` amount), with a trace of
   Seam's 4×4 dither. Keep the colours, fog, ash and snow.

@@ -7,6 +7,7 @@ import { buildStation, applyLook, tickLights, L } from './station.js';
 import { K } from './kit.js';
 import { P, setWorld, initInput, stepPlayer, pressJump, toggleCrouch, simKeys } from './player.js';
 import { LOOKS } from './looks.js';
+import { paintDetail } from './paint.js';
 
 /* the mist (Nov 17, later): the fog isn't one even wall. it drifts, very slowly (well under a breath a second), thicker
    in some places than others and pooling low near the ground, the way Silent Hill's does */
@@ -24,7 +25,22 @@ THREE.ShaderChunk.fog_fragment = '#ifdef USE_FOG\n' +
   ' float far = smoothstep(1.2, 7.0, vFogDepth);\n' +
   ' fogFactor = clamp(fogFactor + (m - 0.5)*0.55*far*(1.0 - fogFactor) + low*0.16*far, 0.0, 1.0);\n' +
   ' gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogFactor);\n#endif\n';
-function giveMist(root){ root.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) { if (m.userData.mist) continue; m.userData.mist = true; const prev = m.onBeforeCompile; m.onBeforeCompile = (sh, r) => { sh.uniforms.uMistT = MIST; if (prev) prev(sh, r); }; } }); }
+const DETAIL = { value:null }, DETK = { value:1 };
+function giveMist(root){ root.traverse(o => { const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : []; for (const m of ms) {
+  if (m.userData.mist) continue; m.userData.mist = true; const prev = m.onBeforeCompile, det = m.isMeshStandardMaterial && !m.userData.noDetail;
+  m.onBeforeCompile = (sh, r) => { sh.uniforms.uMistT = MIST; if (det) addDetail(sh); if (prev) prev(sh, r); };
+  const prevKey = prev ? prev.toString() : ''; m.customProgramCacheKey = () => 'eg|' + (det ? 'd' : '') + '|' + prevKey;   /* (so materials with different extras never share a program) */
+} }); }
+/* the close-up grain, from three sides at the surface's true place in the world, at two sizes */
+function addDetail(sh){
+  sh.uniforms.uDetail = DETAIL; sh.uniforms.uDetK = DETK;
+  sh.vertexShader = 'varying vec3 vEgW; varying vec3 vEgN;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n' +
+    ' { vec4 w = vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\n w = instanceMatrix*w;\n#endif\n vEgW = (modelMatrix*w).xyz; vEgN = normalize(mat3(modelMatrix)*objectNormal); }');
+  sh.fragmentShader = 'uniform sampler2D uDetail; uniform float uDetK; varying vec3 vEgW; varying vec3 vEgN;\n' +
+    'float egTri(float s){ vec3 b = pow(abs(normalize(vEgN)), vec3(4.0)); b /= b.x + b.y + b.z; return texture2D(uDetail, vEgW.zy*s).r*b.x + texture2D(uDetail, vEgW.xz*s).r*b.y + texture2D(uDetail, vEgW.xy*s).r*b.z; }\n' +
+    sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n { float d1 = egTri(1.6), d2 = egTri(0.23); diffuseColor.rgb *= mix(1.0, (0.7 + 0.6*d1)*(0.82 + 0.36*d2), uDetK); }')
+    .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = clamp(roughnessFactor*mix(1.0, 0.8 + 0.4*egTri(1.6), uDetK), 0.04, 1.0);');
+}
 
 const cv = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas:cv, antialias:false, alpha:false, powerPreference:'high-performance', preserveDrawingBuffer:true });
@@ -41,6 +57,7 @@ const FIXED = new URLSearchParams(location.search).has('fixed');   /* (tests: no
 let look, world, cur = 0, split = false, resK = 1, frames = [], lastT = performance.now(), T0 = performance.now();
 function start(){
   look = makeLook(renderer);
+  DETAIL.value = paintDetail();
   world = buildStation(scene);
   giveMist(scene);
   setWorld(world);
@@ -66,8 +83,8 @@ let CW = 0, CH = 0;
 function resize(){
   const V = split ? LOOKS[1] : LOOKS[cur];
   const asp = innerWidth/innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
-  let h = Math.round(Math.min(V.res, innerHeight*dpr/2)*resK), w = Math.round(h*asp);   /* each drawn pixel is 2 screen pixels at most: a tiny crunch */
-  if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/2)*resK); h = Math.round(w/asp); }
+  let h = Math.round(Math.min(V.res, innerHeight*dpr/1.5)*resK), w = Math.round(h*asp);   /* each drawn pixel is 1.5 screen pixels at most: a tinier crunch (Nov 17, later: smoother) */
+  if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/1.5)*resK); h = Math.round(w/asp); }
   CW = split ? Math.floor(w/3)*3 : w; CH = h;
   renderer.setSize(CW, CH, false);
   camera.aspect = CW/CH; camera.fov = asp < 1 ? Math.min(100, 2*Math.atan(Math.tan(33*Math.PI/180)/asp)*180/Math.PI*0.8) : 66;

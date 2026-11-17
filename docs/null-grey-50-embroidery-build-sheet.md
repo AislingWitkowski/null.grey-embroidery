@@ -84,3 +84,11 @@ Aisling asked for Embroidery to lose most of the pixel and go as close to real a
 - **Glow** is worked out at an eighth of the size and spread smooth (the first try at high resolution left a grid of dots round the bulbs; fixed). Dust motes are soft and round and sized to the screen. The street lamp's shadows are finer. Telephone and lamp poles are round now.
 - **Tests:** the test machine has no graphics card, so pictures are now taken as still frames (`pause`/`renderOnce` hooks) at Retina size. Real speed still has to be seen on her Mac and phone (press **f**).
 - **Checked:** pictures in all three looks at four spots; no blue; walking checks; no errors with gamepads forbidden.
+
+### Nov 17, 2026 — smoother, real flakes, close-up grain
+Aisling: *"ok runs smooth we can go smoother, and more like, flake like with snow, more realistic? better textures?"* (It runs smooth on her machine.)
+- **Smoother:** up to 900 / 840 / 960 rows (soft / grit / glow), each drawn pixel at most 1.5 screen pixels (was 2). On a Retina Mac that's about 960p. Less of the ink snap stays mixed in (soft 30%, grit 36%, glow 25%). Still steps down by itself if frames run long.
+- **Flakes:** the dust became pale flakes drifting down through the fog around you (2,600 of them, in a box that travels with you, so some are always close and the far ones fade into the fog). Each its own size, falling slowly, swaying, pushed a little by the gusts, turning so it catches the light now and then (a slow swell, never a flash), warmer and brighter near the lamps. *Missing Mile is autumn in doc 32; whether these read as early snow or ash is Aisling's call.*
+- **Better textures:** every solid surface now gets a shared close-up grain (grit, scuffs, small stains, hairline scratches) laid on from three sides at its true place in the world, at two sizes, so walls, ground, wood and metal have texture up close without bigger pictures; it also roughens or smooths the shine a little. Grass, corn and leaves don't take it.
+- **Checked:** pictures in all three looks; no blue; no errors with gamepads forbidden.
+- **Still rough, honestly:** the grass and corn still read as painted cards up close; real-looking plants and trees come with the kit (milestone 3).

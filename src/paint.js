@@ -273,3 +273,19 @@ export function paintFarTrees(){
     }
   });
 }
+
+/* the close-up grain every surface shares (Nov 17, later): fine grit, scuffs, small stains and hairline scratches,
+   in grey, tiling. it's laid over each surface from three sides at its true place in the world, at two sizes, so
+   walls, ground and wood all get grain up close without bigger pictures */
+export function paintDetail(){
+  const W = 512, cv = document.createElement('canvas'); cv.width = cv.height = W; const c = cv.getContext('2d'), im = c.createImageData(W, W), d = im.data;
+  const tile = (f, x, y, p) => { const a = f(x, y), b = f(x - p, y), e = f(x, y - p), g = f(x - p, y - p), u = x/p, v = y/p; return a*(1 - u)*(1 - v) + b*u*(1 - v) + e*(1 - u)*v + g*u*v; };
+  for (let j = 0; j < W; j++) for (let i = 0; i < W; i++) {
+    const x = i/W*8, y = j/W*8;
+    let v = 0.5 + 0.28*(tile(fbm, x*2, y*2, 16) - 0.5) + 0.18*(tile(vn, x*16, y*16, 128) - 0.5) + 0.1*(hsh(i, j) - 0.5);
+    if (tile(vn, x*6 + 3, y*6, 48) > 0.78) v -= 0.12;   /* small stains */
+    const sc = Math.abs(frac(x*1.7 + y*0.4 + vn(x*0.5, y*0.5)*2) - 0.5); if (sc < 0.006 && vn(x*2, y*2) > 0.6) v += 0.08;   /* scratches */
+    const o = (j*W + i)*4; d[o] = d[o + 1] = d[o + 2] = Math.round(clamp(v, 0, 1)*255); d[o + 3] = 255;
+  }
+  c.putImageData(im, 0, 0); const t = tex(cv); t.colorSpace = THREE.NoColorSpace; return t;
+}

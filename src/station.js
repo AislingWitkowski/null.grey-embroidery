@@ -306,7 +306,7 @@ export function buildStation(scene){
     for (let i = 0; i < 900; i++) { const x = ROAD[0] - 0.6 + LR()*3.2, z = 9 + LR()*14; if (LR() < 0.6) put(x, z, groundAt(x, z)); }
     for (let i = 0; i < 700; i++) { const x = 8.5 + LR()*21, z = 13.05 + LR()*1.2; put(x, z, groundAt(x, z)); }
     const g = new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI/2);
-    const lm = new THREE.MeshStandardMaterial({ map:paintLeafAtlas(), alphaTest:0.5, roughness:0.85, side:THREE.DoubleSide });
+    const lm = new THREE.MeshStandardMaterial({ map:paintLeafAtlas(), alphaTest:0.5, roughness:0.85, side:THREE.DoubleSide }); lm.userData.noDetail = true;
     lm.onBeforeCompile = sh => { sh.vertexShader = 'attribute float aVar;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv.x = vMapUv.x*0.25 + aVar*0.25;'); };
     const im = new THREE.InstancedMesh(g, lm, L.length), M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), vars = new Float32Array(L.length);
     L.forEach((it, i) => { e.set((LR() - 0.5)*0.3, it[4], (LR() - 0.5)*0.3); q.setFromEuler(e); M4.compose(new THREE.Vector3(it[0], it[1], it[2]), q, new THREE.Vector3(it[3], 1, it[3])); im.setMatrixAt(i, M4); vars[i] = it[5]; });
@@ -331,22 +331,28 @@ export function buildStation(scene){
     }
   })();
 
-  /* ---- motes: a little dust and ash hanging in the air, drifting down slowly and swaying (from Aisling's Silent Hill 1
-     rooftop picture, where flakes hang in the fog). they catch the fog's colour and glow faintly near the lamps.
-     slow: each takes a minute to fall, no flicker ---- */
-  (function motes(){
-    const MR = rnd(99), N = 900, pos = new Float32Array(N*3), ph = new Float32Array(N);
-    for (let i = 0; i < N; i++) { pos[i*3] = 2 + MR()*38; pos[i*3 + 1] = MR()*7; pos[i*3 + 2] = 1 + MR()*22; ph[i] = MR()*100; }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 1));
-    const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, fog:false,
-      uniforms:{ uT:K.wind.uTime, uPx:{ value:1 }, uC:{ value:new THREE.Color() }, uL:{ value:[new THREE.Vector3(30.36, 3.9, 8.15), new THREE.Vector3(18, 2.6, 5.9), new THREE.Vector3(24, 2.6, 5.9), new THREE.Vector3(12, 2.6, 5.9)] } },
-      vertexShader:'attribute float aPh; uniform float uT; uniform float uPx; uniform vec3 uL[4]; varying float vA; varying float vG;\n' +
-        'void main(){ vec3 p = position; float t = uT + aPh*13.0; p.y = mod(p.y - t*0.11, 7.0); p.x += sin(t*0.35 + aPh)*0.4; p.z += cos(t*0.27 + aPh*1.7)*0.4;\n' +
-        ' vec4 mv = viewMatrix*vec4(p, 1.0); float d = -mv.z; vA = smoothstep(0.4, 2.0, d)*(1.0 - smoothstep(9.0, 16.0, d));\n' +
-        ' float g = 0.0; for (int i = 0; i < 4; i++) { vec3 q = p - uL[i]; g += 1.0/(1.0 + dot(q, q)*0.6); } vG = g;\n' +
-        ' gl_PointSize = clamp(14.0/max(d, 0.5), 1.5, 4.0)*uPx; gl_Position = projectionMatrix*mv; }',
-      fragmentShader:'uniform vec3 uC; varying float vA; varying float vG; void main(){ vec2 q = gl_PointCoord - 0.5; float r = 1.0 - smoothstep(0.15, 0.5, length(q)); gl_FragColor = vec4((uC*0.28 + vec3(1.0, 0.75, 0.45)*vG*0.45)*vA*r, 1.0); }' });
-    const pts = new THREE.Points(g, m); pts.frustumCulled = false; scene.add(pts); L.motes = m;
+  /* ---- flakes (Nov 17, later; Aisling: "more like, flake like with snow"): pale flakes drifting down through the fog
+     around you, the way they hang in Silent Hill 1's air. each its own size, falling slowly and swaying, turning so its
+     edge catches the light now and then (softly, never a flash), brighter near the lamps. they live in a box that
+     travels with you, so there are always some near and the far ones fade into the fog ---- */
+  (function flakes(){
+    const MR = rnd(99), N = 2600, pos = new Float32Array(N*3), ph = new Float32Array(N*2);
+    for (let i = 0; i < N; i++) { pos[i*3] = MR()*26; pos[i*3 + 1] = MR()*9; pos[i*3 + 2] = MR()*26; ph[i*2] = MR()*100; ph[i*2 + 1] = 0.018 + MR()*MR()*0.05; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 2));
+    const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, fog:false,
+      uniforms:{ uT:K.wind.uTime, uGust:K.wind.uGust, uPx:{ value:1 }, uC:{ value:new THREE.Color() }, uFogF:{ value:18 }, uL:{ value:[new THREE.Vector3(30.36, 3.9, 8.15), new THREE.Vector3(18, 2.6, 5.9), new THREE.Vector3(24, 2.6, 5.9), new THREE.Vector3(12, 2.6, 5.9), new THREE.Vector3(15, 2.6, 5.9), new THREE.Vector3(21, 2.6, 5.9)] } },
+      vertexShader:'attribute vec2 aPh; uniform float uT, uGust, uPx, uFogF; uniform vec3 uL[6]; varying float vA, vG, vTw;\n' +
+        'void main(){ float t = uT + aPh.x*13.0; vec3 p = position;\n' +
+        ' p.y -= t*(0.22 + aPh.y*4.0); p.x += sin(t*0.42 + aPh.x)*0.5 + t*(0.06 + uGust*0.25); p.z += cos(t*0.31 + aPh.x*1.7)*0.45 + t*0.03;\n' +
+        ' p = mod(p - cameraPosition + vec3(13.0, 4.0, 13.0), vec3(26.0, 9.0, 26.0)) + cameraPosition - vec3(13.0, 4.0, 13.0);\n' +   /* the box that travels with you */
+        ' vec4 mv = viewMatrix*vec4(p, 1.0); float d = -mv.z;\n' +
+        ' vA = smoothstep(0.25, 1.2, d)*(1.0 - smoothstep(uFogF*0.5, uFogF*0.95, d));\n' +
+        ' float g = 0.0; for (int i = 0; i < 6; i++) { vec3 q = p - uL[i]; g += 1.0/(1.0 + dot(q, q)*0.45); } vG = g;\n' +
+        ' vTw = 0.75 + 0.25*sin(t*1.3 + aPh.x*5.0);\n' +   /* turning: a slow swell, well under a breath a second */
+        ' gl_PointSize = clamp(aPh.y*projectionMatrix[1][1]*0.5*uPx*300.0/max(d, 0.3), 1.0, 22.0); gl_Position = projectionMatrix*mv; }',
+      fragmentShader:'uniform vec3 uC; varying float vA, vG, vTw; void main(){ vec2 q = gl_PointCoord - 0.5; float r = length(q*vec2(1.0, 1.25)); float a = 1.0 - smoothstep(0.2, 0.5, r);\n' +
+        ' vec3 c = mix(uC*1.35 + vec3(0.1), vec3(0.95, 0.88, 0.78), 0.45) + vec3(1.0, 0.78, 0.5)*vG*0.6; gl_FragColor = vec4(c*vTw, a*vA*0.85); }' });
+    const pts = new THREE.Points(g, m); pts.frustumCulled = false; pts.renderOrder = 5; scene.add(pts); L.motes = m;
   })();
 
   /* ---- light everywhere else: overcast dusk, almost gone. a dim sky, a faint warmth from the west ---- */
@@ -386,7 +392,7 @@ export function applyLook(scene, V){
   if (!scene.fog) scene.fog = new THREE.Fog(fc, V.fogNear, V.fogFar); scene.fog.color.copy(fc); scene.fog.near = V.fogNear; scene.fog.far = V.fogFar;
   L.skyM.uniforms.uHor.value.copy(fc); L.skyM.uniforms.uTop.value.setRGB(V.skyTop[0], V.skyTop[1], V.skyTop[2], S); L.skyM.uniforms.uWest.value.setRGB(V.skyWest[0], V.skyWest[1], V.skyWest[2], S);
   L.hemi.intensity = V.hemi; L.west.intensity = V.west;
-  if (L.motes) L.motes.uniforms.uC.value.copy(fc);
+  if (L.motes) { L.motes.uniforms.uC.value.copy(fc); L.motes.uniforms.uFogF.value = V.fogFar; }
   if (L.farM) L.farM.forEach(m => { m.uniforms.uC.value.copy(fc).multiplyScalar(0.62); m.uniforms.uF.value.copy(fc); });   /* the nearer layer a little darker */
   L.lamp.intensity = V.lamp; L.vend.intensity = V.vend;
   for (const b of L.bulbs) if (b !== L.lamp) b.userData.base = V.bulb;
