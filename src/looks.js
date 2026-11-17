@@ -37,7 +37,7 @@ function mixLooks(parts){
   }
   return o;
 }
-const MM = mixLooks([[BASE[0], 0.96], [BASE[1], 0.02], [BASE[2], 0.02]]);
-MM.label = 'missing mile'; MM.say = 'missing mile · soft, a touch of grit and glow, a hair darker';
-MM.contrast *= 1.04; MM.exposure *= 0.99; MM.res = Math.round(MM.res);
+const MM = mixLooks([[BASE[0], 0.90], [BASE[1], 0.05], [BASE[2], 0.05]]);   /* (then "maybe like 3% more of same things": 5% grit, 5% glow, a little darker again) */
+MM.label = 'missing mile'; MM.say = 'missing mile · soft, with a little grit and glow, a little darker';
+MM.contrast *= 1.07; MM.exposure *= 0.97; MM.res = Math.round(MM.res);
 export const LOOKS = [MM, BASE[0], BASE[1], BASE[2]];

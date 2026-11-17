@@ -104,3 +104,4 @@ Aisling: *"thinner smaller a tad darker, more like small ash...falkier...go ahea
 Aisling: *"ok so i like soft..but can we add like 2% grit and like 2% glow and make it just like 1% darker? is this possible by darker like pump the contrast like a slight bit??"*
 - **Built:** a fourth look, **missing mile**: every setting is 96% soft, 2% grit, 2% glow, then contrast up 4% and exposure down 1% (a hair darker). It's the default and key **1**; soft, grit and glow are keys 2–4, side by side is 5. The difference from soft is small on purpose (a touch darker, a touch more glow round the lamps).
 - Aisling, earlier: *"ok so this is like the "baase level" correct this is before all the details and such"*. Yes: still to come are the Seam version's things and clickables, milestone 2's shared layer, and the kit's trees and better plants.
+- Then Aisling: *"ok i think maybe like 3% more of same things?"* So now: 90% soft, 5% grit, 5% glow, contrast up 7%, exposure down 3%.
