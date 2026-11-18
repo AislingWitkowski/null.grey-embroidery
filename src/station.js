@@ -6,7 +6,7 @@
    looks, i mostly want pumped up graphics."
    ================================================================ */
 import * as THREE from 'three';
-import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl } from './kit.js';
+import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
@@ -262,13 +262,19 @@ export function buildStation(scene){
   box(24.95, 29.05, 2.62, 2.7, 7, 9.7, [M.tinG, M.tinG, M.tin, M.tinG, M.tinG, M.tinG], { solid:false });
   box(25, 29, 2.48, 2.62, 6.98, 7.02, M.tin, { solid:false });
   for (const x of [25.05, 28.9]) box(x, x + 0.05, 0, 2.62, 7.0, 7.05, M.iron);
-  tag(box(25.15, 25.75, 0, 1.75, 7.38, 7.95, mat(null, { color:0x5a504a })), 'phone');   /* the payphone (its close-up: milestone 2) */
+  tag(box(8.32, 8.97, -0.3, 1.75, 9.55, 10.15, mat(null, { color:0x5a504a })), 'phone');   /* the payphone, at the station's west end (Seam's second pass moved it there: it hid the tobacco window) */   /* the payphone (its close-up: milestone 2) */
   tag(box(26.0, 26.4, 0, 0.85, 7.55, 7.95, mat(T.tinG, { color:0x8a8078 })), 'bin');   /* the bin */
   tag(box(26.45, 26.65, 0, 0.32, 7.76, 7.95, mat(T.iron, { color:0xd08070 })), 'jerry');   /* the jerry can */
   const vf = paintVendFront(); sized(vf, 1.02, 1.86); vf.wrapS = vf.wrapT = THREE.ClampToEdgeWrapping;
   const vfM = new THREE.MeshStandardMaterial({ map:vf, emissiveMap:vf, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.32, roughness:0.5 });
   const vs = mat(null, { color:0xd8d2c8 });
-  tag(box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vs, vs, vs, vs, vs, vfM]), 'vending'); SRC.vend = { x:27.43, y:1.2, z:7.15 };
+  /* (milestone 2) the old red machine, Seam's own picture of it (f3vm2: Drink Smile, the cream wave, four cans: chocolate
+     creme, lemon cola, ultra violet, cherry cheer), its sides f3vmSide2 */
+  const vmT = seamTex('f3vm2', 420, '#8e2a22'), vsT = seamTex('f3vmSide2', 300, '#8e2a22');
+  const vmF = new THREE.MeshStandardMaterial({ map:vmT, emissiveMap:vmT, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.22, roughness:0.55 });
+  const vmS = new THREE.MeshStandardMaterial({ map:vsT, roughness:0.6 });
+  vmF.userData.m = [1.02, 1.86]; vmS.userData.m = [0.75, 1.86];   /* (one picture per face, not tiled) */
+  tag(box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vmS, vmS, vs, vs, vmS, vmF]), 'vending'); SRC.vend = { x:27.43, y:1.2, z:7.15 };
   L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.9); scene.add(L.vend);
   const ab = spot(26.6, 2.42, 7.4, 1.2, 6, 0xffb070, 512); ab.userData = { weak:false, ph:4 }; L.bulbs.push(ab);
   lathe([[0.01, 0.1], [0.06, 0.07], [0.12, 0.0]], shadeM, 26.6, 2.42, 7.4, 10, { cast:false });
@@ -278,6 +284,21 @@ export function buildStation(scene){
   const nb = paintNameBoard(); const nbM = mat(nb, { rough:0.5, emit:0x8a8278, emitMap:nb, emitK:0.35 });   /* white enamel holds the last of the light */ nbM.userData.m = [1.7, 0.95];
   tag(box(27.0, 28.7, 0.8, 1.75, 3.55, 3.6, [M.iron, M.iron, M.iron, M.iron, nbM, nbM], { solid:false }), 'name');
   for (const x of [27.0, 28.63]) tag(box(x, x + 0.07, 0, 1.75, 3.54, 3.61, M.iron), 'name');
+
+  /* ---- (milestone 2) Seam's details round 1 (f03-details): the newspaper left on the bench, the pit beside it, the
+     dumpster out back, the missing poster on the road's pole; their pictures are Seam's own and their clicks run Seam's
+     own actions (the close-ups, searching the dumpster, pocketing the pit) ---- */
+  const nwT = seamTex('f3newsTop', 900, '#dccb9e');
+  const nwM = new THREE.MeshStandardMaterial({ map:nwT, roughness:0.9 }); nwM.userData.m = [0.55, 0.32];
+  tag(box(12.0, 12.55, 0.43, 0.445, 7.6, 7.92, [mat(null, { color:0xd8ccb0 }), mat(null, { color:0xd8ccb0 }), nwM, mat(null, { color:0xd8ccb0 }), mat(null, { color:0xd8ccb0 }), mat(null, { color:0xd8ccb0 })], { solid:false, cast:false }), 'news');
+  let pitGot = false; try { pitGot = localStorage.getItem('nullgrey.f3.pit') === '1'; } catch (e) {}
+  if (!pitGot) { const pt = seamTex('f3pit', 1400, '#8a5a36'); const pm = new THREE.MeshStandardMaterial({ map:pt, transparent:true, alphaTest:0.4, roughness:0.8 });
+    const pit = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.09), pm); pit.rotation.x = -Math.PI/2; pit.position.set(12.665, 0.432, 7.735); scene.add(pit); tag(pit, 'pit'); L.pit = pit; }
+  const dF = seamTex('f3dumpF', 260, '#30261d'), dS = seamTex('f3dumpS', 260, '#30261d');
+  const dmF = new THREE.MeshStandardMaterial({ map:dF, roughness:0.8 }), dmS = new THREE.MeshStandardMaterial({ map:dS, roughness:0.8 }); dmF.userData.m = [1.9, 1.6]; dmS.userData.m = [1.1, 1.6];
+  tag(box(14.1, 16.0, -0.3, 1.3, 13.12, 14.22, [dmS, dmS, mat(T.iron, { color:0x6a5040 }), dmS, dmF, dmS]), 'dump');
+  const msT = seamTex('f3miss', 900, '#dcd4c4');
+  const ms = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.48), new THREE.MeshStandardMaterial({ map:msT, roughness:0.95 })); ms.position.set(31.86, 1.24, 24.58); ms.rotation.y = -Math.PI/2; ms.receiveShadow = true; scene.add(ms); tag(ms, 'missing');
 
   /* ---- the street lamp where the road leaves the platform: the one real lamp out here ---- */
   tag(cyl(0.075, 0.06, 4.6, M.woodD, 30.87, -0.3, 8.15, 12), 'streetlamp'); SRC.lamp = { x:30.36, y:3.95, z:8.15 }; K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
@@ -403,12 +424,12 @@ export function buildStation(scene){
   clumps(grass, paintGrassAtlas(), 3, 1, 1.0);   /* (atlas: 4 clumps) */
   const cornAt = (x, z) => { if (R() < 0.08) return; corn.push([x + (R() - 0.5)*0.25, groundAt(x, z) - 0.05, z + (R() - 0.5)*0.25, 1.0 + R()*0.3, R()*6.3, Math.floor(R()*4), 2.6]); };
   for (let x = -8; x < 48; x += 0.36) for (let z = -9; z < 0.55; z += 0.42) cornAt(x, z);              /* across the track */
-  for (let x = -8; x < 48; x += 0.42) for (let z = 24.4; z < 31; z += 0.5) if (x < ROAD[0] - 0.6 || x > ROAD[1] + 0.6) cornAt(x, z);   /* the corn the road runs into */
+  for (let x = -8; x < 48; x += 0.42) for (let z = 24.4; z < 31; z += 0.5) if (x < ROAD[0] - 0.6 || x > ROAD[1] + 1.6) cornAt(x, z);   /* (clear round the pole with the missing poster) */   /* the corn the road runs into */
   for (let x = -8; x < 0.6; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* west */
   for (let x = 41.4; x < 48; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* east */
   clumps(corn, paintCornAtlas(), 2, 1, 0.55, 8);
 
-  return { bounds:{ x0:1.2, x1:40.8, z0:0.95, z1:23.6 }, solids:K.solids, ground:groundAt };
+  return { bounds:{ x0:1.2, x1:40.8, z0:0.95, z1:24.0 }, solids:K.solids, ground:groundAt };
 }
 
 /* ---------------- a look's lights and fog ---------------- */

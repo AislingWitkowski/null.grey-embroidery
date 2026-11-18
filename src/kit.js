@@ -102,4 +102,16 @@ export function cyl(r0, r1, h, m, x, y, z, seg = 8, o = {}){
   const me = new THREE.Mesh(new THREE.CylinderGeometry(r1, r0, h, seg, 1, !!o.open), m); me.position.set(x, y + h/2, z);
   if (o.rx) me.rotation.x = o.rx; if (o.rz) me.rotation.z = o.rz; me.castShadow = o.cast !== false; me.receiveShadow = true; K.scene.add(me); return me;
 }
+/* a picture from Seam (its own drawing, word for word: FPIC, via the bridge) as a texture. drawn once it loads */
+export function seamTex(name, ppu, fallback){
+  const S = window.EG_SEAM, P = S && S.pic && S.pic(name);
+  const cv = document.createElement('canvas'); cv.width = 4; cv.height = 4; const t = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 4;
+  if (fallback) { const g = cv.getContext('2d'); g.fillStyle = fallback; g.fillRect(0, 0, 4, 4); }
+  if (!P) return t;
+  const k = Math.min(1, 2048/Math.max(P.w*(ppu || 400), P.h*(ppu || 400))), W = Math.max(8, Math.round(P.w*(ppu || 400)*k)), H = Math.max(8, Math.round(P.h*(ppu || 400)*k)), img = new Image();   /* (ppu: pixels per metre of the thing) */
+  img.onload = () => { const c2 = document.createElement('canvas'); c2.width = W; c2.height = H; c2.getContext('2d').drawImage(img, 0, 0, W, H); t.dispose(); t.image = c2; t.needsUpdate = true; };   /* (a new size: the old one is let go first) */
+  try { img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + P.vbw + ' ' + P.vbh + '" width="' + W + '" height="' + H + '">' + P.svg() + '</svg>'); } catch (e) {}
+  return t;
+}
 export function rnd(seed){ let s = (seed % 2147483646) + 1; return () => (s = (s*16807) % 2147483647)/2147483647; }

@@ -13,14 +13,19 @@ i = head.index('(function(){') + len('(function(){')
 snd = rd('src/f8-sound.js'); drk = '\n'.join(l for l in snd.split('\n') if l.startswith('var DRK_'))   # the pocket's food and drink kinds, word for word
 def stmt(path, start):
     # one top-level statement, word for word: from the line starting with `start` until its brackets close and it ends in ;
-    L = rd(path).split('\n'); i = next(k for k, l in enumerate(L) if l.startswith(start)); out = []; depth = 0
+    L = rd(path).split('\n'); i = next(k for k, l in enumerate(L) if l.lstrip().startswith(start)); out = []; depth = 0
     for l in L[i:]:
         out.append(l); depth += l.count('{') + l.count('[') + l.count('(') - l.count('}') - l.count(']') - l.count(')')
         e = l.rstrip().split('/*')[0].rstrip()
         if depth <= 0 and (e.endswith(';') or e.endswith('}')): break
     return '\n'.join(out)
 fig = '\n'.join([stmt('src/c8-objects.js', 'var FIGTALK'), stmt('src/c8-objects.js', 'var PASS_STATE'), stmt('src/c8-objects.js', 'try { var _fg'),   # the waiting passenger and the pass (the newspaper's hint reads them)
-                  stmt('src/shared/cc.js', 'var CC_TEXT')])   # what each recorded sound says, written (for CC)
+                  stmt('src/shared/cc.js', 'var CC_TEXT'),   # what each recorded sound says, written (for CC)
+                  # Seam's way of drawing a picture and placing a box: kept, so Missing Mile's own Seam files can run here
+                  # and their close-ups and click actions work as they are (the boxes they place aren't drawn: Embroidery draws the world)
+                  stmt('src/f5c-things.js', 'var F_EN'), stmt('src/f5c-things.js', 'var F_MONO'), stmt('src/f5c-things.js', 'function fTx'),
+                  stmt('src/f5c-things.js', 'var FPIC'), stmt('src/f5c-things.js', 'function fHang'), stmt('src/f5b-doors.js', 'function fAddBox'), stmt('src/f5b-doors.js', 'function fBoxTop')] +
+                 [stmt(f, st) for f, st in (l.split('|', 1) for l in open(os.path.join(here, 'seam', 'vars.txt')).read().split('\n') if '|' in l)])   # single things taken from bigger Seam files (seam/vars.txt)
 parts = [head[:i], open(os.path.join(here, 'seam', 'shim-pre.js')).read(), '/* ---- from src/f8-sound.js: the pocket\'s food and drink kinds ---- */\n' + drk, '/* ---- from src/c8-objects.js ---- */\n' + fig, '/* ---- from src/f03/a-head-f03.html (the inks and helpers) ---- */\n' + head[i:]]
 for f in FILES: parts.append('/* ---- copied from null.grey-furusatostation/%s ---- */\n' % f + rd(f))
 parts.append(open(os.path.join(here, 'seam', 'shim-post.js')).read())

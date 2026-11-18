@@ -121,7 +121,8 @@ function frame(now){
   const dt = Math.min(0.05, (now - lastT)/1000); lastT = now; const t = (now - T0)/1000;
   const SEAM = window.EG_SEAM;
   if (SEAM && SEAM.step) SEAM.step(now, dt);
-  const pkOpen = !!(SEAM && SEAM.pocket && SEAM.pocket.isOpen()); if (document.body.classList.contains('pk-open') !== pkOpen) document.body.classList.toggle('pk-open', pkOpen);
+  if (SEAM && SEAM.where) SEAM.where(P.x, P.z, P.yaw);
+  const pkOpen = !!(SEAM && ((SEAM.pocket && SEAM.pocket.isOpen()) || (SEAM.closeUpOpen && SEAM.closeUpOpen())));   /* (the pocket or a close-up: the world waits behind it) */ if (document.body.classList.contains('pk-open') !== pkOpen) document.body.classList.toggle('pk-open', pkOpen);
   if (pkOpen) { tickUI(now); return; }   /* the pocket is open: it's what's drawn (as in Seam); the world waits */
   if (!window.__frozen) { stepPlayer(dt); adapt(dt); }
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
@@ -157,6 +158,9 @@ function reach(cx, cy){
   const hit = RAY.intersectObjects(CLICK, false)[0]; if (!hit) return;
   const o = hit.object, k = o.userData.say, near = k === 'bench' ? 2.6 : 3.6; if (hit.distance > near) return;
   if (typeof k === 'function') { say(k(hit), 4600); return; }
+  /* Seam's own click actions first (the close-ups, the dumpster, the pit...), as Missing Mile's Seam version does */
+  const SEAM = window.EG_SEAM;
+  if (SEAM && SEAM.click) { SEAM.where(P.x, P.z, P.yaw); if (SEAM.click(k)) { if (k === 'pit' && L.pit) { L.pit.visible = false; } return; } }
   const Ls = F3_SAYS[k]; if (!Ls) return;
   const sib = CLICK.filter(c => c.userData.say === k && c.position.distanceTo(o.position) < 0.6);   /* (a thing made of several parts shares its count) */
   const i = o.userData.sayI || 0;

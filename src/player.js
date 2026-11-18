@@ -85,7 +85,7 @@ function pads(){
 
 /* ---------------- each frame ---------------- */
 export function stepPlayer(dt){
-  if (window.EG_SEAM && EG_SEAM.pocket && EG_SEAM.pocket.isOpen()) return;   /* (no walking with your hand in your pocket) */
+  if (window.EG_SEAM && ((EG_SEAM.pocket && EG_SEAM.pocket.isOpen()) || (EG_SEAM.closeUpOpen && EG_SEAM.closeUpOpen()))) return;   /* (no walking with your hand in your pocket) */
   let fwd = 0, side = 0;
   if (keys.KeyW || keys.ArrowUp) fwd += 1; if (keys.KeyS || keys.ArrowDown) fwd -= 1;
   if (keys.KeyA) side -= 1; if (keys.KeyD) side += 1;

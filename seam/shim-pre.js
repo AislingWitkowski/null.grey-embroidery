@@ -9,9 +9,17 @@ var stage = document.getElementById('stage');
 var capEl = document.getElementById('seam-caption');
 var capTimer = 0;
 function setCaption(t, ms){ EG_SEAM.say(t, ms); }
+function say(t, ms){ EG_SEAM.say(t, ms); }
 var keys = {}, drag = null, showMap = false;
 var me = { x:12.6, y:6.6, a:0, look:0, room:1 };
 var CU = { open:false }, LOOK = { open:false };
 var WALK_ASK = null;
 function walkAskHide(){} function walkAskShow(){} function walkAskPlace(){}
 var seamStep = function(now, dt){};
+
+/* Seam's world-building calls, standing in: Embroidery draws the world, so these only remember (their pictures and their
+   boxes' click names), and Seam's click actions (hubBoxAction) are asked when Embroidery's thing is clicked */
+var BENCH = [], OBST = [], SPRITES = [], LATER = [];
+function fpic(name, w, h, ppu, vbw, vbh, emit, svg, clear, neon){ FPIC[name] = { w:w, h:h, vbw:vbw, vbh:vbh, emit:emit || '', svg:svg, clear:!!clear }; }
+function fRetire(){} function find(fn){ return BENCH.filter(fn); }
+function fpicTex(){ return null; } function fPicTex(){ return null; }

@@ -12,12 +12,20 @@ var stage = document.getElementById('stage');
 var capEl = document.getElementById('seam-caption');
 var capTimer = 0;
 function setCaption(t, ms){ EG_SEAM.say(t, ms); }
+function say(t, ms){ EG_SEAM.say(t, ms); }
 var keys = {}, drag = null, showMap = false;
 var me = { x:12.6, y:6.6, a:0, look:0, room:1 };
 var CU = { open:false }, LOOK = { open:false };
 var WALK_ASK = null;
 function walkAskHide(){} function walkAskShow(){} function walkAskPlace(){}
 var seamStep = function(now, dt){};
+
+/* Seam's world-building calls, standing in: Embroidery draws the world, so these only remember (their pictures and their
+   boxes' click names), and Seam's click actions (hubBoxAction) are asked when Embroidery's thing is clicked */
+var BENCH = [], OBST = [], SPRITES = [], LATER = [];
+function fpic(name, w, h, ppu, vbw, vbh, emit, svg, clear, neon){ FPIC[name] = { w:w, h:h, vbw:vbw, vbh:vbh, emit:emit || '', svg:svg, clear:!!clear }; }
+function fRetire(){} function find(fn){ return BENCH.filter(fn); }
+function fpicTex(){ return null; } function fPicTex(){ return null; }
 
 ;
 /* ---- from src/f8-sound.js: the pocket's food and drink kinds ---- */
@@ -39,6 +47,70 @@ var CC_TEXT = {
   eat_crunch:'a crunch', eat_slurp:'a slurp',
   pk_basic:'a small sound: into your pocket', pk_special:'a bright little chime', pk_weird:'an odd little sound, a bit wrong', pk_plot:'a low, quiet tone that matters'
 };
+var F_EN = 'Helvetica Neue, Arial, Helvetica, sans-serif';
+var F_MONO = 'Courier New, monospace';
+function fTx(t, x, y, fill, sz, o){
+  o = o || {};
+  t = String(t).replace(/&(?![a-z#0-9]+;)/gi, '&amp;').replace(/</g, '&lt;');   /* (Oct 23) an & in the words broke the whole picture ("saints & angels") */
+  return '<text x="' + x + '" y="' + y + '" text-anchor="' + (o.a || 'middle') + '" fill="' + fill + '" font-family="' + (o.f || F_JP) + '" font-weight="' + (o.w || 700) + '" font-size="' + sz + '"' + (o.ls ? ' letter-spacing="' + o.ls + '"' : '') + (o.op ? ' opacity="' + o.op + '"' : '') + (o.tr ? ' transform="' + o.tr + '"' : '') + '>' + t + '</text>';
+}
+var FPIC = {};
+function fHang(x0, x1, y0, y1, h0, h1, keys){ var B = { x0:x0, x1:x1, y0:y0, y1:y1, h0:h0, h1:h1, tk:keys, bi:BENCH.length, texH:h1, texH0:h0, topFn:null }; BENCH.push(B); return B; }
+function fAddBox(x0, x1, y0, y1, h1, keys){ var B = { x0:x0, x1:x1, y0:y0, y1:y1, h0:0, h1:h1, tk:keys, bi:BENCH.length, texH:h1, topFn:fBoxTop }; BENCH.push(B); OBST.push({ x0:x0, x1:x1, y0:y0, y1:y1 }); return B; }
+function fBoxTop(x, y){ return PK(R_PWHITE, 0.9 - 0.08*vn(x*6, y*6), 0); }
+var F_SODAS = [
+  ['#cfad9f', 'さくら'], ['#9a5038', 'いちご'], ['#c9a067', 'レモン'], ['#5e4652', 'チェリー'], ['#9e9386', 'ザー'],
+  ['#8a8076', '売切'], ['#e2d0ad', '土曜'], ['#6e7440', 'ВСПЛЕСК'], ['#61402a', 'コーヒー'], ['#f2f0ea', 'おにぎり']
+];
+var F3_SAYS = {
+  column:['an iron column, painted rust-red a long time ago. under the paint, older paint, a different red.'],
+  bulb:['a bare bulb in a tin shade. it hums. moths, though it\'s late in the year for them.', 'this one keeps going out and coming back, as if it\'s trying.'],
+  sign:['ほんまち · 本町 · MAIN STREET. lit from inside. missing mile, smaller, underneath.'],
+  name:['ほんまち. the frame has rusted through at one corner. the line\'s band: ふるさと one way, オールドリッジ the other.'],
+  bench:['an old wooden bench, worn pale where people sat. (click again to sit and wait.)'],
+  poster:['HARVEST FEST & HAYRIDE · 収穫祭 · MISSING MILE · OCT 31. pie, cider, the maze. it doesn\'t say which year.'],
+  linemap:['the furusato line. YOU ARE HERE: 本町, main street. the dot\'s been touched so often it\'s worn grey.'],
+  time:['TIMETABLE. to furusato, to aldridge place. the last train to furusato is —:—. the last one the other way is at 25:61.'],
+  grass:['tall grass gone gold, growing up over the platform\'s edge.'],
+  phone:['a green payphone in its little glass box. you lift the receiver: a dial tone, very far away, and under it, the wind in the corn.', 'the payphone. someone has written a number on the glass in marker and rubbed it out.'],
+  bin:['a concrete bin with two holes in its lid, like eyes. it\'s looking at the road.'],
+  jerry:['a pink jerry can. empty. it smells of nothing.'],
+  vending:['a vending machine, glowing in the dusk. COLD · つめた〜い. one button is lit red: sold out of something you can\'t read.'],
+  shedsign:['FEED · SEED · BAIT. 造花 · 生花. MAPLES & SONS, TEL 2-1137. hand-painted, a long time ago.'],
+  tobacco:['たばこ · TOBACCO. the little window is shut. a hand-written card behind the glass: back at 4.'],
+  lamp:['the street lamp, where the road begins. it buzzes, and now and then it nearly goes out.'],
+  pole:['a telephone pole, grey and split with age. the wires sing a little when the wind comes through the corn.'],
+  tree:['a big tree, its leaves turning: rust, gold, still a little green.'],
+  xbuck:['RAILROAD CROSSING · 踏切. a farm track crosses the line here, and goes off into the corn.'],
+  mile:['MISSING MILE 1. green paint gone chalky. someone shot at it, a long time ago.', 'MISSING MILE 1. you\'re sure you passed this sign already.'],
+  mail:['a mailbox on a post, R.R. 2, its little red flag up. there\'s no house anywhere. inside: nothing.'],
+  treeF:['a tree on its own out in the field, its leaves turning. nothing near it for a long way.']
+};
+  var F3_FLAV = [['チョコクリーム', 'chocolate creme', '#5c3a26', '#e8dcc0'], ['レモンコーラ', 'lemon cola', '#bdbab4', '#9a1a14', '#e0c040'], ['ウルトラバイオレット', 'ultra violet', '#6d4b5a', '#f2ece0', '#c4a091'], ['チェリーチア', 'cherry cheer', '#7a1420', '#f2ece0', '#f2ece0']];
+  window.F3_FLAV = F3_FLAV;
+  fpic('f3vm2', 1.02, 1.86, 220, 85, 182, function(x, y){ return (y > 6 && y < 30) || (y > 33 && y < 62 && x > 7 && x < 78) || (y > 66 && y < 72 && x > 60 && x < 70); }, function(){
+    var s = '<rect width="85" height="182" fill="#8e2a22"/><rect x="0" y="0" width="85" height="4" fill="#e8dcc0"/><rect x="0" y="0" width="3" height="182" fill="#a8322a"/><rect x="82" y="0" width="3" height="182" fill="#6a1e18"/>';
+    s += '<rect x="5" y="6" width="75" height="24" fill="#a8322a"/><path d="M5,22 Q30,13 52,20 Q68,25 80,17 L80,22 Q68,29 52,24 Q30,17 5,26 Z" fill="#f2ece0"/>';   /* the header: a cream wave */
+    s += fTx('Drink', 20, 13.5, '#f2ece0', 4.2, { f:F_EN, w:700 }) + fTx('Smile', 44, 15.5, '#f2ece0', 9, { f:'Snell Roundhand, Brush Script MT, cursive', w:700 }) + fTx('スマイル', 66, 28.4, '#f2ece0', 3, { w:800 });
+    s += '<rect x="6" y="33" width="73" height="30" fill="#c7c6c3"/><rect x="8" y="35" width="69" height="26" fill="#efe9dc"/>';   /* the lit window */
+    F3_FLAV.forEach(function(F, k){ var cx = 17 + k*17;
+      s += '<rect x="' + (cx - 5.5) + '" y="38" width="11" height="19" rx="1.5" fill="' + F[2] + '"/>' + (F[4] ? '<path d="M' + (cx - 5.5) + ',50 Q' + cx + ',45 ' + (cx + 5.5) + ',47 L' + (cx + 5.5) + ',50 Q' + cx + ',48 ' + (cx - 5.5) + ',53 Z" fill="' + F[4] + '"/>' : '') + '<rect x="' + (cx - 5.5) + '" y="38" width="11" height="2.4" fill="#c7c6c3"/><rect x="' + (cx - 4.6) + '" y="41" width="2" height="15" fill="#ffffff" opacity="0.25"/>';
+      s += fTx(F[0], cx, F[0].length > 2 ? 47 : 49, F[3], F[0].length > 6 ? 1.05 : (F[0].length > 2 ? 1.7 : 6), { w:900 }) + (F[1].length > 1 ? fTx(F[1], cx, 52, F[3], 1.3, { f:F_EN, w:700 }) : '');
+      s += '<rect x="' + (cx - 5) + '" y="58" width="10" height="2.6" fill="#f2ece0"/>' + fTx('120', cx, 60.2, '#3a2a1c', 2, { f:F_EN, w:800 }); });
+    s += '<rect x="6" y="64" width="73" height="10" fill="#2a2224"/>';   /* the buttons */
+    for (var b = 0; b < 4; b++) { var bx = 17 + b*17 - 3.5; s += '<rect x="' + bx + '" y="66" width="7" height="6" rx="1" fill="#d6d0c4"/><rect x="' + bx + '" y="66" width="7" height="1.2" fill="#f2ece0"/>'; }   /* (Oct 29: a button under each can, so it can sell them) */
+    s += '<rect x="73" y="65.5" width="5.5" height="7" fill="#121211"/>';   /* the little display */
+    s += '<rect x="72" y="82" width="5" height="8" fill="#8b8a87"/><rect x="74" y="83" width="1.2" height="5" fill="#1e1714"/>' + fTx('つめた～い', 22, 77, '#f2ece0', 1.6, { w:900 });   /* the coin slot */
+    s += '<rect x="6" y="78" width="73" height="62" fill="#5c3a26"/>';   /* the door: wood grain */
+    for (var g = 0; g < 14; g++) s += '<path d="M6,' + (80 + g*4.4) + ' Q30,' + (78 + g*4.4 + (g % 3)) + ' 50,' + (81 + g*4.4) + ' T79,' + (80 + g*4.4) + '" stroke="#4a2e1c" stroke-width="0.9" fill="none"/>';
+    s += '<rect x="64" y="84" width="8" height="3" fill="#c7c6c3"/><rect x="10" y="82" width="20" height="12" fill="#e8dcc0" opacity="0.8"/>' + fTx('故障の時は', 20, 87, '#3a2a1c', 1.7, { w:800 }) + fTx('2-1137', 20, 91.4, '#3a2a1c', 2.2, { f:F_EN, w:800 });   /* a sticker: if it breaks, call */
+    s += '<rect x="10" y="143" width="65" height="14" fill="#c7c6c3"/><rect x="13" y="146" width="59" height="8" fill="#1e1714"/>';   /* the slot where the can drops */
+    for (var v = 0; v < 6; v++) s += '<rect x="8" y="' + (162 + v*3) + '" width="69" height="1.6" fill="#5a1a14"/>';   /* the grille */
+    s += '<path d="M30,4 L31,40 M70,74 L71,140 M12,140 L13,180" stroke="#5a1a14" stroke-width="2.4" opacity="0.6"/><rect x="0" y="176" width="85" height="6" fill="#3a1410"/>';   /* rust running */
+    return s;
+  });
+  fpic('f3vmSide2', 0.75, 1.86, 120, 75, 186, '', function(){ return '<rect width="75" height="186" fill="#8e2a22"/><rect width="75" height="4" fill="#e8dcc0"/><path d="M10,0 L12,186 M50,40 L52,150" stroke="#5a1a14" stroke-width="3" opacity="0.5"/>'; });
+var F_JP = 'Hiragino Sans, Hiragino Kaku Gothic ProN, Noto Sans CJK JP, Noto Sans JP, Yu Gothic, Meiryo, sans-serif';
 ;
 /* ---- from src/f03/a-head-f03.html (the inks and helpers) ---- */
 
@@ -2935,6 +3007,538 @@ var _pocketPutTier = pocketPut;
 pocketPut = function(id){ var ok = _pocketPutTier(id); if (ok) pkTierSound(id); return ok; };
 
 ;
+/* ---- copied from null.grey-furusatostation/src/f03/f03-vend.js ---- */
+/* ================================================================
+   F03 — THE DRINKS MACHINE WORKS (Oct 29; Aisling: "i would liek to see these sodas, the machine would work in the same
+   as the other vending machines, but not a beep for the button push i think it would just have the same sounds as
+   platform one buttons and machine")
+   Main Street borrows Furusato's machine close-up (f6x-vend.js) as it is. This page has no shop of its own, so this
+   file gives it the few things f6x asks for (its sound slots, how many are left, the names), before f6x loads. the
+   sounds are Platform 1's: its heavy button (vend_btn1, the hub's v_btn1), the coin, the whirr, the drop, the change,
+   the flap. no ピポ.
+   ================================================================ */
+var FSND = typeof FSND !== 'undefined' ? FSND : {};
+var F_SMOKES = typeof F_SMOKES !== 'undefined' ? F_SMOKES : (function(){ var a = []; for (var i = 0; i < 12; i++) a.push(['', '#5e5a56']); return a; })();
+var SHOP = typeof SHOP !== 'undefined' ? SHOP : { got:{} }, SHOP_ONCE = typeof SHOP_ONCE !== 'undefined' ? SHOP_ONCE : {}, F_MYSTERY = typeof F_MYSTERY !== 'undefined' ? F_MYSTERY : [];
+function shopName(id){ var f = FU_ITEMS[id]; return f ? { jp:f.jp, en:f.en, price:f.price } : { jp:id, en:'', price:1 }; }
+function shopLeft(id){ return 3 - (SHOP.got[id] || 0); }   /* three of each a visit, like Furusato's machines */
+function shopOpen(){}
+var F3_VSND = { vend_btn:['vend_btn1', 0.4], vend_coin:['vend_coin', 0.32], vend_drop:['vend_drop', 0.42], vend_hum:['vend_hum', 0.05], vend_change:['vend_change', 0.3], vend_flap:['vend_flap', 0.42] };
+function fSnd(k, gain){ var q = F3_VSND[k]; if (!q) return false; try { var S = SND; if (!S || !S.on || !S.ctx || !S.buf || !S.buf[q[0]]) return !!(S && S.buf && S.buf[q[0]]); sndOneShot(q[0], S.dry, q[1]*(gain || 1)*2.2, k === 'vend_btn' ? 0.92 + Math.random()*0.1 : 1); } catch (e) {} return true; }   /* (true even with the sound off, so nothing beeps instead) */
+
+;
+/* ---- copied from null.grey-furusatostation/src/f6x-vend.js ---- */
+/* ================================================================
+   f6x — THE VENDING MACHINES UP CLOSE (Oct 27; Aisling: "the function of the vending machine and views should match
+   the hub and station one, just the aesthetics are different. But the ticket thing for ramen should stay the same.")
+   the Smile Soda machine and the two tobacco machines now work the way №333 does in the hub (doc 19): the machine drawn
+   big, taller than the screen (drag, scroll or the arrow keys to look up and down it). press the button under a thing →
+   the money is somehow in your pocket → coins drop one by one, the display counts down, the machine shudders → it falls
+   into the tray; push the flap and it's in your pocket. three of each a visit (the same count the old panel kept), the
+   wrapped packages once ever. sold out is sold out. the ramen ticket machine, the kiosk and the boba keep their panels.
+   ================================================================ */
+var FVM = { open:false, w:null, viewY:0, viewT:0, disp:'', busy:false, flap:null, shake:0, first:true, raf:0, press:null, coin:0, fall:null, flapT:0, sc:{}, drag:null };
+FSND.vend_btn = { kind:'one', vol:0.3, what:'a vending machine button pressed (under 1 s). until there is a file, a made one plays: a soft plastic click and a little two-note ピポ, cute and Japanese (Aisling, Oct 27: "something cute and japan coded"; she may swap it later)' };
+FSND.vend_coin = { kind:'one', vol:0.32, what:'a coin going into a vending machine (Oct 27: the hub\'s v_coin, copied over)' };
+FSND.vend_drop = { kind:'one', vol:0.42, what:'the thing falling and landing in the vending machine\'s tray (Oct 27: the hub\'s v_drop, copied over)' };
+FSND.vend_hum = { kind:'one', vol:0.035, what:'a vending machine working as it drops something: a short low whirr, very quiet (Oct 27: the hub\'s v_rumble, copied over, at the hub\'s soft level)' };
+FSND.vend_change = { kind:'one', vol:0.3, what:'a vending machine: change rattling down inside after the thing drops (Oct 27: the hub\'s v_change, copied over)' };
+FSND.vend_flap = { kind:'one', vol:0.42, what:'a vending machine\'s tray flap pushed open and swinging back (Oct 27: the hub\'s v_flap, copied over)' };
+function fvmClick(){   /* the stand-in button: a soft plastic click, then ピポ, two little sine notes (C7, E7), quiet and short */
+  var S = SND; if (!S || !S.on || !S.ctx || !S.dry) return;
+  try { var c = S.ctx, t = c.currentTime + 0.01, L = Math.floor(c.sampleRate*0.015), b = c.createBuffer(1, L, c.sampleRate), d = b.getChannelData(0); for (var i = 0; i < L; i++) d[i] = (Math.random()*2 - 1)*Math.pow(1 - i/L, 4);
+    var n = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); n.buffer = b; f.type = 'bandpass'; f.frequency.value = 2800; f.Q.value = 1.2; g.gain.value = 0.12; n.connect(f); f.connect(g); g.connect(S.dry); n.start(t);
+    [[2093, 0.03], [2637, 0.11]].forEach(function(q){ var o = c.createOscillator(), e = c.createGain(), t0 = t + q[1]; o.type = 'sine'; o.frequency.value = q[0]; e.gain.setValueAtTime(0, t0); e.gain.linearRampToValueAtTime(0.045, t0 + 0.008); e.gain.exponentialRampToValueAtTime(0.0008, t0 + 0.09); o.connect(e); e.connect(S.dry); o.start(t0); o.stop(t0 + 0.1); });
+  } catch (e) {}
+}
+function fvmSnd(k){ try { if (k === 'btn') { if (!fSnd('vend_btn')) fvmClick(); } else if (k === 'coin') { if (!fSnd('vend_coin')) fSnd('coin', 0.8); } else if (k === 'drop') { if (!fSnd('vend_drop')) fSnd('shop_thunk'); } else fSnd('vend_' + k); } catch (e) {} }
+
+/* each machine: its picture, where its things are (in its own units), its display, slot, tray */
+var FVM_DEFS = {};
+(function(){
+  var ids = ['f_smile_sakura', 'f_smile_ichigo', 'f_smile_lemon', 'f_smile_cherry', 'f_smile_static', '_out', 'smile', 'f_vsplesk', 'coffee', 'onigiri'], sl = [];
+  for (var i = 0; i < 10; i++) { var c = i % 5, r = (i/5) | 0, x = 9 + c*17.5, y = 40 + r*38; sl.push({ x:x, y:y, w:15, h:35, id:ids[i], btn:[x + 5, y + 32.5, 5, 2.2], col:F_SODAS[i][0] }); }
+  FVM_DEFS.smile = { pic:'smile', K:1.7, slots:sl, disp:[70, 122, 22, 12], coin:[74, 138, 3, 8], note:[80, 139, 10, 2.5], tray:[10, 155, 80, 20], win:[6, 36, 88, 80], top:28, out:'売切 · sold out. it always has been.' };
+  var t0 = [];
+  for (var j = 0; j < 12; j++) { var x0 = 5 + (j % 4)*10.6, y0 = 18 + ((j/4) | 0)*16; t0.push({ x:x0, y:y0, w:8.4, h:15, id:j === 0 ? 'f_pack_seven' : (j === 1 ? 'f_pack_mir' : '_so'), btn:[x0 + 2.2, y0 + 12.4, 4, 1.6], col:F_SMOKES[j][1] }); }
+  var tob = { K:3.4, disp:[37.5, 80.5, 9.5, 6], coin:[34, 81, 2, 6], tray:[8, 88, 34, 7], win:[3, 16, 44, 50], top:12, out:'売切 · sold out. most of them always are.' };
+  FVM_DEFS.smokes = Object.assign({ pic:'tobacco0', slots:t0, side:'smokes2' }, tob);
+  var t1 = [];
+  for (var k = 0; k < 4; k++) t1.push({ x:5 + k*10.6, y:18, w:8.4, h:15, id:'_so', btn:[7.2 + k*10.6, 30.4, 4, 1.6], col:F_SMOKES[(k + 5) % 12][1] });
+  t1.push({ x:4, y:35, w:8.6, h:15, id:'f_matchpatches', col:'#d6c39f' }, { x:13.6, y:35, w:8.6, h:15, id:'f_matchmomo', col:'#5e4652' }, { x:23.2, y:35, w:8.6, h:15, id:'f_matchwg', col:'#b08890' }, { x:33, y:34, w:11, h:16, id:'f_cornsoup', col:'#c9a067' });
+  [5, 19, 33].forEach(function(x, q){ t1.push({ x:x, y:55, w:12, h:11, id:['f_mys_book', 'f_mys_robot', 'f_mys_tickets'][q], col:'#a38b73' }); });
+  FVM_DEFS.smokes2 = Object.assign({ pic:'tobacco1', slots:t1, side:'smokes' }, tob);
+})();
+
+var fvmEl = document.createElement('div'); fvmEl.id = 'fvm';
+fvmEl.innerHTML = '<canvas id="fvmv" width="320" height="180"></canvas><div id="fvm-cap"></div><div id="fvm-btns"><button type="button" data-a="back">戻る · step back</button></div>';
+stage.appendChild(fvmEl);
+(function(){ var st = document.createElement('style'); st.textContent =
+  '#fvm{position:absolute;inset:0;display:none;z-index:41;background:#0a0908;}#fvm.open{display:block;}' +
+  '#fvmv{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:min(100%,calc(74vh*16/9));aspect-ratio:16/9;image-rendering:pixelated;cursor:pointer;touch-action:none;}' +
+  '#fvm-cap{position:absolute;left:50%;transform:translateX(-50%);bottom:12.5%;width:min(680px,90%);text-align:center;font-size:12px;letter-spacing:.06em;line-height:1.5;color:rgba(228,220,208,.94);text-shadow:0 0 6px #000,0 0 2px #000;min-height:16px;}' +
+  '#fvm-btns{position:absolute;left:50%;transform:translateX(-50%);bottom:5%;display:flex;gap:8px;}' +
+  '#fvm-btns button{font-family:inherit;font-size:11px;letter-spacing:.12em;color:rgba(228,220,208,.9);background:rgba(42,32,41,.92);border:1px solid rgba(140,137,131,.7);padding:3px 12px;cursor:pointer;}#fvm-btns button:hover{background:rgba(92,74,99,.95);}';
+  document.head.appendChild(st); })();
+['wheel', 'click'].forEach(function(ev){ fvmEl.addEventListener(ev, function(e){ e.stopPropagation(); }); });
+fvmEl.querySelector('#fvm-btns').addEventListener('click', function(e){ if (e.target.closest('button')) fvmClose(); });
+fvmEl.addEventListener('pointerdown', function(e){ e.stopPropagation(); if (e.target.id !== 'fvmv') return; FVM.drag = { y:e.clientY, v:FVM.viewT, moved:false }; });
+fvmEl.addEventListener('pointermove', function(e){
+  if (e.target.id !== 'fvmv') return;
+  if (FVM.drag) { var R = e.target.getBoundingClientRect(), dy = (e.clientY - FVM.drag.y)*180/R.height; if (Math.abs(dy) > 3) FVM.drag.moved = true; FVM.viewT = fvmClamp(FVM.drag.v - dy); return; }
+  if (e.pointerType === 'mouse' && !FVM.busy) { var s = fvmHit(e); if (s && s !== FVM.hov) { FVM.hov = s; fvmCap(fvmLabel(s)); } }
+});
+fvmEl.addEventListener('pointerup', function(e){ e.stopPropagation(); var d = FVM.drag; FVM.drag = null; if (e.target.id === 'fvmv' && d && !d.moved) fvmClickAt(e); });
+fvmEl.addEventListener('wheel', function(e){ e.preventDefault(); FVM.viewT = fvmClamp(FVM.viewT + e.deltaY*0.3); }, { passive:false });
+window.addEventListener('keydown', function(e){ if (!FVM.open) return; var k = e.key || '';
+  if (k === 'Escape') fvmClose(); else if (k === 'ArrowUp' || k === 'w' || k === 'W') FVM.viewT = fvmClamp(FVM.viewT - 24); else if (k === 'ArrowDown' || k === 's' || k === 'S') FVM.viewT = fvmClamp(FVM.viewT + 24);
+  e.stopImmediatePropagation(); }, true);
+window.addEventListener('keyup', function(e){ if (FVM.open) e.stopImmediatePropagation(); }, true);
+function fvmCap(t){ document.getElementById('fvm-cap').textContent = t; }
+
+/* the scene: the machine at K px a unit, the wall behind it, its neighbour's edge, the floor; put through the inks */
+function fvmScene(w){
+  var D = FVM_DEFS[w], P = FPIC[D.pic], K = D.K, mw = P.vbw*K, mh = P.vbh*K, MX = Math.round((320 - mw)/2), MY = 22, H = Math.ceil(MY + mh + 22);
+  var s = '<rect width="320" height="' + H + '" fill="#cfcac0"/>';
+  for (var y = 0; y < H - 22; y += 14) for (var x = (y/14 % 2)*7; x < 320; x += 14) s += '<rect x="' + x + '" y="' + y + '" width="13.4" height="13.4" fill="#dcd8d0"/>';   /* the back wall's tiles */
+  s += '<rect y="' + (MY + mh) + '" width="320" height="22" fill="#8e877c"/><rect y="' + (MY + mh) + '" width="320" height="2" fill="#6c6560"/>';   /* the floor */
+  s += '<rect x="' + (MX + mw) + '" y="' + (MY + 6) + '" width="10" height="' + (mh - 6) + '" fill="#000" opacity="0.16"/><ellipse cx="' + (MX + mw/2) + '" cy="' + (MY + mh + 2) + '" rx="' + (mw/2 + 8) + '" ry="5" fill="#000" opacity="0.28"/>';   /* its shadow on the wall and the floor */
+  if (D.side) { var nx = D.side === 'smokes2' ? MX - mw - 0.02*K*100 : MX + mw + 0.02*K*100;   /* (facing them, the east one is on the left) */ s += '<g transform="translate(' + nx + ' ' + MY + ') scale(' + K + ')">' + FPIC[FVM_DEFS[D.side].pic].svg() + '</g><rect x="' + nx + '" y="' + MY + '" width="' + mw + '" height="' + mh + '" fill="#0a0908" opacity="0.32"/>'; }
+  s += '<g transform="translate(' + MX + ' ' + MY + ') scale(' + K + ')">' + P.svg();
+  /* its edges: the steel case's rounded corners catching the light on the left, in shade on the right */
+  s += '<rect x="0" y="0" width="1.2" height="' + P.vbh + '" fill="#ffffff" opacity="0.22"/><rect x="' + (P.vbw - 1.6) + '" y="0" width="1.6" height="' + P.vbh + '" fill="#000" opacity="0.22"/>';
+  /* the glass: a soft sheen, scuffs round the buttons */
+  var W = D.win; s += '<path d="M' + W[0] + ',' + (W[1] + W[3]*0.5) + ' L' + (W[0] + W[2]*0.45) + ',' + W[1] + ' L' + (W[0] + W[2]*0.62) + ',' + W[1] + ' L' + W[0] + ',' + (W[1] + W[3]*0.78) + ' Z" fill="#ffffff" opacity="0.07"/>';
+  D.slots.forEach(function(q, i){ if (q.btn) s += '<ellipse cx="' + (q.btn[0] + q.btn[2]/2) + '" cy="' + (q.btn[1] + q.btn[3]/2) + '" rx="' + (q.btn[2]*0.9) + '" ry="' + (q.btn[3]*0.9) + '" fill="#8a8076" opacity="' + (0.08 + (i*7 % 5)*0.03) + '"/>'; });
+  return { svg:s + '</g>', K:K, MX:MX, MY:MY, W:320, H:H, mh:mh };
+}
+function fvmBuild(w){
+  if (FVM.sc[w]) return;
+  var Q = fvmScene(w), img = new Image(); FVM.sc[w] = { K:Q.K, MX:Q.MX, MY:Q.MY, H:Q.H, c:null };
+  img.onload = function(){
+    var c = document.createElement('canvas'); c.width = 320; c.height = Q.H; var x = c.getContext('2d'); x.drawImage(img, 0, 0);
+    try { var im = x.getImageData(0, 0, 320, Q.H), d = im.data; for (var i = 0; i < d.length; i += 4) { var q = pkInk(d[i], d[i + 1], d[i + 2]); d[i] = q[2]; d[i + 1] = q[3]; d[i + 2] = q[4]; } x.putImageData(im, 0, 0); } catch (e) {}
+    FVM.sc[w].c = c;
+  };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 ' + Q.H + '" width="320" height="' + Q.H + '">' + Q.svg + '</svg>');
+}
+function fvmClamp(v){ var S = FVM.sc[FVM.w]; return S ? Math.max(0, Math.min(S.H - 180, v)) : 0; }
+function fvmHit(e){
+  var S = FVM.sc[FVM.w], D = FVM_DEFS[FVM.w], R = e.target.getBoundingClientRect(); if (!S) return null;
+  var vx = ((e.clientX - R.left)/R.width*320 - S.MX)/S.K, vy = ((e.clientY - R.top)/R.height*180 + FVM.viewY - S.MY)/S.K;
+  FVM.hx = vx; FVM.hy = vy;
+  for (var i = 0; i < D.slots.length; i++) { var q = D.slots[i]; if (vx >= q.x && vx <= q.x + q.w && vy >= q.y && vy <= q.y + q.h) return q; }
+  return null;
+}
+function fvmLabel(q){
+  if (q.id === '_out' || q.id === '_so') return '売切 · sold out';
+  if (SHOP_ONCE[q.id]) return '"' + F_MYSTERY[['f_mys_book', 'f_mys_robot', 'f_mys_tickets'].indexOf(q.id)].join(' ') + '"  · ' + shopName(q.id).price + ' д';
+  var n = shopName(q.id); return n.jp + ' · ' + n.en + ' · ' + n.price + ' д' + (shopLeft(q.id) > 0 ? '' : ' · 売切');
+}
+function fvmClickAt(e){
+  var q = fvmHit(e), D = FVM_DEFS[FVM.w], x = FVM.hx, y = FVM.hy, inR = function(r){ return r && x >= r[0] - 1 && x <= r[0] + r[2] + 1 && y >= r[1] - 1 && y <= r[1] + r[3] + 1; };
+  if (q) { fvmBuy(q); return; }
+  if (inR(D.tray)) { fvmFlap(); return; }
+  if (inR(D.coin)) { FVM.shake = performance.now() + 120; fvmCap('you jiggle the coin return. nothing comes back.'); return; }
+  if (inR(D.note)) { fvmCap('千円札 · the note slot. it doesn\'t want your notes. it never has.'); return; }
+}
+function fvmBuy(q){
+  if (FVM.busy) return;
+  var D = FVM_DEFS[FVM.w], i = D.slots.indexOf(q);
+  FVM.press = { i:i, t:performance.now() }; fvmSnd('btn');
+  if (q.id === '_out' || q.id === '_so') { FVM.disp = '--'; fvmCap(D.out); setTimeout(function(){ FVM.disp = ''; }, 1400); return; }
+  if (shopLeft(q.id) <= 0) { FVM.disp = '--'; fvmCap(SHOP_ONCE[q.id] ? 'there was only ever one of those.' : '売切 · sold out. (it comes back next visit.)'); setTimeout(function(){ FVM.disp = ''; }, 1400); return; }
+  if (FVM.flap) { fvmCap('there\'s already something in the tray.'); return; }
+  var price = shopName(q.id).price;
+  FVM.busy = true; FVM.disp = '' + price;
+  fvmCap(FVM.first ? 'you search your pocket. you don’t know how, but the money is there.' : 'the money is there.'); FVM.first = false;
+  setTimeout(function(){
+    var left = price;
+    (function drop(){ if (!FVM.open) { FVM.busy = false; return; } FVM.coin = performance.now(); fvmSnd('coin'); setTimeout(function(){ left--; FVM.disp = left > 0 ? '' + left : '0'; if (left > 0) setTimeout(drop, 160); else paid(); }, 260); })();
+  }, 700);
+  function paid(){
+    FVM.shake = performance.now() + 650; fvmSnd('hum');
+    setTimeout(function(){
+      SHOP.got[q.id] = (SHOP.got[q.id] || 0) + 1;
+      FVM.fall = { x:q.x + q.w/2, y:q.y + q.h*0.4, t0:performance.now(), col:q.col };
+      setTimeout(function(){
+        FVM.fall = null; FVM.shake = performance.now() + 180; fvmSnd('drop'); setTimeout(function(){ fvmSnd('change'); }, 240);
+        FVM.flap = q.id; FVM.busy = false; FVM.disp = ''; FVM.viewT = fvmClamp(1e4);
+        fvmCap((SHOP_ONCE[q.id] ? 'something wrapped in brown paper' : shopName(q.id).en) + '. something dropped into the tray. (push the flap)');
+      }, 900);
+    }, 700);
+  }
+}
+function fvmFlap(){
+  if (!FVM.flap) { fvmSnd('flap'); fvmCap('the flap swings. nothing inside.'); return; }
+  var id = FVM.flap; FVM.flap = null; FVM.flapT = performance.now(); fvmSnd('flap');
+  setTimeout(function(){ var ok = pocketPut(id); fvmCap(ok ? '(' + (SHOP_ONCE[id] ? 'a brown-paper package' : shopName(id).en) + ' · it\'s in your pocket now.)' : 'you already have one. you leave it for someone else.'); }, 500);
+}
+function fvmFrame(now){
+  if (!FVM.open) return; FVM.raf = requestAnimationFrame(fvmFrame);
+  var cv = document.getElementById('fvmv'), g = cv.getContext('2d'), S = FVM.sc[FVM.w], D = FVM_DEFS[FVM.w];
+  if (cv.width !== 320*(FVM.hi || 1)) { cv.width = 320*(FVM.hi || 1); cv.height = 180*(FVM.hi || 1); }
+  g.setTransform(FVM.hi || 1, 0, 0, FVM.hi || 1, 0, 0); g.imageSmoothingEnabled = false; g.fillStyle = '#0a0908'; g.fillRect(0, 0, 320, 180);
+  if (!S || !S.c) return;
+  FVM.viewY += (FVM.viewT - FVM.viewY)*0.18;
+  var sh = now < FVM.shake ? Math.round(Math.sin(now*0.09)*1.4) : 0, Y0 = -Math.round(FVM.viewY);
+  g.drawImage(S.c, sh, Y0, 320, S.c.height/(S.hi || 1));   /* (Oct 31: the scene is drawn at three times the pixels, f7f) */
+  function V(x, y){ return [S.MX + x*S.K + sh, S.MY + y*S.K + Y0]; }
+  /* the lit window: a soft glow off the glass, very slowly breathing */
+  var W = D.win, a = V(W[0], W[1]); g.save(); g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,236,200,' + (0.05 + 0.012*Math.sin(now/2600)) + ')'; g.fillRect(a[0], a[1], W[2]*S.K, W[3]*S.K); g.restore();
+  /* the display */
+  var d0 = V(D.disp[0], D.disp[1]), dw = D.disp[2]*S.K, dh = D.disp[3]*S.K;
+  g.fillStyle = '#121211'; g.fillRect(Math.round(d0[0]), Math.round(d0[1]), Math.round(dw), Math.round(dh));
+  g.fillStyle = '#e0a040'; g.font = '900 ' + Math.round(dh*0.78) + 'px "IBM Plex Mono",monospace'; g.textBaseline = 'middle'; g.textAlign = 'right';
+  g.fillText(FVM.disp || '0', Math.round(d0[0] + dw - 2), Math.round(d0[1] + dh/2 + 1));
+  g.textAlign = 'left';
+  /* a pressed button lights */
+  if (FVM.press && now - FVM.press.t < 260) { var q = D.slots[FVM.press.i], b = q.btn || [q.x + q.w/2 - 2, q.y + q.h - 2, 4, 1.6], p = V(b[0], b[1]); g.fillStyle = 'rgba(255,220,150,0.55)'; g.fillRect(p[0] - 1, p[1] - 1, b[2]*S.K + 2, b[3]*S.K + 2); }
+  /* a coin going in */
+  if (FVM.coin && now - FVM.coin < 260) { var cp = V(D.coin[0] + D.coin[2]/2, D.coin[1] - 3 + (now - FVM.coin)/260*(D.coin[3] + 2)); g.fillStyle = '#b7b4ae'; g.beginPath(); g.ellipse(cp[0], cp[1], 2.4, 1, 0, 0, 6.3); g.fill(); }
+  /* the thing falling behind the glass, out of sight at the window's foot */
+  if (FVM.fall) { var t = Math.min(1, (now - FVM.fall.t0)/650), bot = W[1] + W[3], fy = FVM.fall.y + t*t*(bot + 8 - FVM.fall.y), fp = V(FVM.fall.x, fy), top = V(0, W[1])[1], cut = V(0, bot)[1];
+    g.save(); g.beginPath(); g.rect(0, top, 320, cut - top); g.clip(); g.fillStyle = FVM.fall.col || '#c8b496'; g.fillRect(fp[0] - 1.6*S.K, fp[1] - 2.5*S.K, 3.2*S.K, 5*S.K); g.restore(); }
+  /* something waiting in the tray, a faint shape behind the flap; the flap pushed in */
+  var T = D.tray;
+  if (FVM.flap) { var fl = V(T[0] + 3, T[1] + T[3]*0.35); g.fillStyle = 'rgba(224,160,64,' + (0.12 + 0.05*Math.sin(now/600)) + ')'; g.fillRect(fl[0], fl[1], (T[2] - 6)*S.K, T[3]*0.4*S.K); }
+  if (FVM.flapT && now - FVM.flapT < 500) { var f2 = V(T[0], T[1]); g.fillStyle = 'rgba(0,0,0,0.45)'; g.fillRect(f2[0], f2[1], T[2]*S.K, T[3]*S.K*(1 - (now - FVM.flapT)/500)); }
+  /* there's more above or below */
+  if (FVM.viewY > 3) { var tg = g.createLinearGradient(0, 0, 0, 16); tg.addColorStop(0, 'rgba(10,9,8,0.8)'); tg.addColorStop(1, 'rgba(10,9,8,0)'); g.fillStyle = tg; g.fillRect(0, 0, 320, 16); }
+  if (FVM.viewY < S.H - 183) { var bg = g.createLinearGradient(0, 164, 0, 180); bg.addColorStop(0, 'rgba(10,9,8,0)'); bg.addColorStop(1, 'rgba(10,9,8,0.8)'); g.fillStyle = bg; g.fillRect(0, 164, 320, 16); }
+}
+function fvmOpen(w){
+  if (!FVM_DEFS[w]) return;
+  FVM.open = true; FVM.w = w; FVM.flap = FVM.flap && FVM.flapW === w ? FVM.flap : null; FVM.flapW = FVM.flap ? FVM.flapW : w; if (!FVM.busy) FVM.disp = ''; FVM.hov = null; keys = {}; drag = null; stage.classList.remove('dragging');
+  fvmBuild(w); var D = FVM_DEFS[w], S = FVM.sc[w]; FVM.viewY = FVM.viewT = Math.max(0, S.MY + D.top*D.K - 14);
+  fvmEl.classList.add('open'); cancelAnimationFrame(FVM.raf); FVM.raf = requestAnimationFrame(fvmFrame);
+  fvmCap(w === 'smile' ? 'スマイル · smile soda. press the button under the one you want.' : 'たばこ · tobacco. press the button under the one you want.');
+}
+function fvmClose(){ if (!FVM.open) return; FVM.open = false; FVM.drag = null; cancelAnimationFrame(FVM.raf); fvmEl.classList.remove('open'); }
+/* every way in (clicking the machine, the super-user buttons) comes here instead of the old panel */
+(function(){ var _so = shopOpen; shopOpen = function(which, tab){ if (FVM_DEFS[which]) { fvmOpen(which); return; } _so(which, tab); }; })();
+
+;
+/* ---- copied from null.grey-furusatostation/src/f03/f03-vend2.js ---- */
+/* ================================================================
+   F03 — THE DRINKS MACHINE, ITS CLOSE-UP (Oct 29). the old red machine drawn big, the way Furusato's are: press the
+   button under a can → the money is somehow in your pocket → coins drop, the little display counts down, it shudders →
+   it falls into the tray → push the flap and it's in your pocket. chocolate creme, lemon cola, ultra violet, cherry
+   cheer (shared/furu-items.js), three of each a visit.
+   ================================================================ */
+(function(){
+  if (typeof F03 === 'undefined' || typeof FVM_DEFS === 'undefined') return;
+  var ids = ['f_mm_choco', 'f_mm_lemon', 'f_mm_uviolet', 'f_mm_cherry'], cols = ['#5c3a26', '#bdbab4', '#6d4b5a', '#7a1420'], sl = [];
+  for (var k = 0; k < 4; k++) { var cx = 17 + k*17; sl.push({ x:cx - 5.5, y:38, w:11, h:19, id:ids[k], btn:[cx - 3.5, 66, 7, 6], col:cols[k] }); }
+  FVM_DEFS.mm = { pic:'f3vm2', K:1.6, slots:sl, disp:[73, 65.5, 5.5, 7], coin:[72, 82, 5, 8], tray:[10, 143, 65, 14], win:[6, 33, 73, 30], top:4, out:'売切 · sold out.' };
+  /* behind it, the shed's corrugated wall gone to rust, not Furusato's white tiles */
+  var _sc = fvmScene;
+  fvmScene = function(w){ var Q = _sc(w); if (w !== 'mm') return Q;
+    var top = Q.MY + Q.mh, wall = '<rect width="320" height="' + top + '" fill="#7a6a5e"/>';
+    for (var x = 0; x < 320; x += 6) wall += '<rect x="' + x + '" y="0" width="2.4" height="' + top + '" fill="#8e7e70"/><rect x="' + (x + 3.6) + '" y="0" width="1.4" height="' + top + '" fill="#5e5048"/>';
+    [[30, 0.6], [62, 0.4], [250, 0.55], [286, 0.35]].forEach(function(q){ wall += '<rect x="' + q[0] + '" y="0" width="16" height="' + top + '" fill="#8a3e2c" opacity="' + q[1] + '"/>'; });   /* rust run down it */
+    var i = Q.svg.indexOf('<rect y="' + top + '"'); if (i > 0) Q.svg = Q.svg.slice(0, i) + wall + Q.svg.slice(i);
+    return Q; };
+  /* the close-up's inks have no violet that doesn't lean blue; the ultra violet can is tinted to a warm mauve-plum
+     after (red stays over blue) */
+  var _bd = fvmBuild;
+  fvmBuild = function(w){ _bd(w); if (w !== 'mm') return; var S = FVM.sc[w], tries = 0;
+    (function fix(){ if (!S.c) { if (tries++ < 60) setTimeout(fix, 100); return; } if (S.fixed) return; S.fixed = true;
+      var q = FVM_DEFS.mm.slots[2], x0 = Math.floor(S.MX + q.x*S.K), y0 = Math.floor(S.MY + q.y*S.K), w2 = Math.ceil(q.w*S.K), h2 = Math.ceil(q.h*S.K), g = S.c.getContext('2d');
+      try { var im = g.getImageData(x0, y0, w2, h2), d = im.data; for (var i = 0; i < d.length; i += 4) { var r = d[i], gg = d[i + 1], bb = d[i + 2]; if (bb > r && bb > gg + 8) { var L = (r + gg + bb)/3; d[i] = Math.min(255, L*1.18); d[i + 1] = L*0.78; d[i + 2] = L*0.92; } } g.putImageData(im, x0, y0); } catch (e) {} })(); };
+  var _op = fvmOpen;
+  fvmOpen = function(w){ _op(w); if (w === 'mm') fvmCap('スマイル · drink smile. an old one. press the button under the one you want.'); };
+  setTimeout(function(){
+    var _hb = hubBoxAction;
+    hubBoxAction = function(P, r){ var B = P.box;
+      if (B && B.say === 'vending' && me.x <= 27.9) return r(2.4, function(){ fvmOpen('mm'); });   /* (from its side, it's still the clippings) */
+      return _hb(P, r); };
+  }, 60);
+})();
+
+;
+/* ---- copied from null.grey-furusatostation/src/f03/f03-details.js ---- */
+/* ================================================================
+   F03 — DETAILS, ROUND 1 (Aisling, Oct 25, with reference pictures; she's on her desktop now).
+   - a newspaper someone left on the bench. you can't pick it up; you can look at it close: LOST & NEVER FOUND.
+   - newspaper clippings taped to the side of the vending machine; click and they come up close, like the shrine's
+     fortunes: a strange light in the sky (1917), the old line about all the people who go missing ("where in the world
+     are all these people going to?"), the internet being a passing fad (2000), and the town council asking whether
+     you'd know if you were dreaming (check a clock; look away; check again).
+   - a missing poster on one of the road's poles. its title is HAVE YOU SEEN ME? (Aisling: "i want to reference nicole
+     dollanganger who i love so much and her song"). the face washed out by rain, the name too; last seen walking
+     down the road, october 31. click it to read it close.
+   - one pole cut through: it hangs from its own wires, a metre and a half off the ground, its bottom nowhere; a newer
+     pole stands beside it doing its job (her photo).
+   - far out in the corn, east of the road, an oddly tall old windmill, its wheel still, its vane lettered.
+   - the vending machine a little bigger (it read small).
+   the pictures here are drawn new, in the station's inks; nobody's real paper, poster or photo is copied in.
+   ================================================================ */
+
+/* ---- the close-up: a page held up to your face, the station dark behind it ---- */
+var F3C = { open:false };
+var f3cEl = document.createElement('div'); f3cEl.id = 'f3close';
+f3cEl.innerHTML = '<div id="f3c-pic"></div><div id="f3c-cap"></div><div id="f3c-btns"><button type="button">もどる · step back</button></div>';
+(document.getElementById('stage') || document.body).appendChild(f3cEl);   /* (on the stage itself: the pocket's layer is hidden when the pocket's shut) */
+(function(){
+  var st = document.createElement('style'); st.textContent =
+  '#f3close{position:absolute;inset:0;display:none;z-index:46;background:rgba(6,5,5,.9);box-sizing:border-box;padding:2.5% 16px 2%;flex-direction:column;align-items:center;justify-content:center;gap:10px;}#f3close.open{display:flex;}' +
+  '#f3c-pic{flex:0 1 auto;height:calc(100% - 120px);max-height:820px;width:min(92%,1000px);transform:rotate(var(--rot,-1deg));filter:drop-shadow(0 6px 18px rgba(0,0,0,.7));}' +   /* (Oct 25: the words go under the picture, never over it) */
+  '#f3c-pic svg{width:100%;height:100%;display:block;cursor:zoom-in;}#f3c-pic.zoom{overflow:auto;transform:none;}#f3c-pic.zoom svg{width:240%;height:auto;cursor:zoom-out;}' +   /* click: look closer (and back) */
+  '#f3c-cap{flex:0 0 auto;width:min(640px,92%);box-sizing:border-box;text-align:center;font-size:13px;letter-spacing:.03em;line-height:1.5;color:#e4dcd0;background:rgba(10,9,8,.88);border:1px solid rgba(140,137,131,.35);padding:5px 14px;}' +
+  '#f3c-btns{flex:0 0 auto;}#f3c-btns button{font-family:inherit;font-size:11px;letter-spacing:.12em;color:rgba(228,220,208,.9);background:rgba(42,32,41,.92);border:1px solid rgba(140,137,131,.7);padding:3px 14px;cursor:pointer;}';
+  document.head.appendChild(st); })();
+['pointerdown', 'pointerup', 'pointermove', 'click', 'wheel'].forEach(function(ev){ f3cEl.addEventListener(ev, function(e){ e.stopPropagation(); }, ev === 'wheel' ? { passive:true } : false); });
+f3cEl.querySelector('#f3c-btns').addEventListener('click', function(e){ if (e.target.closest('button')) f3Close(); });
+f3cEl.addEventListener('click', function(e){
+  var P = e.target.closest('#f3c-pic');
+  if (P && F3C.parts) {   /* the clippings: click one to look at it on its own; click again to see them all */
+    var sv = P.querySelector('svg');
+    if (F3C.focus >= 0) { f3Focus(-1); return; }
+    try { var pt = sv.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; var q = pt.matrixTransform(sv.getScreenCTM().inverse());
+      for (var i = 0; i < F3C.parts.length; i++) { var b = F3C.parts[i].box; if (q.x >= b[0] && q.x <= b[0] + b[2] && q.y >= b[1] && q.y <= b[1] + b[3]) { f3Focus(i); return; } } } catch (er) {}
+    return;
+  }
+  if (P) { var on = !P.classList.contains('zoom'); P.classList.toggle('zoom', on); if (on) { var R = P.getBoundingClientRect(), fx = (e.clientX - R.left)/R.width, fy = (e.clientY - R.top)/R.height; requestAnimationFrame(function(){ P.scrollLeft = fx*P.scrollWidth - P.clientWidth/2; P.scrollTop = fy*P.scrollHeight - P.clientHeight/2; }); } return; }
+  if (!e.target.closest('#f3c-cap')) f3Close();
+});
+/* one clipping on its own: the same picture, framed on just that piece */
+function f3Focus(i){
+  var P = document.getElementById('f3c-pic'), sv = P.querySelector('svg'), b = i >= 0 ? F3C.parts[i].box : [0, 0, F3C.vb[0], F3C.vb[1]];
+  F3C.focus = i; sv.setAttribute('viewBox', b.join(' ')); for (var k = 0; k < F3C.parts.length; k++) { var g = sv.querySelector('#f3k' + k); if (g) g.style.display = (i < 0 || k === i) ? '' : 'none'; }   /* just that one, the others put aside */ sv.style.cursor = i >= 0 ? 'zoom-out' : 'zoom-in';
+  document.getElementById('f3c-cap').textContent = i >= 0 ? F3C.parts[i].cap + '  (click to see them all again.)' : F3C.cap + '  (click one to look at it on its own.)';
+}
+window.addEventListener('keydown', function(e){ if (!F3C.open) return; e.stopImmediatePropagation(); var k = (e.key || '').toLowerCase(); if (k === 'escape' || k === 'e' || k === ' ' || k === 'enter') { e.preventDefault(); f3Close(); } }, true);
+function f3Open(svg, vb, cap, rot, parts){
+  F3C.parts = parts || null; F3C.focus = -1; F3C.vb = vb; F3C.cap = cap;
+  F3C.open = true; keys = {}; try { pkTrap(true); } catch (e) {}
+  var P = document.getElementById('f3c-pic'); P.style.setProperty('--ar', (vb[0]/vb[1]).toFixed(3)); P.style.setProperty('--rot', (rot || 0) + 'deg');
+  P.innerHTML = '<svg viewBox="0 0 ' + vb[0] + ' ' + vb[1] + '" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">' + svg + '</svg>';
+  P.classList.remove('zoom'); document.getElementById('f3c-cap').textContent = cap + (parts ? '  (click one to look at it on its own.)' : '  (click it to look closer.)'); f3cEl.classList.add('open'); f3Fit(P); try { stage.classList.add('drb-open'); } catch (e) {}
+}
+/* nothing runs over: any line wider than its room on this computer is squeezed to fit; the rest are left as they are */
+function f3Fit(P){ try { P.querySelectorAll('text[data-max]').forEach(function(t){ var m = +t.getAttribute('data-max'); if (t.getComputedTextLength() > m) { t.setAttribute('textLength', m); t.setAttribute('lengthAdjust', 'spacingAndGlyphs'); } }); } catch (e) {} }
+function f3Close(){ F3C.open = false; try { pkTrap(false); } catch (e) {} f3cEl.classList.remove('open'); try { stage.classList.remove('drb-open'); } catch (e) {} }
+
+/* ---- shared bits for paper: grey text lines, a paper's grain, tape ---- */
+var F3P = { paper:'#e6dcc4', old:'#dccb9e', ink:'#2a2420', grey:'#8a8076', tape:'#d8c79a' };
+function f3Lines(x, y, w, n, gap, seed){ var s = ''; for (var i = 0; i < n; i++) { var l = w*(i === n - 1 ? 0.55 : 0.88 + 0.12*hsh(i, seed || 1)); s += '<rect x="' + x + '" y="' + (y + i*gap) + '" width="' + l.toFixed(1) + '" height="' + (gap*0.42).toFixed(1) + '" fill="' + F3P.grey + '" opacity="0.75"/>'; } return s; }
+function f3Txt(t, x, y, sz, o){ o = o || {}; return '<text x="' + x + '" y="' + y + '" font-size="' + sz + '" fill="' + (o.c || F3P.ink) + '" font-family="' + (o.f || 'Georgia, Times New Roman, serif') + '" font-weight="' + (o.w || 400) + '"' + (o.a ? ' text-anchor="' + o.a + '"' : '') + (o.st ? ' font-style="' + o.st + '"' : '') + (o.ls ? ' letter-spacing="' + o.ls + '"' : '') + (o.op ? ' opacity="' + o.op + '"' : '') + (o.tl ? ' data-max="' + o.tl + '"' : '') + '>' + t + '</text>'; }   /* tl: the most room it has; if this computer's font comes out wider, it's squeezed to fit (f3Fit) */
+function f3Para(lines, x, y, sz, lh, o){ o = o || {}; return lines.map(function(l, i){ var oo = {}; for (var k in o) oo[k] = o[k]; if (o.just) oo.tl = o.just; else if (!o.tl) delete oo.tl; return f3Txt(l, x, y + i*lh, sz, oo); }).join(''); }   /* just: newspaper columns, every line but the last spread to the width */
+function f3Grain(w, h, n, seed){ var s = ''; for (var i = 0; i < n; i++) s += '<circle cx="' + (hsh(i, seed)*w).toFixed(1) + '" cy="' + (hsh(i, seed + 1)*h).toFixed(1) + '" r="' + (0.4 + hsh(i, seed + 2)*1.6).toFixed(1) + '" fill="#6a5a44" opacity="' + (0.08 + 0.14*hsh(i, seed + 3)).toFixed(2) + '"/>'; return s; }
+
+/* ---- 1. the newspaper on the bench ---- */
+function f3NewsSvg(){
+  var W = 800, H = 560, s = '<rect width="' + W + '" height="' + H + '" fill="' + F3P.paper + '"/>';
+  s += '<path d="M0,0 L800,0 L800,560 L0,560 Z" fill="none" stroke="#b9ad96" stroke-width="3"/>';
+  s += f3Txt('本町新聞 · THE MAIN STREET COURIER', 400, 46, 30, { a:'middle', w:700, tl:560 }) + '<rect x="30" y="58" width="740" height="2" fill="' + F3P.ink + '"/>';
+  s += f3Txt('MISSING MILE, UKIYO', 36, 78, 13, { f:'Helvetica Neue, Arial, sans-serif', w:700 }) + f3Txt('THURSDAY, OCTOBER 31', 400, 78, 13, { a:'middle', f:'Helvetica Neue, Arial, sans-serif', w:700 }) + f3Txt('25¢', 764, 78, 13, { a:'end', f:'Helvetica Neue, Arial, sans-serif', w:700 });
+  s += '<rect x="30" y="86" width="740" height="1" fill="' + F3P.ink + '"/>';
+  /* the photo: a road, straight, into the corn, at dusk; grainy */
+  s += '<rect x="36" y="100" width="430" height="300" fill="#2e2a2a"/><path d="M36,280 L466,280 L466,400 L36,400 Z" fill="#3e3830"/><path d="M240,282 L262,282 L360,400 L150,400 Z" fill="#5e5852"/><path d="M250,284 L252,284 L256,400 L248,400 Z" fill="#a89a7a"/>';
+  for (var i = 0; i < 46; i++) { var x = 36 + i*9.4; s += '<path d="M' + x + ',' + (280 - 8 - 6*hsh(i, 4)) + ' l2,' + (8 + 6*hsh(i, 4)) + '" stroke="#4a4436" stroke-width="3"/>'; }
+  s += '<path d="M60,110 L60,286 M58,118 l8,0" stroke="#1c1814" stroke-width="3"/>' + f3Grain(430, 300, 260, 9).replace(/<circle cx="([\d.]+)" cy="([\d.]+)"/g, function(m, a, b){ return '<circle cx="' + (36 + +a) + '" cy="' + (100 + +b) + '"'; });
+  s += f3Txt('the road south of the station, where the last sighting was. (courier photo)', 36, 418, 11, { st:'italic', c:'#4a4440' });
+  /* the headline, the only thing that matters */
+  s += f3Txt('LOST &amp;', 486, 168, 58, { f:'Arial Black, Helvetica Neue, Arial, sans-serif', w:900, tl:252 }) + f3Txt('NEVER', 486, 234, 58, { f:'Arial Black, Helvetica Neue, Arial, sans-serif', w:900, tl:242 }) + f3Txt('FOUND', 486, 300, 58, { f:'Arial Black, Helvetica Neue, Arial, sans-serif', w:900, tl:252 });
+  s += f3Txt('searchers walk the road again;', 486, 332, 13, { st:'italic' }) + f3Txt('the corn gives nothing back', 486, 349, 13, { st:'italic' });
+  s += f3Lines(486, 362, 270, 5, 7, 3) + f3Lines(36, 436, 226, 13, 7, 5) + f3Lines(282, 436, 226, 13, 7, 6) + f3Lines(528, 436, 230, 10, 7, 7);
+  s += f3Txt('HARVEST FEST GOES ON — page 4', 528, 518, 12, { f:'Helvetica Neue, Arial, sans-serif', w:700 });
+  s += '<defs><filter id="f3grainN" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="5"/><feColorMatrix values="0 0 0 0 0.25  0 0 0 0 0.2  0 0 0 0 0.12  0 0 0 0.9 -0.35"/></filter><radialGradient id="f3yelN" cx="0.5" cy="0.45" r="0.75"><stop offset="0.6" stop-color="#d6ceb6" stop-opacity="0"/><stop offset="1" stop-color="#b89c62" stop-opacity="0.45"/></radialGradient></defs><rect width="' + W + '" height="' + H + '" fill="url(#f3yelN)"/><rect width="' + W + '" height="' + H + '" filter="url(#f3grainN)" opacity="0.3"/>';   /* newsprint: yellowed edges, the paper's grain */
+  s += f3Grain(W, H, 140, 21) + '<path d="M0,536 Q200,548 420,538 T800,542 L800,560 L0,560 Z" fill="#c9bb9e" opacity="0.45"/>';   /* (Oct 25: nothing runs off the edge now; the damp only at the very bottom) */   /* the bottom gone soft from the damp */
+  return s;
+}
+
+/* ---- 2. the clippings taped to the vending machine's side (Oct 25, redone: real newsprint) ----
+   cheap grey-cream paper gone yellow at the edges, cut a little crooked with scissors (one torn), the ink not quite black
+   and a little soft, set in narrow justified columns with a column rule; the grain of the paper over everything; a
+   halftone photo. every line is fitted to its width so no font, on any computer, runs over the edge. */
+function f3Cut(x, y, w, h, seed, torn){   /* a clipping's outline: scissor-cut, a little crooked; torn along one side if asked */
+  var p = [], n = 9, i, j;
+  for (i = 0; i <= n; i++) p.push([x + w*i/n, y + (hsh(i, seed) - 0.5)*2.2]);
+  for (i = 1; i <= n; i++) p.push([x + w + (hsh(i, seed + 1) - 0.5)*2.2, y + h*i/n]);
+  for (i = n - 1; i >= 0; i--) { var ty = y + h; if (torn === 'b') { ty += (hsh(i*3, seed + 2) - 0.5)*9; p.push([x + w*(i + 0.5)/n, y + h + (hsh(i*3 + 1, seed + 2) - 0.5)*7]); } p.push([x + w*i/n, ty + (torn === 'b' ? 0 : (hsh(i, seed + 3) - 0.5)*2.2)]); }
+  for (j = n - 1; j > 0; j--) p.push([x + (hsh(j, seed + 4) - 0.5)*2.2, y + h*j/n]);
+  return '<path d="M' + p.map(function(q){ return q[0].toFixed(1) + ',' + q[1].toFixed(1); }).join(' L') + ' Z"';
+}
+function f3Newsprint(id, x, y, w, h, seed, torn, tone){   /* the paper itself: the cut, the yellowing, the grain (clipped to the cut) */
+  var cut = f3Cut(x, y, w, h, seed, torn);
+  return '<clipPath id="' + id + '">' + cut + '/></clipPath>' + cut + ' fill="' + (tone || '#d6ceb6') + '"/>' +
+    '<g clip-path="url(#' + id + ')"><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="url(#f3yel)"/><rect x="' + (x - 5) + '" y="' + (y - 5) + '" width="' + (w + 10) + '" height="' + (h + 10) + '" filter="url(#f3grain)" opacity="0.32"/></g>';
+}
+function f3ClipSvg(){
+  var W = 1070, H = 600, INK = '#2b2622', s = '';   /* (Oct 25: laid out wide, the four side by side, so they come up big) */
+  s += '<defs><radialGradient id="f3yel" cx="0.5" cy="0.45" r="0.75"><stop offset="0.55" stop-color="#d6ceb6" stop-opacity="0"/><stop offset="1" stop-color="#b89c62" stop-opacity="0.55"/></radialGradient>' +
+    '<filter id="f3grain" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" seed="7"/><feColorMatrix values="0 0 0 0 0.25  0 0 0 0 0.2  0 0 0 0 0.12  0 0 0 0.9 -0.35"/></filter>' +
+    '<filter id="f3ink"><feGaussianBlur stdDeviation="0.25"/></filter>' +
+    '<pattern id="f3dots" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="2" cy="2" r="1.25" fill="' + INK + '"/></pattern>' +
+    '<pattern id="f3dots2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><circle cx="2" cy="2" r="0.7" fill="' + INK + '"/></pattern></defs>';
+  s += '<rect width="' + W + '" height="' + H + '" fill="#a9a6a1"/>';
+  for (var y = 0; y < H; y += 48) s += '<rect x="0" y="' + y + '" width="' + W + '" height="2" fill="#93908b"/>';   /* the machine's side panel */
+  s += '<path d="M0,560 Q300,540 560,570 T1070,550 L1070,600 L0,600 Z" fill="#8a4a30" opacity="0.25"/>';   /* rust coming up from the bottom */
+  function tape(x, y, a){ return '<rect x="' + (x - 30) + '" y="' + (y - 9) + '" width="60" height="18" fill="#d8c79a" opacity="0.72" transform="rotate(' + a + ' ' + x + ' ' + y + ')"/><rect x="' + (x - 30) + '" y="' + (y - 9) + '" width="60" height="3" fill="#f2e8c8" opacity="0.4" transform="rotate(' + a + ' ' + x + ' ' + y + ')"/>'; }
+  var SER = 'Times New Roman, Times, Georgia, serif', SANS = 'Helvetica Neue, Helvetica, Arial, sans-serif', COND = 'Arial Narrow, Helvetica Neue Condensed, Helvetica Neue, Arial, sans-serif';
+  var T = function(t, x, y, sz, o){ o = o || {}; o.c = o.c || INK; return f3Txt(t, x, y, sz, o); };
+  /* a: STRANGE LIGHT IN SKY (1917): a narrow old column, a heavy condensed head, a rule, decks, then body */
+  s += '<g id="f3k0" transform="translate(-22,0)">';
+  s += '<g transform="rotate(-2 200 210)" filter="url(#f3ink)">' + f3Newsprint('f3ca', 52, 42, 300, 352, 11, '', '#d3c9ad');
+  s += T('STRANGE LIGHT IN SKY', 68, 82, 30, { f:COND, w:800, tl:268 }) + '<rect x="68" y="92" width="268" height="1.4" fill="' + INK + '"/>';
+  s += T('Rural Population Alarmed by', 202, 117, 17, { a:'middle', f:SER, w:700, tl:236 }) + T('Appearance Early Today.', 202, 138, 17, { a:'middle', f:SER, w:700, tl:196 }) + '<rect x="160" y="150" width="84" height="1" fill="' + INK + '"/>';
+  s += f3Para(['Persons residing in the rural dis-', 'tricts, and city residents who are', 'wont to arise early in the morning,', 'witnessed a strange phenomena in', 'the sky early this morning.'], 68, 174, 14, 17.5, { f:SER, c:INK, just:268 });
+  s += f3Para(['   About 5 o\'clock a red light ap-', 'peared in the northwestern sky and', 'it grew larger and larger until it', 'appeared as if it might be the re-', 'flection of some big fire in the sky.', '   The light was visible for more', 'than a half hour and it was watched'], 68, 264, 14, 17.5, { f:SER, c:INK, just:268 });
+  s += '</g>' + tape(78, 46, -8) + tape(330, 50, 10) + '</g>';
+  /* b: "where in the world are all these people going to?" (old; one paragraph between two rules) */
+  s += '<g id="f3k3" transform="translate(-368,378)">';
+  s += '<g transform="rotate(3 565 125)" filter="url(#f3ink)">' + f3Newsprint('f3cb', 408, 64, 318, 132, 23, '', '#d8cfb4');
+  s += '<rect x="450" y="80" width="234" height="1.2" fill="' + INK + '"/>';
+  s += f3Para(['It hard to pick up a paper nowadays', 'that does not contain the account of a', 'mysterious disappearance. Where in', 'the world are all these people going', 'to?'], 424, 106, 16, 19.5, { f:SER, w:700, c:INK, just:286 });
+  s += '<rect x="450" y="186" width="234" height="1.2" fill="' + INK + '"/></g>' + tape(566, 66, 2) + '</g>';
+  /* c: the internet, a passing fad (2000): a modern page, a halftone photo, its lower edge torn off */
+  s += '<g id="f3k1" transform="translate(-28,-206)">';
+  s += '<g transform="rotate(1.5 560 400)" filter="url(#f3ink)">' + f3Newsprint('f3cc', 400, 238, 322, 420, 37, 'b', '#e0dacb');
+  s += T('Tuesday, December 5, 2000', 414, 256, 10, { f:SANS, c:'#5a524a', tl:126 }) + T('Page 33', 708, 256, 10, { f:SANS, c:'#5a524a', a:'end' }) + '<rect x="414" y="261" width="294" height="0.8" fill="' + INK + '"/>';
+  s += T('Internet ‘may be', 414, 296, 31, { f:SER, w:700, tl:244 }) + T('just a passing fad', 414, 330, 31, { f:SER, w:700, tl:262 }) + T('as millions give up on it’', 414, 364, 31, { f:SER, w:700, tl:294 });
+  var body = ['THE internet could turn out', 'to be no more than a craze,', 'a new study suggests.', '   Researchers say large num-', 'bers of people who went on-', 'line have since given it up,', 'put off by the slow connec-', 'tions and the cost of stay-', 'ing logged on.'];   /* (our own words for the story) */
+  s += f3Para(body, 414, 392, 12, 15, { f:SER, c:INK, just:146 });
+  s += '<rect x="566" y="380" width="1" height="256" fill="' + INK + '" opacity="0.6"/>';   /* the column rule */
+  s += '<rect x="572" y="380" width="136" height="96" fill="#cfc8b8"/><rect x="572" y="380" width="136" height="96" fill="url(#f3dots)" opacity="0.75"/>';   /* the halftone photo: a beige monitor, a boy at the keyboard */
+  s += '<rect x="590" y="394" width="56" height="44" fill="#e8e2d4"/><rect x="596" y="400" width="44" height="30" fill="url(#f3dots2)" opacity="0.6"/><rect x="606" y="440" width="26" height="8" fill="#e8e2d4"/><path d="M660,476 L664,420 Q672,404 690,410 Q704,420 700,440 L708,476 Z" fill="#1f1b18" opacity="0.85"/>';
+  s += T('Logging off: some have had enough', 572, 488, 8.6, { f:SANS, w:700, tl:136 });
+  s += f3Para(['Experts say the novelty of', 'e-mail and chat rooms is', 'already wearing off, and', 'that many who tried it', 'will not be back.'], 572, 508, 12, 15, { f:SER, c:INK, just:136 }) + f3Para(['   Others disagree. ‘It', 'is here to stay,’ one', 'said. ‘Give it time.’'], 414, 538, 12, 15, { f:SER, c:INK, just:146 });
+  s += '</g>' + tape(426, 242, -14) + tape(700, 248, 12) + '</g>';
+  /* d: the town council asks: would you know if you were dreaming? (a notice, printed in the paper) */
+  s += '<g id="f3k2" transform="translate(674,-390)">';
+  s += '<g transform="rotate(-2.5 220 620)" filter="url(#f3ink)">' + f3Newsprint('f3cd', 52, 432, 316, 378, 53, '', '#e2dccc');
+  s += '<path d="M52,446 ' + [0, 1, 2, 3, 4, 5, 6, 7].map(function(i){ return 'l19.75,-12 l19.75,12'; }).join(' ') + '" stroke="' + INK + '" stroke-width="6" fill="none"/>';   /* the zigzag band along the top */
+  [['WOULD YOU KNOW', 268], ['IF YOU WERE', 200], ['DREAMING', 172], ['RIGHT NOW?', 196]].forEach(function(l, i){ s += T(l[0], 70, 494 + i*32, 29, { f:SANS, w:900, tl:l[1] }); });
+  [[110, 'look at a clock.'], [210, 'look away.'], [310, 'look back.']].forEach(function(c, i){
+    var cx = c[0], cy = 632; s += '<circle cx="' + cx + '" cy="' + cy + '" r="22" fill="none" stroke="' + INK + '" stroke-width="3"/>' + (i === 1 ? '<path d="M' + (cx - 14) + ',' + cy + ' l28,0" stroke="' + INK + '" stroke-width="3"/>' : '<path d="M' + cx + ',' + cy + ' l0,-15 M' + cx + ',' + cy + ' l' + (i ? 13 : 10) + ',' + (i ? 9 : -4) + '" stroke="' + INK + '" stroke-width="3"/>');
+    s += T(String.fromCharCode(65 + i) + '.', cx - 28, 604, 13, { f:SANS, w:700 }) + T(c[1], cx, 676, 11.5, { a:'middle', f:SANS, tl:(i ? 62 : 86) }); });
+  s += T('in a dream, the time will have changed', 70, 716, 13, { f:SANS, tl:270 }) + T('when you look back at it. check often.', 70, 734, 13, { f:SANS, tl:262 });
+  s += T('MISSING MILE TOWN COUNCIL', 210, 784, 13, { a:'middle', f:SANS, w:800, tl:214 });
+  s += '</g>' + tape(84, 438, -6) + tape(338, 430, 9) + '</g>';
+  return s;
+}
+/* where each clipping sits in the picture (after its move), and what's said when you look at it alone */
+var F3_CLIPS = [
+  { box:[18, 28, 326, 380], cap:'STRANGE LIGHT IN SKY. a red light in the northwest before dawn, growing, then gone east. 1917, by the type.' },
+  { box:[360, 22, 348, 452], cap:'the internet, a passing fad. december 5, 2000. someone kept this one on purpose.' },
+  { box:[712, 26, 348, 410], cap:'the town council: would you know if you were dreaming right now? look at a clock. look away. look back.' },
+  { box:[24, 424, 352, 166], cap:'\u2018where in the world are all these people going to?\u2019 very old, the paper gone soft as cloth.' }
+];
+/* ---- 3. the missing poster on the pole: HAVE YOU SEEN ME? ---- */
+function f3MissSvg(){
+  var W = 600, H = 800, s = '<rect width="' + W + '" height="' + H + '" fill="#e8e2d6"/>';
+  s += '<rect width="' + W + '" height="190" fill="#a0645a"/>';
+  s += f3Txt('MISSING · ゆくえふめい', 300, 52, 26, { a:'middle', f:'Helvetica Neue, Arial, sans-serif', w:800, c:'#f2ece0', ls:2 });
+  s += f3Txt('HAVE YOU', 300, 116, 58, { a:'middle', f:'Arial Black, Helvetica Neue, Arial, sans-serif', w:900, c:'#f2ece0' }) + f3Txt('SEEN ME?', 300, 176, 58, { a:'middle', f:'Arial Black, Helvetica Neue, Arial, sans-serif', w:900, c:'#f2ece0' });
+  /* the photo: long dark hair; where the face was, the rain has taken the ink */
+  s += '<rect x="80" y="220" width="300" height="340" fill="#6a6058"/><rect x="80" y="220" width="300" height="340" fill="url(#f3mg)"/>';
+  s += '<defs><linearGradient id="f3mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a8076"/><stop offset="1" stop-color="#4e4640"/></linearGradient><radialGradient id="f3mf"><stop offset="0" stop-color="#ece6da"/><stop offset="0.7" stop-color="#d8d0c2"/><stop offset="1" stop-color="#d8d0c2" stop-opacity="0"/></radialGradient></defs>';
+  s += '<path d="M150,560 Q140,420 170,330 Q200,250 232,250 Q268,250 296,330 Q326,420 316,560 Z" fill="#241e1c"/>';   /* her hair, long */
+  s += '<ellipse cx="232" cy="350" rx="52" ry="66" fill="url(#f3mf)"/>';   /* the face, washed out */
+  s += '<path d="M120,560 Q232,470 344,560 Z" fill="#cfc7b8"/>';
+  s += '<rect x="400" y="220" width="170" height="340" fill="#2e2a28"/>' + f3Txt('$ REWARD', 485, 270, 26, { a:'middle', f:'Helvetica Neue, Arial, sans-serif', w:800, c:'#d6c47a' });
+  s += f3Txt('LAST SEEN', 485, 340, 18, { a:'middle', f:'Helvetica Neue, Arial, sans-serif', w:800, c:'#e8e2d6' }) + f3Para(['walking down', 'the road from', 'the station', 'october 31'], 485, 372, 15, 22, { a:'middle', f:'Helvetica Neue, Arial, sans-serif', c:'#e8e2d6' });
+  s += f3Txt('HELP FIND', 485, 494, 22, { a:'middle', f:'Helvetica Neue, Arial, sans-serif', w:800, c:'#e8e2d6' });
+  s += '<rect x="420" y="512" width="130" height="14" fill="#6a6058"/><rect x="430" y="532" width="110" height="10" fill="#6a6058"/>';   /* the name, run in the rain */
+  s += f3Txt('if you have seen her, call', 300, 610, 17, { a:'middle', f:'Helvetica Neue, Arial, sans-serif' }) + f3Txt('TEL 2-', 236, 650, 26, { a:'middle', f:'Helvetica Neue, Arial, sans-serif', w:800 });
+  /* torn down the middle and across the bottom, the way posters go on poles */
+  s += '<path d="M318,0 L326,40 L312,90 L330,150 L318,220 L340,300 L322,380 L344,470 L330,560 L352,640 L338,700 L356,800 L380,800 L366,700 L382,640 L360,560 L372,470 L350,380 L366,300 L344,220 L356,150 L338,90 L352,40 L344,0 Z" fill="#d8d0c2"/>';
+  s += '<path d="M0,690 L80,700 L120,680 L210,710 L300,690 L380,720 L470,694 L540,712 L600,700 L600,800 L0,800 Z" fill="#7a6a54"/>';   /* gone below here; the pole's wood shows */
+  for (var i = 0; i < 8; i++) s += '<path d="M' + (20 + i*8) + ',700 l0,100" stroke="#5e5242" stroke-width="2"/>';
+  s += '<circle cx="30" cy="22" r="5" fill="#9a9690"/><circle cx="570" cy="22" r="5" fill="#9a9690"/>';   /* staples */
+  s += f3Grain(W, H, 200, 51) + '<path d="M0,0 L600,0 L600,800 L0,800 Z" fill="#5e5a40" opacity="0.08"/>';
+  for (var j = 0; j < 9; j++) s += '<path d="M' + (40 + j*64) + ',190 l' + (4 - j % 3*3) + ',' + (60 + 90*hsh(j, 61)) + '" stroke="#8a7a68" stroke-width="' + (2 + 3*hsh(j, 62)) + '" opacity="0.35"/>';   /* rain streaks */
+  return s;
+}
+
+/* ---- the little versions, out in the world ---- */
+fpic('f3newsTop', 0.55, 0.38, 200, 110, 76, '', function(){ return '<rect width="110" height="76" fill="#e6dcc4"/><rect x="6" y="5" width="98" height="5" fill="#2a2420"/><rect x="6" y="15" width="56" height="40" fill="#3a3430"/><rect x="66" y="16" width="38" height="8" fill="#1c1511"/><rect x="66" y="27" width="34" height="8" fill="#1c1511"/><rect x="66" y="38" width="38" height="8" fill="#1c1511"/><rect x="6" y="60" width="98" height="2" fill="#8a8076"/><rect x="6" y="66" width="80" height="2" fill="#8a8076"/>'; });
+fpic('f3newsEdge', 0.55, 0.04, 200, 55, 4, '', function(){ return '<rect width="55" height="4" fill="#d8ccb2"/><rect y="1.5" width="55" height="0.6" fill="#b9ad96"/>'; });
+fpic('f3vmClip', 0.75, 1.83, 140, 75, 183, '', function(){
+  var s = '<rect width="75" height="183" fill="#d6d5d1"/><rect width="75" height="6" fill="#bdbab3"/>';
+  s += '<g transform="rotate(-3 20 40)"><rect x="8" y="30" width="28" height="28" fill="#dccb9e"/><rect x="11" y="33" width="22" height="3" fill="#2a2420"/><rect x="11" y="39" width="20" height="1.2" fill="#8a8076"/><rect x="11" y="42" width="21" height="1.2" fill="#8a8076"/><rect x="11" y="45" width="19" height="1.2" fill="#8a8076"/></g>';
+  s += '<g transform="rotate(3 55 36)"><rect x="42" y="28" width="28" height="12" fill="#dccb9e"/><rect x="45" y="32" width="22" height="1.2" fill="#2a2420"/><rect x="45" y="35" width="20" height="1.2" fill="#2a2420"/></g>';
+  s += '<g transform="rotate(1.5 55 70)"><rect x="40" y="50" width="30" height="30" fill="#e6dcc4"/><rect x="43" y="55" width="14" height="10" fill="#2a2420"/><rect x="58" y="54" width="10" height="9" fill="#4a4440"/><rect x="43" y="68" width="24" height="1.2" fill="#8a8076"/><rect x="43" y="71" width="22" height="1.2" fill="#8a8076"/></g>';
+  s += '<g transform="rotate(-2.5 22 82)"><rect x="8" y="64" width="30" height="36" fill="#efe9da"/><rect x="11" y="68" width="22" height="13" fill="#1c1511"/><circle cx="14" cy="90" r="3" fill="none" stroke="#1c1511" stroke-width="1"/><circle cx="23" cy="90" r="3" fill="none" stroke="#1c1511" stroke-width="1"/><circle cx="32" cy="90" r="3" fill="none" stroke="#1c1511" stroke-width="1"/></g>';
+  [[12, 30], [32, 29], [56, 28], [44, 50], [66, 51], [12, 64], [34, 63]].forEach(function(t){ s += '<rect x="' + (t[0] - 4) + '" y="' + (t[1] - 1.5) + '" width="8" height="3" fill="#d8c79a" opacity="0.85"/>'; });
+  return s;
+});
+fpic('f3miss', 0.36, 0.48, 400, 60, 80, '', function(){ return '<rect width="60" height="80" fill="#e8e2d6"/><rect width="60" height="19" fill="#a0645a"/><rect x="8" y="5" width="44" height="4" fill="#f2ece0"/><rect x="6" y="11" width="48" height="5" fill="#f2ece0"/><rect x="8" y="22" width="30" height="34" fill="#6a6058"/><path d="M15,56 Q14,40 23,27 Q32,40 31,56 Z" fill="#241e1c"/><ellipse cx="23" cy="36" rx="5" ry="6.5" fill="#e0d8ca"/><rect x="40" y="22" width="17" height="34" fill="#2e2a28"/><rect x="42" y="27" width="13" height="2" fill="#d6c47a"/><rect x="8" y="60" width="44" height="2" fill="#5a524a"/><rect x="32" y="0" width="4" height="80" fill="#d8d0c2"/><path d="M0,69 L20,71 L40,68 L60,70 L60,80 L0,80 Z" fill="#7a6a54"/>'; });
+
+/* ---- a big dumpster out back, behind the station, on the field's edge (Aisling: "i'll put something in there if it's
+   searched"). F3_DUMP.find is where that thing goes: { say:'…', item:'pocket key' }; until then it's empty ---- */
+var F3_DUMP = { find:null, searched:0 };
+fpic('f3dumpF', 1.9, 1.3, 160, 190, 130, '', function(){
+  var s = '<rect width="190" height="130" fill="#33281f"/><path d="M0,0 L190,0 L184,14 L6,14 Z" fill="#3a2e24"/>';   /* faded brown-black (no blue: it went teal in green); the lid's lip */
+  for (var x = 18; x < 190; x += 34) s += '<rect x="' + x + '" y="18" width="5" height="104" fill="#2a2019"/>';   /* ribs */
+  s += '<rect x="0" y="122" width="190" height="8" fill="#2a2420"/>' + fTx('NO DUMPING', 95, 64, '#b9ad96', 13, { f:F_EN, w:800 }) + fTx('ゴミ捨て禁止', 95, 82, '#b9ad96', 9, { w:800 });
+  s += '<rect x="20" y="96" width="60" height="22" fill="#8a4a30" opacity="0.55"/><rect x="120" y="20" width="40" height="70" fill="#8a4a30" opacity="0.35"/><rect x="0" y="104" width="190" height="18" fill="#6a3e2c" opacity="0.4"/>';   /* rust coming through */
+  s += '<rect x="12" y="2" width="22" height="6" fill="#5a5450"/><rect x="156" y="2" width="22" height="6" fill="#5a5450"/>';   /* the lid's handles */
+  return s;
+});
+fpic('f3dumpS', 1.1, 1.3, 160, 110, 130, '', function(){ return '<rect width="110" height="130" fill="#30261d"/><path d="M0,0 L110,0 L110,14 L0,14 Z" fill="#3a2e24"/><rect x="40" y="40" width="30" height="10" fill="#4a4440"/><rect x="0" y="122" width="110" height="8" fill="#2a2420"/><rect x="0" y="100" width="110" height="22" fill="#6a3e2c" opacity="0.4"/>'; });
+/* ---- placed ---- */
+(function(){
+  var g = 'fp_grey';
+  /* the newspaper, left folded on the bench's far end */
+  var nw = fHang(12.0, 12.55, 7.6, 7.92, 0.41, 0.435, ['fp_f3newsEdge', 'fp_f3newsEdge', 'fp_f3newsEdge', 'fp_f3newsEdge']); nw.say = 'news';
+  nw.topFn = function(x, y){ var u = (x - 12.0)/0.55, v = (y - 7.6)/0.32; return f3PicTexel('f3newsTop', u, v); };
+  /* the dumpster, out back */
+  var dm = fAddBox(14.1, 16.0, 13.12, 14.22, 1.3, ['fp_f3dumpS', 'fp_f3dumpS', 'fp_f3dumpS', 'fp_f3dumpF']); dm.say = 'dump'; dm.topFn = function(x, y){ return PK(R_HRUST, 0.14 + 0.04*vn(x*8, y*8) + (frac(x*3) < 0.06 ? -0.05 : 0), 0); };
+  /* the missing poster, on the road's fourth pole, facing the road */
+  fHang(31.46, 31.49, 24.4, 24.76, 1.3, 1.78, ['fp_f3miss', g, g, g]).say = 'missing';
+})();
+/* a texel of one of the pictures, for a box's top (u, v from its top left), as the ink the world uses */
+function f3PicTexel(nm, u, v){ var P = FPIC && FPIC[nm]; if (!P || !P.pix || u < 0 || u >= 1 || v < 0 || v >= 1) return PK(R_HCREAM, 0.5, 0); var t = P.pix[((v*P.H) | 0)*P.W + ((u*P.W) | 0)]; return t === HPIC_NONE ? PK(R_HCREAM, 0.5, 0) : t; }
+
+/* ---- the cut pole and its newer neighbour; the windmill's words ---- */
+
+/* ---- clicking: the close-ups. (installed after everything else has wrapped the click, so it's asked first) ---- */
+setTimeout(function(){
+  F3_SAYS.chopped = ['a pole hanging from its own wires, cut clean through a metre and a half up. the bottom of it is nowhere. a newer pole stands beside it, doing its job.', 'it sways a little, the cut pole, when the wind comes over the corn. it never touches the ground.'];
+  F3_SAYS.missing = ['a poster stapled to the pole. HAVE YOU SEEN ME? (click again to read it close.)'];   /* (F3_SAYS lives in f03-road, which comes after this file) */
+  var _hb = hubBoxAction;
+  hubBoxAction = function(P, r){
+    var B = P.box;
+    if (B && B.say === 'dump') return r(2.4, function(){ var D = F3_DUMP; D.searched++;
+      if (D.searched === 1) say('a big dumpster behind the station, its paint gone brown-black, rust coming through. NO DUMPING · ゴミ捨て禁止. the lid is down. (click again to search it.)', 5200);
+      else if (D.find && !D.found) { D.found = true; say(D.find.say, 6000); if (D.find.act) try { D.find.act(); } catch (e) {} }
+      else say(['you lift the lid. inside: dark, and the smell of wet leaves. nothing.', 'you look again. wet leaves, a broken umbrella, the dark at the bottom. nothing you want.'][D.searched & 1], 4600); });
+    if (B && B.say === 'news') return r(2.6, function(){ f3Open(f3NewsSvg(), [800, 560], 'someone left a newspaper on the bench, folded open. LOST & NEVER FOUND. you don\'t pick it up. it isn\'t yours, and it feels like it\'s waiting for someone.', -1.2); });
+    if (B && B.say === 'missing') return r(2.6, function(){ f3Open(f3MissSvg(), [600, 800], 'HAVE YOU SEEN ME? last seen walking down the road from the station, october 31. the rain has taken her face, and her name.', 1.5); });
+    if (B && B.say === 'vending' && me.x > 27.9) return r(2.4, function(){ f3Open(f3ClipSvg(), [1070, 600], 'clippings, taped to the side of the machine, yellowed. someone has been collecting them.', 0, F3_CLIPS); });
+    return _hb(P, r);
+  };
+}, 0);
+/* ---- (Oct 26, Aisling's scan) the pit, lying on the bench by the newspaper. click it and it goes in your pocket ---- */
+fpic('f3pit', 0.07, 0.09, 1100, F_PIT_WH[0], F_PIT_WH[1], '', function(){ return '<image href="' + F_PIT_PNG + '" x="0" y="0" width="' + F_PIT_WH[0] + '" height="' + F_PIT_WH[1] + '"/>'; }, true);
+fpic('f3pitSide', 0.09, 0.022, 900, 18, 4.4, '', function(){ return '<ellipse cx="9" cy="4.4" rx="8.6" ry="4.2" fill="#8a5a36"/><path d="M2,3.6 Q5,1.6 9,2.4 T16,3.4" stroke="#5e3a26" stroke-width="0.5" fill="none"/><path d="M3,2.6 Q7,1 12,1.8" stroke="#b07a4a" stroke-width="0.4" fill="none"/>'; }, true);   /* its side: a low, lumpy dome (clear round it) */
+var F3_PIT = { box:null, got:false };
+(function(){
+  try { F3_PIT.got = localStorage.getItem('nullgrey.f3.pit') === '1'; } catch (e) {}
+  if (F3_PIT.got) return;
+  var x0 = 12.63, y0 = 7.69, w = 0.07, d = 0.09;
+  var B = fHang(x0, x0 + w, y0, y0 + d, 0.41, 0.432, ['fp_f3pitSide', 'fp_f3pitSide', 'fp_f3pitSide', 'fp_f3pitSide']); B.say = 'pit';
+  B.topFn = function(x, y){ var P = FPIC.f3pit, u = (x - x0)/w, vv = (y0 + d - y)/d, v = (!P || !P.pix || u < 0 || u >= 1 || vv < 0 || vv >= 1) ? HPIC_NONE : P.pix[Math.min(P.H - 1, ((1 - vv)*P.H) | 0)*P.W + Math.min(P.W - 1, (u*P.W) | 0)]; return v === HPIC_NONE ? f3BenchSeatAt(x, y) : v; };
+  F3_PIT.box = B;
+})();
+function f3BenchSeatAt(x, y){ return PK(R_HWOOD, 0.3 + 0.08*vn(x*30, y*4), 0); }   /* (round the pit: the bench's own slats) */
+(function(){
+  var _hb = hubBoxAction;
+  hubBoxAction = function(P, r){
+    var B = P.box;
+    if (B && B.say === 'pit' && !F3_PIT.got) return r(2.4, function(){
+      F3_PIT.got = true; try { localStorage.setItem('nullgrey.f3.pit', '1'); } catch (e) {}
+      B.h1 = B.h0 + 0.0005; B.topFn = function(x, y){ return f3BenchSeatAt(x, y); };   /* gone from the bench */
+      pocketPut('f_pit'); say('a pit from some stone fruit, dried out, on the bench by the newspaper. you put it in your pocket.', 4200);
+    });
+    return _hb(P, r);
+  };
+})();
+
+;
 /* ---- Seam's sound engine is here only for the pocket's own sounds (picking things up, cans, bottles, a bite, a
    wrapper). Embroidery has its own switch and its own world sounds, so Seam's switch is never made, its footsteps and
    tube hum are turned off, and its volume follows Embroidery's switch. ---- */
@@ -2958,5 +3562,15 @@ EG_SEAM.pocket = {
   have:function(){ return typeof PK_HAVE !== 'undefined' ? PK_HAVE.slice() : []; },
   art:function(){ return typeof PK_ART !== 'undefined' ? Object.keys(PK_ART).length : 0; }
 };
+/* clicking a thing: Seam's own click actions first (close-ups, the dumpster, the pit...); true if one answered */
+EG_SEAM.click = function(sayKey){
+  var hit = false;
+  try { hubBoxAction({ box:{ say:sayKey } }, function(d, fn){ hit = true; fn(); return true; }); } catch (e) { console.error(e); }
+  return hit;
+};
+EG_SEAM.where = function(x, z, a){ me.x = x; me.y = z; me.a = a; };
+EG_SEAM.closeUpOpen = function(){ return !!((typeof F3C !== 'undefined' && F3C.open) || (typeof FVM !== 'undefined' && FVM.open)); };
+EG_SEAM.closeAll = function(){ try { if (typeof F3C !== 'undefined' && F3C.open) f3Close(); } catch (e) {} try { if (typeof FVM !== 'undefined' && FVM.open) fvmClose(); } catch (e) {} };
+EG_SEAM.pic = function(name){ return FPIC[name] || null; };
 EG_SEAM.step = function(now, dt){ try { if (POK.open) pkFrame(now); seamStep(now, dt); }   /* (as Seam's d2-frame: while the pocket is open, it's what's drawn) */ catch (e) { if (!EG_SEAM.err) { EG_SEAM.err = e; console.error(e); } } };
 })();

@@ -138,3 +138,20 @@ Aisling: *"Go!"* (from bed; she'll check on her Mac later).
 - Its sounds (picking things up, cans, bottles, a bite, a wrapper) are Seam's own and follow Embroidery's sound switch; each gets its CC line from Seam's caption list.
 - **Checked:** opens with P, shows its things, closes, walking works after; clicks still work; no errors (`t/pocket.js`, `t/seam-probe.js`).
 - **Still to come in milestone 2:** the close-ups (the drinks machine and its four flavours, the payphone, the missing poster) and the train in and out.
+
+### Nov 17, 2026 (evening) — milestone 2, part 3: the close-ups and Seam's own click actions
+Aisling: *"Ok go to next?"*
+- **Before building:** read Missing Mile's Seam passes (f03-3d … 3d4, f03-details, f03-vend2) for what the station has that Embroidery didn't yet.
+- **Seam's close-ups run in Embroidery, as they are** (the same bridge as the pocket; `seam/files.txt`, `seam/vars.txt` list what's copied):
+  - **the drinks machine**: the old red Drink Smile machine, its own close-up: chocolate creme, lemon cola, ultra violet, cherry cheer, three of each a visit, the coins, the display counting down, the can dropping, the flap, into your pocket; Platform 1's heavy button sounds.
+  - **the clippings** taped to the machine's side (click it from the side): the four yellowed clippings, each on its own when clicked.
+  - **the newspaper** left on the bench: LOST & NEVER FOUND, close.
+  - **the missing poster** on the road's pole: HAVE YOU SEEN ME?, close.
+  - **the dumpster** out back: NO DUMPING · ゴミ捨て禁止; click again to search it.
+  - **the pit** on the bench by the newspaper (Aisling's scan): click it and it goes in your pocket; it's gone from the bench after.
+- **How:** clicking a thing asks Seam's own click actions first (its `hubBoxAction` chain, the same code the Seam page runs), then falls back to its line. Seam's world-building calls are stood in for (Embroidery draws the world), so its files run without changes. Its pictures (`FPIC`) are Seam's own drawings: Embroidery uses them as textures for the red machine's front and sides, the newspaper, the pit, the dumpster and the missing poster.
+- **Caught up with Seam's passes:** the payphone moved to the station's west end (Seam's second pass; it had hidden the tobacco window); the machine is the old red one; the corn cleared round the poster's pole; the walkable edge pushed a little further down the road so the poster can be reached.
+- While a close-up or the pocket is open, the world waits behind it.
+- **Checked:** every close-up opens and closes; the dumpster's search; the pit goes to the pocket; all clicks still answer (`t/closeups.js`, `t/clicks.js`, `t/seam-closeups.js`); the pocket; no errors.
+- **Still not carried over from the Seam version** (for the kit / the rest of Missing Mile): the four trees, the windmill and its words, the crossing and crossbuck, the mileage signs, the mailbox, the cut pole, the tunnel and its lights, the shed's sign and tobacco window, the station's other pictures (the name board and hanging sign are redrawn, not Seam's), and the train.
+- **Next in milestone 2:** the train in and out.

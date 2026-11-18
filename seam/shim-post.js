@@ -21,5 +21,15 @@ EG_SEAM.pocket = {
   have:function(){ return typeof PK_HAVE !== 'undefined' ? PK_HAVE.slice() : []; },
   art:function(){ return typeof PK_ART !== 'undefined' ? Object.keys(PK_ART).length : 0; }
 };
+/* clicking a thing: Seam's own click actions first (close-ups, the dumpster, the pit...); true if one answered */
+EG_SEAM.click = function(sayKey){
+  var hit = false;
+  try { hubBoxAction({ box:{ say:sayKey } }, function(d, fn){ hit = true; fn(); return true; }); } catch (e) { console.error(e); }
+  return hit;
+};
+EG_SEAM.where = function(x, z, a){ me.x = x; me.y = z; me.a = a; };
+EG_SEAM.closeUpOpen = function(){ return !!((typeof F3C !== 'undefined' && F3C.open) || (typeof FVM !== 'undefined' && FVM.open)); };
+EG_SEAM.closeAll = function(){ try { if (typeof F3C !== 'undefined' && F3C.open) f3Close(); } catch (e) {} try { if (typeof FVM !== 'undefined' && FVM.open) fvmClose(); } catch (e) {} };
+EG_SEAM.pic = function(name){ return FPIC[name] || null; };
 EG_SEAM.step = function(now, dt){ try { if (POK.open) pkFrame(now); seamStep(now, dt); }   /* (as Seam's d2-frame: while the pocket is open, it's what's drawn) */ catch (e) { if (!EG_SEAM.err) { EG_SEAM.err = e; console.error(e); } } };
 })();
