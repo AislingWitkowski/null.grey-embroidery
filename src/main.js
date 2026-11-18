@@ -11,6 +11,7 @@ import { UI, initUI, say, tickUI, ccSay, VOID_LINE } from './ui.js';
 import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
 import { SOUND_FILES } from './sound-files.js';
 import { K } from './kit.js';
+import { rootAll } from './roots.js';
 import { P, setWorld, initInput, stepPlayer, pressJump, toggleCrouch, simKeys, TAP } from './player.js';
 import { LOOKS } from './looks.js';
 import { paintDetail } from './paint.js';
@@ -65,6 +66,7 @@ function start(){
   look = makeLook(renderer);
   DETAIL.value = paintDetail();
   world = buildStation(scene);
+  { const R = rootAll(scene, world.surfaceAt); window.__roots = R; }   /* (every pole, post and trunk gets its footing) */
   buildTrain(scene, tag, halo); world.rideSolids = TR.solids;   /* (the train: milestone 2's last part) */
   /* (Nov 17) nobody gets onto the track, anywhere: the platform's edge (z 3) and the gravel past its ends stop you; only
      the train's own floor, through its open doors, is allowed past it. Aisling's line, word for word */

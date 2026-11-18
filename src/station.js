@@ -5,6 +5,7 @@
    real light and shadow, fog, textures, grass and corn in the round. Aisling (Nov 16): "i lkike the way the station
    looks, i mostly want pumped up graphics."
    ================================================================ */
+import { ROOTS } from './roots.js';
 import * as THREE from 'three';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
@@ -139,6 +140,14 @@ function spot(x, y, z, angle, dist, col, mapSize){
 }
 
 /* ---------------- build ---------------- */
+/* what a thing standing here stands in (for its footing, roots.js): the platform's concrete, the road's asphalt, or earth */
+export function surfaceAt(x, z){
+  if (x > 8.9 && x < 32.1 && z > 7.85 && z < 8.05) return null;   /* (door frames and the wall's foot: not standing in the platform) */
+  if (x > 8.9 && x < 32.1 && z > 3.1 && z < 8.05) return { y:0, kind:'concrete' };
+  if (x > 8.6 && x < 29.2 && z > 7.7 && z < 13.4) return null;   /* (inside the buildings) */
+  if (x > ROAD[0] - 0.05 && x < ROAD[1] + 0.05 && z > 7.9) return { y:groundAt(x, z), kind:'concrete' };
+  return { y:groundAt(x, z), kind:'earth' };
+}
 export function buildStation(scene){
   kitInit(scene);
   const T = {
@@ -441,7 +450,17 @@ export function buildStation(scene){
     grass.push([x, -0.13, z, 0.35 + R()*0.5, R()*6.3, Math.floor(R()*4)]);
   }
   for (let i = 0; i < 240; i++) { const x = -2 + R()*44, z = 0.85 + R()*0.18; grass.push([x, groundAt(x, z), z, 0.5 + R()*0.5, R()*6.3, Math.floor(R()*4)]); }
-  [[9.05, 3.2], [9.2, 7.55], [32.5, 3.3], [32.3, 7.6], [24.7, 7.62], [31.0, 7.7]].forEach(p => grass.push([p[0], 0, p[1], 0.45, R()*6, Math.floor(R()*4)]));   /* through the platform's cracks (Seam's spots) */
+  /* (Nov 18, Aisling: "no grass on concrete that is that long, like moss and a little ok, but there wouldnt be huge tufts")
+     through the platform's cracks (Seam's spots): only small weeds, low, and moss round them and along the damp back edge */
+  [[9.05, 3.2], [9.2, 7.55], [32.5, 3.3], [32.3, 7.6], [24.7, 7.62], [31.0, 7.7]].forEach(p => { grass.push([p[0], 0, p[1], 0.13 + R()*0.06, R()*6, Math.floor(R()*4), 0.5]); ROOTS.addMoss(p[0], p[1], 0.22 + R()*0.1); });
+  for (let i = 0; i < 26; i++) { const x = 9.3 + R()*22.4; ROOTS.addMoss(x, 7.86 + R()*0.1, 0.12 + R()*0.16); }   /* moss in the shade where the platform meets the building */
+  for (let i = 0; i < 10; i++) { const x = 9.3 + R()*22.4; ROOTS.addMoss(x, 3.18 + R()*0.06, 0.08 + R()*0.1); }   /* and a little at the coping */
+  /* (Nov 18) round anything narrow standing in the earth (poles, posts, trunks) the ground is trodden and bare, so its
+     footing shows: no tall grass right up against it, only a few short tufts a little way off */
+  { const feet = K.solids.filter(o => o.x1 - o.x0 < 0.7 && o.z1 - o.z0 < 0.7);
+    for (let i = grass.length - 1; i >= 0; i--) { const g = grass[i];
+      for (const o of feet) { const cx = (o.x0 + o.x1)/2, cz = (o.z0 + o.z1)/2, r = Math.max(o.x1 - o.x0, o.z1 - o.z0)/2, d = Math.hypot(g[0] - cx, g[2] - cz);
+        if (d < r + 0.35) { grass.splice(i, 1); break; } if (d < r + 0.8) { g[3] *= 0.6; if (g[6]) g[6] *= 0.6; } } } }
   clumps(grass, paintGrassAtlas(), 3, 1, 1.0);   /* (atlas: 4 clumps) */
   const cornAt = (x, z) => { if (R() < 0.08 || cornClear(x, z)) return; corn.push([x + (R() - 0.5)*0.25, onTunnelRoof(x, z) ? TUN.bank - 0.02 : groundAt(x, z) - 0.05, z + (R() - 0.5)*0.25, 1.0 + R()*0.3, R()*6.3, Math.floor(R()*4), 2.6]); };
   for (let x = -8; x < 48; x += 0.36) for (let z = -9; z < 0.55; z += 0.42) cornAt(x, z);              /* across the track */
@@ -450,7 +469,7 @@ export function buildStation(scene){
   for (let x = 41.4; x < 48; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* east */
   clumps(corn, paintCornAtlas(), 2, 1, 0.55, 8);
 
-  return { bounds:{ x0:1.2, x1:40.8, z0:0.95, z1:24.0 }, solids:K.solids, ground:groundAt };
+  return { bounds:{ x0:1.2, x1:40.8, z0:0.95, z1:24.0 }, solids:K.solids, ground:groundAt, surfaceAt };
 }
 
 /* ---------------- a look's lights and fog ---------------- */

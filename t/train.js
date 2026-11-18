@@ -55,7 +55,7 @@ const page = 'file://' + path.resolve('dist/missing-mile-station.html');
   /* 5. arriving by train, from a Seam page */
   const p2 = await b.newPage({ viewport:{ width:960, height:540 } });
   p2.on('pageerror', e => { errs++; console.log('ERR2', String(e.stack).slice(0, 400)); });
-  await p2.goto(page + '?arrive=train&tok=t' + Date.now());
+  await p2.goto(page + '?arrive=train&tok=t' + Date.now(), { waitUntil:'domcontentloaded', timeout:120000 });
   await p2.waitForFunction(() => document.getElementById('wait').classList.contains('gone'), null, { timeout:180000 });
   await p2.waitForTimeout(600);
   const arr = await p2.evaluate(() => { const E = window.__eg; E.pause(true); E.renderOnce(); return { state:E.TR.state, doorK:E.TR.doorK, P:[E.P.x, E.P.z].map(v => +v.toFixed(2)), said:document.getElementById('caption').textContent }; });

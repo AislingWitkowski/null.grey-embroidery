@@ -21,6 +21,7 @@ import { K, mat, box, lathe, plane, wire, cyl, seamTex, rnd } from './kit.js';
 import { vn, fbm, frac, clamp, sm, tex, paint } from './paint.js';
 import { inkRGB } from './inks.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
+import { ROOTS } from './roots.js';
 
 /* Seam's deep reds (hblood, from null.grey-furusatostation's RAMP_SRC) for the leaves only: Embroidery's ink grade keeps its own ramps */
 const HBLOOD = ['#120202','#220404','#340606','#470909','#5b0b0b','#700e0d','#851211','#9a1715','#ae1f1a','#c22b22','#d4463a','#e47466'];
@@ -79,27 +80,33 @@ export function buildMore(C){
   ];
   /* each palette's leaves: 16 to an atlas, four shapes (maple, oval, long, round with a wavy edge), each its own colour,
      a darker rib, a dried edge */
+  /* (Nov 18, from Aisling's own photos of maples: "almost right but they dont look natural at all") each leaf as it grows:
+     its own stalk (the petiole) reaching to the bottom of its picture, so the leaf hangs from its twig; five pointed lobes
+     with small teeth; veins spreading out from where the stalk joins, a little redder than the leaf; brown speckles and
+     a dried edge here and there. 16 to an atlas, each its own colour from the tree's palette */
   function leafAtlas(L){
-    return cvTex(256, 256, (c) => { const lr = rnd(31 + L.n);
-      for (let k = 0; k < 16; k++) { const ox = (k % 4)*64 + 32, oy = Math.floor(k/4)*64 + 32, P = L.p[k % L.p.length], sh = k % 4, t = P[1] + (lr() - 0.5)*0.14;
-        c.save(); c.translate(ox, oy); c.rotate(lr()*6.28); c.fillStyle = col(P[0], t); c.beginPath();
-        /* (Nov 18, Aisling: "a little too outlined and cartoonish") no hard outline: each leaf is shaded from its middle out,
-           a little darker and browner toward its edge, the rib a faint line, a few soft blemishes; the maple's lobes are
-           rounded, not a star */
-        const path = () => { c.beginPath();
-          if (sh === 0) { for (let i = 0; i <= 60; i++) { const a = i/60*Math.PI*2, r = 12 + 14*Math.pow(Math.abs(Math.sin(a*2.5)), 1.8) + lr()*1.2; c.lineTo(Math.cos(a)*r, Math.sin(a)*r*0.92); } }
-          else if (sh === 1) c.ellipse(0, 0, 25, 15, 0, 0, Math.PI*2);
-          else if (sh === 2) c.ellipse(0, 0, 27, 9.5, 0, 0, Math.PI*2);
-          else for (let i = 0; i <= 36; i++) { const a = i/36*Math.PI*2, r = 20 + 1.6*Math.sin(a*7) + lr()*0.8; c.lineTo(Math.cos(a)*r, Math.sin(a)*r); }
-          c.closePath(); };
-        path(); const g = c.createRadialGradient(-4, -2, 2, 0, 0, 27); g.addColorStop(0, col(P[0], Math.min(1, t + 0.06))); g.addColorStop(0.7, col(P[0], t)); g.addColorStop(1, col(P[0], t*0.82)); c.fillStyle = g; c.fill();
-        c.save(); path(); c.clip();
-        c.strokeStyle = col(P[0], t*0.8); c.globalAlpha = 0.5; c.lineWidth = 1; c.beginPath(); c.moveTo(-22, 0); c.lineTo(20, 0); c.stroke();   /* the rib, faint */
-        for (let i = 0; i < 6; i++) { const bx = -14 + lr()*28, by = -7 + lr()*14, br = 1.5 + lr()*3; const bg = c.createRadialGradient(bx, by, 0, bx, by, br); bg.addColorStop(0, col('hwood', 0.3)); bg.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = 0.45; c.fillStyle = bg; c.fillRect(bx - br, by - br, br*2, br*2); }   /* soft blemishes */
-        c.restore();
-        c.restore(); }
+    return cvTex(512, 512, (c) => { const lr = rnd(31 + L.n);
+      for (let k = 0; k < 16; k++) { const ox = (k % 4)*128, oy = Math.floor(k/4)*128, P = L.p[k % L.p.length], t = P[1] + (lr() - 0.5)*0.14;
+        const cx = ox + 64, cy = oy + 52, R0 = 40 + lr()*6, deep = 0.42 + lr()*0.16, sk = (lr() - 0.5)*0.25;
+        const lobes = [[-Math.PI/2 + sk, 1], [-Math.PI/2 - 0.95 + sk, 0.88], [-Math.PI/2 + 0.95 + sk, 0.88], [-Math.PI/2 - 1.85, 0.5], [-Math.PI/2 + 1.85, 0.5]];
+        const rAt = a => { let m = 0; for (const [la, ll] of lobes) { let d = Math.abs(Math.atan2(Math.sin(a - la), Math.cos(a - la))); m = Math.max(m, ll*Math.pow(Math.max(0, 1 - d/0.62), 1.35)); }
+          const tooth = 0.05*Math.pow(Math.abs(Math.sin(a*14)), 6); return R0*(deep + (1 - deep)*m + tooth*m); };
+        c.beginPath(); for (let i = 0; i <= 160; i++) { const a = i/160*Math.PI*2 - Math.PI/2, r = rAt(a); c.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r*0.95); } c.closePath();
+        const g = c.createRadialGradient(cx, cy + 8, 3, cx, cy, R0); g.addColorStop(0, col(P[0], Math.min(1, t + 0.05))); g.addColorStop(0.75, col(P[0], t)); g.addColorStop(1, col(P[0], t*0.9));
+        c.fillStyle = g; c.fill();
+        c.save(); c.clip();
+        if (lr() < 0.55) { const ex = cx + (lr() - 0.5)*60, ey = cy - 10 - lr()*25, er = 12 + lr()*16, eg = c.createRadialGradient(ex, ey, 0, ex, ey, er); eg.addColorStop(0, col('hwood', 0.3)); eg.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = 0.5; c.fillStyle = eg; c.fillRect(ex - er, ey - er, er*2, er*2); c.globalAlpha = 1; }   /* a dried patch */
+        for (let i = 0; i < 40; i++) { c.fillStyle = col('hwood', 0.14 + lr()*0.12); c.globalAlpha = 0.35 + lr()*0.4; const sx = cx + (lr() - 0.5)*70, sy = cy + (lr() - 0.5)*70, ss = 0.8 + lr()*1.8; c.fillRect(sx, sy, ss, ss); }   /* the speckles */
+        c.globalAlpha = 0.55; c.strokeStyle = col(P[0] === 'hgold' || P[0] === 'holive' ? 'hrust' : P[0], t*0.7); c.lineWidth = 1.3;
+        const bx = cx, by = cy + 12;   /* where the stalk joins: the veins spread out from here */
+        for (const [la, ll] of lobes) { const r = rAt(la)*0.93; c.beginPath(); c.moveTo(bx, by); c.quadraticCurveTo(bx + Math.cos(la)*r*0.45, by + Math.sin(la)*r*0.45 - 2, cx + Math.cos(la)*r, cy + Math.sin(la)*r*0.95); c.stroke();
+          c.lineWidth = 0.7; for (const f of [0.35, 0.6]) for (const sd of [-1, 1]) { const px = bx + (Math.cos(la)*r)*f, py = by + (Math.sin(la)*r*0.95 - 12)*f, a2 = la + sd*0.7; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a2)*r*0.28, py + Math.sin(a2)*r*0.28); c.stroke(); } c.lineWidth = 1.3; }
+        c.restore(); c.globalAlpha = 1;
+        c.strokeStyle = col(P[0] === 'hgold' || P[0] === 'holive' ? 'hrust' : 'hwood', 0.32); c.lineWidth = 2.2; c.beginPath(); c.moveTo(bx, by - 2); c.quadraticCurveTo(bx + (lr() - 0.5)*10, oy + 110, bx + (lr() - 0.5)*4, oy + 127); c.stroke();   /* the stalk, down to the picture's edge */
+      }
     });
   }
+
   /* (Nov 17, graphics pass) the trees in the wind, the same wind as the grass (the same gusts, the same way): the crown
      leans and comes back, more the higher it is, the branches bending with it so the leaves stay on them; each leaf
      trembles a little on its own, slowly (well under three times a second). and light comes through the leaves: they
@@ -126,9 +133,9 @@ export function buildMore(C){
     return m;
   }
   function leafField(items, m, flat){
-    const g = new THREE.PlaneGeometry(1, 1); if (flat) g.rotateX(-Math.PI/2);
+    const g = new THREE.PlaneGeometry(1, 1); g.translate(0, 0.5, 0);   /* (its stalk's end at the twig) */ if (flat) g.rotateX(-Math.PI/2);
     const im = new THREE.InstancedMesh(g, m, items.length), M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new Float32Array(items.length);
-    items.forEach((it, i) => { e.set(it[4], it[5], it[6]); q.setFromEuler(e); M4.compose(new THREE.Vector3(it[0], it[1], it[2]), q, new THREE.Vector3(it[3], it[3], it[3])); im.setMatrixAt(i, M4); v[i] = it[7]; });
+    items.forEach((it, i) => { if (it[8]) q.copy(it[8]); else { e.set(it[4], it[5], it[6]); q.setFromEuler(e); } M4.compose(new THREE.Vector3(it[0], it[1], it[2]), q, new THREE.Vector3(it[3], it[3], it[3])); im.setMatrixAt(i, M4); v[i] = it[7]; });
     g.setAttribute('aVar', new THREE.InstancedBufferAttribute(v, 1)); im.castShadow = !flat; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); return im;
   }
   function tree(tx, tz, ph, seed, say){
@@ -150,14 +157,28 @@ export function buildMore(C){
           const E3 = limb(P2, 0.45 + Rt()*0.4, Math.cos(a3)*m3, Math.sin(a3)*m3, 0.024, 0.008);   /* its twigs */
           for (const f of [0.35, 0.65, 0.9, 1.02]) site(P2, E3, f); }   /* (Nov 18: on the twig, not past its end: Aisling, "they float a little too much") */
       } }
+    ROOTS.add(tx, tz, 0.3, 'earth');   /* (its foot in the earth: roots.js) */
+    for (let k = 0; k < 5; k++) { const a = Rt()*6.283 + k*1.25, L = 0.75 + Rt()*0.4;   /* (Nov 18) its roots flaring into the ground, so it doesn't stand like a pipe */
+      geos.push(rodGeo([tx + Math.cos(a)*0.16, gy + 0.38, tz + Math.sin(a)*0.16], [tx + Math.cos(a)*L, gy - 0.02, tz + Math.sin(a)*L], 0.13, 0.03, 6)); }
     tag(meshOf(geos, bark), say); K.solids.push({ x0:tx - 0.28, x1:tx + 0.28, y0:gy - 1, y1:gy + H1, z0:tz - 0.28, z1:tz + 0.28 });
     for (let k = sites.length - 1; k > 0; k--) { const s = Math.floor(Rt()*(k + 1)); [sites[k], sites[s]] = [sites[s], sites[k]]; }   /* (which sites get leaves: at random, so no two trees match) */
-    const lv = [];
-    for (let t = 0; t < Math.min(Lf.n, sites.length); t++) { const S = sites[t], r = (Lf.rb[0] + Rt()*(Lf.rb[1] - Lf.rb[0]))*0.8, cx = S[0] + (Rt() - 0.5)*0.3, cy = S[1] - 0.04 + (Rt() - 0.5)*0.18, cz = S[2] + (Rt() - 0.5)*0.3;   /* (bunches sit on their twig) */
-      const n = Math.round(30 + 120*r*r);
-      for (let i = 0; i < n; i++) { const u = Rt()*2 - 1, a = Rt()*6.283, d = Math.cbrt(Rt()), s = Math.sqrt(1 - u*u);   /* a loose bunch, thinning at its edge */
-        if (d > 0.8 && Rt() < 0.5) continue;
-        lv.push([cx + Math.cos(a)*s*d*r, cy + u*d*r*0.75, cz + Math.sin(a)*s*d*r, 0.1 + Rt()*0.07, Rt()*6.3, Rt()*6.3, Rt()*6.3, Math.floor(Rt()*16)]); } }
+    /* (Nov 18) the leaves grow on twiglets: from each site a few thin shoots, and the leaves hang off them in fans,
+       each on its own stalk, spreading out and facing the sky a little, as on her maples */
+    const lv = [], UP = new THREE.Vector3(0, 1, 0), tw = [];
+    const leafAt = (N, dir, sz) => { const y = dir.clone().normalize(); let x = new THREE.Vector3().crossVectors(UP, y); if (x.lengthSq() < 1e-4) x.set(1, 0, 0); x.normalize();
+      const z = new THREE.Vector3().crossVectors(x, y).normalize(); const M = new THREE.Matrix4().makeBasis(x, y, z), qq = new THREE.Quaternion().setFromRotationMatrix(M);
+      qq.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (Rt() - 0.5)*1.1));
+      lv.push([N[0], N[1], N[2], sz, 0, 0, 0, Math.floor(Rt()*16), qq]); };
+    const nUse = Math.min(sites.length, Math.round(sites.length*Math.min(1, Lf.n/86)));
+    for (let t = 0; t < nUse; t++) { const S = sites[t], nt = ph >= 3 ? 1 : (ph === 2 ? 3 : 5 + Math.floor(Rt()*3));
+      for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = 0.25 + Rt()*0.4, d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
+        const B = [S[0] + d.x*len, S[1] + d.y*len, S[2] + d.z*len]; tw.push(rodGeo(S, B, 0.009, 0.004, 3));
+        for (const f of [0.35, 0.68, 1.0]) { const N = [S[0] + d.x*len*f, S[1] + d.y*len*f, S[2] + d.z*len*f], nl = f === 1 ? 4 + Math.floor(Rt()*3) : 2 + Math.floor(Rt()*2);
+          for (let l = 0; l < nl; l++) { const sp = (l - (nl - 1)/2)*0.75 + (Rt() - 0.5)*0.4, ca = Math.cos(sp), sa = Math.sin(sp);
+            const dir = new THREE.Vector3(d.x*ca - d.z*sa, d.y*0.4 - 0.25 + Rt()*0.35, d.x*sa + d.z*ca);   /* fanning out from the shoot, drooping a little */
+            if (Rt() < (ph >= 2 ? 0.25 : 0.06)) continue;   /* (gaps: some already fallen) */
+            leafAt(N, dir, 0.14 + Rt()*0.09); } } } }
+    if (tw.length) tag(meshOf(tw, bark, { cast:false }), say);
     if (lv.length) tag(leafField(lv, m, false), say);
     const gl = [];   /* its leaves on the ground round it, thicker near the trunk */
     for (let i = 0; i < Lf.ground; i++) { const a = Rt()*6.283, d = 0.3 + Math.pow(Rt(), 0.7)*3.2, x = tx + Math.cos(a)*d*1.1, z = tz + Math.sin(a)*d;
@@ -179,6 +200,7 @@ export function buildMore(C){
       geos.push(rodGeo(corner(A[0], A[1], h), corner(B[0], B[1], h), 0.012, 0.012, 4));   /* its rings */
       geos.push(rodGeo(corner(A[0], A[1], h), corner(B[0], B[1], h + 0.85), 0.01, 0.01, 4), rodGeo(corner(B[0], B[1], h), corner(A[0], A[1], h + 0.85), 0.01, 0.01, 4)); }   /* the braces crossing */
     geos.push(rodGeo([WX, g0 + 1.6, WZ], [WX, g0 + 8.62, WZ], 0.018, 0.018, 4));   /* the pump rod */
+    for (const [sx, sz] of CN) ROOTS.add(WX + sx*0.62, WZ + sz*0.62, 0.06, 'earth');
     const blk = mat(T.iron, { color:0x4a403a }); tag(meshOf(geos, blk), 'windmill');
     tag(cyl(0.36, 0.36, 0.85, mat(T.tinG, { color:0x8a5a40 }), WX, g0 + 4.1, WZ, 12), 'windmill');   /* the tank */
     box(WX - 0.32, WX + 0.32, g0 + top, g0 + top + 0.07, WZ - 0.32, WZ + 0.32, blk, { solid:false });   /* the platform */
