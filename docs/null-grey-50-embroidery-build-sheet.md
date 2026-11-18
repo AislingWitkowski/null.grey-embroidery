@@ -177,3 +177,8 @@ Aisling: *"Ok we will move all those over then we will update them all to embroo
 - **Checked:** pictures from ten spots; every new thing clicks and says its Seam line (`t/clicks.js`); walking and collisions (`t/walk.js`); close-ups and the pocket (`t/closeups.js`); no errors; no blue. How heavy it is (`t/info.js`): about +30k triangles and up to +50 draw calls from the busiest spots. That should be fine, but Aisling should check smoothness on the Mac.
 - **For the Embroidery-graphics pass (next):** the trees don't move in the wind yet; their leaves are flat cards, not yet lit through. The windmill's wheel and vane are cut-out pictures. The tunnel's inside shows its box shape faintly. The road lamps' light. The name board and hanging sign are still Embroidery's redraws (same words as Seam's).
 - **Still pending from Aisling:** her sound files.
+
+### Nov 17, 2026 (night) — notes from Aisling, for later
+- **Next: the train** (Aisling: making sure it works mechanically is important).
+- **The mailbox: "label it 2019"** (Aisling, for later). Whether that's the number on the box or a year: to ask when it's done.
+- **MAPLES & SONS** (on the shed's FEED · SEED · BAIT sign and the windmill's vane) was **Claude's made-up name**, from the first Seam build (Oct 25), not Aisling's. She's wondering about a better lore name; it can change later. Doc 38 already links the bait sign to her uncle's or great-uncle's bait shop in Harriman (Uncle's Bait Shop). **Pending, Aisling:** the name.
