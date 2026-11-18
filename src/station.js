@@ -16,7 +16,7 @@ import { buildMore, cornClear, onTunnelRoof, groundSay, tickMore, TUN } from './
 /* (milestone 2) what you can click: a mesh carries the key of its lines in F3_SAYS (the Seam version's, word for word),
    or a function that picks a line from where you clicked it */
 export const CLICK = [];
-function tag(me, say, start){ me.userData.say = say; if (start) me.userData.sayI = start; CLICK.push(me); return me; }
+export function tag(me, say, start){ me.userData.say = say; if (start) me.userData.sayI = start; CLICK.push(me); return me; }
 /* the station building's walls: which bay you clicked (the same sums as Seam's f03-road lookAction) */
 function wallSay(hit){
   const x = hit.point.x, y = hit.point.y, z = hit.point.z;
@@ -124,7 +124,7 @@ function sky(){
    (the shade stops light going up), and every one casts shadows; nothing here moves, so the shadows are drawn once.
    two of the bulbs struggle: they dim and come back slowly, never a flicker. ---------------- */
 export const L = { bulbs:[], halos:[], hemi:null, west:null, lamp:null, vend:null, shaft:null, skyM:null, fog:null };
-function halo(x, y, z, s, col){
+export function halo(x, y, z, s, col){
   const cv = document.createElement('canvas'); cv.width = cv.height = 64; const c = cv.getContext('2d'), gr = c.createRadialGradient(32, 32, 0, 32, 32, 32);
   gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.2, 'rgba(255,255,255,0.45)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
   const t = new THREE.CanvasTexture(cv);
@@ -174,10 +174,10 @@ export function buildStation(scene){
   tp.receiveShadow = true; scene.add(tp);
 
   /* ---- telephone poles along the line, wires between, sagging ---- */
-  const PX = [4, 11, 18, 25, 32, 39];
+  const PX = [4, 11, 18, 25, 32, 39], LZ = 0.8;   /* (Nov 17, night: back from the track to 0.8, so the real-size train clears them) */
   PX.forEach((x, i) => {
-    tag(cyl(0.11, 0.09, 7.7, M.woodD, x + 0.08, -0.5, 1.1, 14), 'pole'); SRC.poles.push({ x:x + 0.08, y:6.7, z:1.1 }); K.solids.push({ x0:x, x1:x + 0.16, y0:-0.5, y1:7.2, z0:1.02, z1:1.18 }); box(x - 0.6, x + 0.76, 6.62, 6.74, 1.05, 1.15, M.woodD, { solid:false });
-    if (i < PX.length - 1) [6.78, 6.78].forEach((y, k) => wire([x - 0.45 + k*1.05, y, 1.1], [PX[i + 1] - 0.45 + k*1.05, y, 1.1], 0.35, M.wire));
+    tag(cyl(0.11, 0.09, 7.7, M.woodD, x + 0.08, -0.5, LZ, 14), 'pole'); SRC.poles.push({ x:x + 0.08, y:6.7, z:LZ }); K.solids.push({ x0:x, x1:x + 0.16, y0:-0.5, y1:7.2, z0:LZ - 0.08, z1:LZ + 0.08 }); box(x - 0.6, x + 0.76, 6.62, 6.74, LZ - 0.05, LZ + 0.05, M.woodD, { solid:false });
+    if (i < PX.length - 1) [6.78, 6.78].forEach((y, k) => wire([x - 0.45 + k*1.05, y, LZ], [PX[i + 1] - 0.45 + k*1.05, y, LZ], 0.35, M.wire));
   });
 
   /* ---- the station building: stucco over brick, shut doors, papered windows; a real gabled tin roof ---- */
@@ -339,16 +339,16 @@ export function buildStation(scene){
      to the shed and the building, a guy wire with its yellow-and-black striped guard ---- */
   const insM = mat(null, { color:0x6e675e, rough:0.4 });
   const insul = (x, y, z) => cyl(0.03, 0.025, 0.09, insM, x, y, z, 6, { cast:false });
-  PX.forEach(x => { for (const k of [-0.5, -0.2, 0.36, 0.66]) insul(x + 0.08 + k, 6.74, 1.1); });
+  PX.forEach(x => { for (const k of [-0.5, -0.2, 0.36, 0.66]) insul(x + 0.08 + k, 6.74, LZ); });
   PY.forEach(z => { if (z !== 17.5) for (const k of [-0.5, -0.2, 0.2, 0.5]) insul(31.98 + k, 6.52, z + 0.08); });
   const can = (x, y, z) => { cyl(0.2, 0.2, 0.62, mat(T.tinG, { color:0x9a948c }), x, y, z, 10); cyl(0.21, 0.17, 0.06, M.iron, x, y + 0.62, z, 10); box(x - 0.04, x + 0.04, y + 0.1, y + 0.5, z - 0.24, z - 0.2, M.iron, { solid:false }); };
-  can(18.08, 5.5, 1.36);   /* (the road's can is on the newer pole by the cut one now: station2) */
-  for (let i = 0; i < PX.length - 1; i++) for (const [dx, y, sg] of [[-0.12, 6.78, 0.5], [0.66, 6.78, 0.3], [0.2, 6.3, 0.7], [0.08, 5.6, 0.9]]) wire([PX[i] + dx, y, 1.1], [PX[i + 1] + dx, y, 1.1], sg, M.wire, 0.009);
+  can(18.08, 5.5, LZ - 0.26);   /* (the road's can is on the newer pole by the cut one now: station2) */
+  for (let i = 0; i < PX.length - 1; i++) for (const [dx, y, sg] of [[-0.12, 6.78, 0.5], [0.66, 6.78, 0.3], [0.2, 6.3, 0.7], [0.08, 5.6, 0.9]]) wire([PX[i] + dx, y, LZ], [PX[i + 1] + dx, y, LZ], sg, M.wire, 0.009);
   for (let i = 0; i < PY.length - 1; i++) for (const [dx, y, sg] of [[-0.2, 6.56, 0.6], [0.2, 6.56, 0.38], [0, 5.9, 0.8]]) wire([31.98 + dx, y, PY[i] + 0.08], [31.98 + dx, y, PY[i + 1] + 0.08], sg, M.wire, 0.009);
   wire([31.98, 5.9, 10.58], [28.9, 2.4, 9.0], 0.3, M.wire, 0.008);   /* the service drop to the shed */
   wire([31.98, 6.3, 10.58], [25.0, 3.0, 13.1], 0.5, M.wire, 0.008);  /* and to the building's back */
-  wire([32.08, 6.4, 1.1], [31.98, 6.4, 10.58], 0.6, M.wire, 0.009);  /* across the line to the road's poles */
-  wire([25.08, 6.0, 1.1], [31.98, 5.8, 10.58], 0.8, M.wire, 0.008);
+  wire([32.08, 6.4, LZ], [31.98, 6.4, 10.58], 0.6, M.wire, 0.009);  /* across the line to the road's poles */
+  wire([25.08, 6.0, LZ], [31.98, 5.8, 10.58], 0.8, M.wire, 0.008);
   wire([31.98, 5.3, 10.5], [31.98, -0.3, 8.62], 0, M.wire, 0.008);   /* the guy wire on the first pole (where Seam has it: the line ends there), and its guard */
   const strT = sized(paint(16, 64, 0.1, 2, (x, y) => [frac(y*3.5) < 0.5 ? 'hamber' : 'hblack', frac(y*3.5) < 0.5 ? 0.5 - 0.15*fbm(x*30, y*6) : 0.15, 1, 0.5, 0.6]), 0.1, 2);
   const gd = cyl(0.04, 0.04, 2.1, mat(strT), 0, 0, 0, 8); const ga = Math.atan2(1.88, 5.6); gd.rotation.x = ga; gd.position.set(31.98, -0.3 + Math.cos(ga)*1.05, 8.62 + Math.sin(ga)*1.05);
@@ -436,7 +436,7 @@ export function buildStation(scene){
     const x = 1 + R()*40, z = 3.1 + R()*4.8; if (x > 8.9 && x < 32.1) continue; if (R() < 0.5 && fbm(x*0.5, z*0.5) < 0.5) continue;
     grass.push([x, -0.13, z, 0.35 + R()*0.5, R()*6.3, Math.floor(R()*4)]);
   }
-  for (let i = 0; i < 240; i++) { const x = -2 + R()*44, z = 0.9 + R()*0.35; grass.push([x, groundAt(x, z), z, 0.5 + R()*0.5, R()*6.3, Math.floor(R()*4)]); }
+  for (let i = 0; i < 240; i++) { const x = -2 + R()*44, z = 0.85 + R()*0.18; grass.push([x, groundAt(x, z), z, 0.5 + R()*0.5, R()*6.3, Math.floor(R()*4)]); }
   [[9.05, 3.2], [9.2, 7.55], [32.5, 3.3], [32.3, 7.6], [24.7, 7.62], [31.0, 7.7]].forEach(p => grass.push([p[0], 0, p[1], 0.45, R()*6, Math.floor(R()*4)]));   /* through the platform's cracks (Seam's spots) */
   clumps(grass, paintGrassAtlas(), 3, 1, 1.0);   /* (atlas: 4 clumps) */
   const cornAt = (x, z) => { if (R() < 0.08 || cornClear(x, z)) return; corn.push([x + (R() - 0.5)*0.25, onTunnelRoof(x, z) ? TUN.bank - 0.02 : groundAt(x, z) - 0.05, z + (R() - 0.5)*0.25, 1.0 + R()*0.3, R()*6.3, Math.floor(R()*4), 2.6]); };

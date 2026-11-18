@@ -28,7 +28,7 @@ const col = (r, t) => { if (r === 'hblood') return HBLOOD[Math.max(0, Math.min(1
 const pick = A => A[(Math.random()*A.length) | 0];
 
 /* where the corn must not stand (round the windmill's feet, the trees out in it); and the bank over the tunnel */
-export const TUN = { x:40.0, zc:2.0, hw:1.35, spring:1.28, top:2.63, bank:3.0 };   /* (the arch fits a train: milestone 2's last part) */
+export const TUN = { x:40.0, zc:2.0, hw:1.4, spring:2.15, bank:3.4 };   /* (the arch fits the train, real size: 1.8 m wide, its roof 2.45 m over the platform) */
 export function cornClear(x, z){
   if (Math.abs(x - 47.6) < 0.9 && Math.abs(z - 20.4) < 0.9) return true;
   if (Math.hypot(x - 45.5, z - 15.5) < 1.1) return true;
@@ -276,8 +276,8 @@ export function buildMore(C){
     /* inside: only dark, and the roof of earth over it (the corn stands on it) */
     const dark = new THREE.MeshBasicMaterial({ color:0x070504, side:THREE.BackSide });
     dark.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', '#ifdef USE_FOG\n float fogF = smoothstep(fogNear, fogFar, vFogDepth)*0.85; gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF*fogF);\n#endif'); };   /* (the dark inside takes the fog late: the mouth stays dark until you're far off) */
-    const inside = new THREE.Mesh(new THREE.BoxGeometry(5, ys + hw - yb + 0.3, hw*2 + 0.6), dark); inside.position.set(X + 0.1 + 2.5, (ys + hw + yb)/2, zc); scene.add(inside);
-    box(X + 0.5, 49, ys + hw + 0.12, top + 0.02, zc - hw - 0.85, zc + hw + 0.85, earth, { solid:false, cast:false });
+    const inside = new THREE.Mesh(new THREE.BoxGeometry(16, ys + hw - yb + 0.3, hw*2 + 0.6), dark); inside.position.set(X + 0.1 + 8, (ys + hw + yb)/2, zc); scene.add(inside);
+    box(X + 0.5, 57, ys + hw + 0.12, top + 0.02, zc - hw - 0.85, zc + hw + 0.85, earth, { solid:false, cast:false });
   })();
 
   /* ================= on the shed: FEED · SEED · BAIT, and the tobacco window (Seam's own pictures) ================= */
@@ -292,8 +292,8 @@ export function buildMore(C){
 
   /* ================= the poles' little tags, and climbing steps on some (f03-3d3) ================= */
   const tagM = picM('f3tag', 900, '#9a958c', { cut:true, two:true }), pegs = [];
-  [4, 11, 18, 25, 32, 39].forEach((x, i) => { if (i % 2 === 0) plane(0.08, 0.11, tagM, x + 0.08, 0.955, 1.205, 0, { cast:false });
-    if (i === 1 || i === 4) for (let y = 2.4; y < 6.2; y += 0.38) { const s = Math.round(y/0.38) % 2 ? 1 : -1; pegs.push(rodGeo([x + 0.08 + s*0.05, y, 1.2], [x + 0.08 + s*0.05, y, 1.31], 0.011, 0.011, 4)); } });
+  [4, 11, 18, 25, 32, 39].forEach((x, i) => { if (i % 2 === 0) plane(0.08, 0.11, tagM, x + 0.08, 0.955, 0.905, 0, { cast:false });
+    if (i === 1 || i === 4) for (let y = 2.4; y < 6.2; y += 0.38) { const s = Math.round(y/0.38) % 2 ? 1 : -1; pegs.push(rodGeo([x + 0.08 + s*0.05, y, 0.9], [x + 0.08 + s*0.05, y, 1.01], 0.011, 0.011, 4)); } });
   [10.5, 24.5, 31.5, 38.5].forEach((z, i) => { if (i !== 1) plane(0.08, 0.11, tagM, 31.875, 1.655, z + 0.08, -Math.PI/2, { cast:false });
     if (i === 2 || i === 3) for (let y = 2.4; y < 6.0; y += 0.38) { const s = Math.round(y/0.38) % 2 ? 1 : -1; pegs.push(rodGeo([31.88, y, z + 0.08 + s*0.05], [31.77, y, z + 0.08 + s*0.05], 0.011, 0.011, 4)); } });
   if (pegs.length) meshOf(pegs, ironR, { cast:false });

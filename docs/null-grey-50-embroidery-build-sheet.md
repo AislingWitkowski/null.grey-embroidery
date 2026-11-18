@@ -181,4 +181,47 @@ Aisling: *"Ok we will move all those over then we will update them all to embroo
 ### Nov 17, 2026 (night) — notes from Aisling, for later
 - **Next: the train** (Aisling: making sure it works mechanically is important).
 - **The mailbox: "label it 2019"** (Aisling, for later). Whether that's the number on the box or a year: to ask when it's done.
-- **MAPLES & SONS** (on the shed's FEED · SEED · BAIT sign and the windmill's vane) was **Claude's made-up name**, from the first Seam build (Oct 25), not Aisling's. She's wondering about a better lore name; it can change later. Doc 38 already links the bait sign to her uncle's or great-uncle's bait shop in Harriman (Uncle's Bait Shop). **Pending, Aisling:** the name.
+- **MAPLES & SONS** (on the shed's FEED · SEED · BAIT sign and the windmill's vane) was **Claude's made-up name**, from the first Seam build (Oct 25), not Aisling's. She's wondering about a better lore name; it can change later. Doc 38 already links the bait sign to her uncle's or great-uncle's bait shop in Harriman (Uncle's Bait Shop). **Pending, Aisling:** the name. (Later: *"There name is Gooch I think but I can double check"*: the uncle's family is probably **Gooch**, the same as great-grandma Gooch. She'll double-check before it goes on the sign.)
+
+### Nov 17, 2026 (night) — milestone 2, the last part: the train
+Aisling: *"I feel making sure the train works is important like mechanically"*, then *"yes go on train"*.
+- **Before building:** read Seam's train for the Furusato line (`f8-train.js`, the station's `d22-train.js` under it), its ride (`f9d-ride.js`, `f9g-car-run.js`, `f9c-ride-map.js`, `f9i-arrive-train.js`), doc 21's ride flow, doc 32's Missing Mile notes (the tunnel, the train going on into it), doc 31's train sound slots.
+- **The train, real size and in the round** (`src/train.js`): the Furusato line's own train, as Seam dresses it.
+  - Four cars, 8.7 m long, three doors a side on each, big windows.
+  - The outside: stainless in an odd warm grey-white, ribbed low down; the gold stripe with a seigaiha wave pressed into it, the thin vermilion line under it; the crest (ふ in a ring) on each car.
+  - A flat cab face at each end: the black mask round the windscreen, the amber board **各停 ・ ？？ / LOCAL ??**, the vermilion band, the crest, the lamps.
+  - Inside: mustard moquette bench seats with a small asanoha pattern, a wooden slatted floor, cream walls, two lines of tube lamps, poles, hanging straps with pale rings, and **Seam's own line map over every door**.
+  - It's 1.8 m wide, and **its floor is level with the platform: step-free**, no gap to speak of.
+- **How it runs** (Seam's numbers):
+  - It comes out of the dusk from the west, headlights first in the fog, a faint beam ahead of it. It brakes along the platform and stops just short of the tunnel mouth.
+  - The doors over the platform open (seven of them; the ones past the platform's ends stay shut).
+  - After about 24 s: the departure melody (故郷), Seam's warning in the train's own rust caption (*ドアが閉まります。ご注意ください · the doors are closing. please be careful.*), the doors close, and it pulls away east into the tunnel. Its windows stay lit as it goes in, the outside goes dark, the red tail lamps last.
+  - First 25–40 s after you arrive, then every 2–3 min. Standing on the track as it comes, it moves you onto the platform's edge.
+- **Getting on and riding** (Seam's ride, its words and its line map, through the bridge: `EG_SEAM.ride`):
+  - Walk in through an open door: *"inside, it's cool and very clean…"*. **The train waits for you** while you're on, as Seam's ride does.
+  - Click the line map over a door and choose your stop. ふるさと goes to Furusato's page; the others go to the stand-in stop (`stop.html`), exactly as a Seam ride ends. Main street says *いまここ · that's here*, F 01 *the train doesn't go back that way*, and the secret last stop can't be chosen.
+  - Choose, and the doors close behind you. It pulls out with you standing in it: the platform slides by, then the tunnel. In the dark the world goes; the ride goes on (*i'm the only one on this car... alone again.*, then *つぎは … · next, …*), and the next page opens.
+  - Step back off before choosing: *you step back out onto the platform.*, and it goes on without you.
+  - Click a seat to sit (*you sit. the seat is soft…*).
+- **Arriving by train** (a Seam page's ride ending here): you open your eyes on the platform beside it, with Seam's line (*本町 · main street. you step off. the doors close behind you, and the train goes on without you, into the corn.*). The doors close and it goes into the tunnel.
+  - The page now says it is **F03** (Seam's `f03-0-page.js`), so it reads arrivals and records the stop in your list the same way Seam's Missing Mile does.
+- **Sounds, all with captions:** the train's slots have the same names as the Seam train's (doc 31): `train_arrive`, `train_doors_open`, `train_doors_close`, `train_depart`, `train_melody`. A new one, `train_ride`, is the wheels under the floor while you ride. They come from the train itself and move with it. Stand-ins until Aisling's files come.
+- **Changed for it:**
+  - The tunnel mouth is bigger (arch 2.8 m wide, about 3.5 m over the track bed), so the real-size train fits. The bank is higher, and the dark inside goes back further.
+  - The telephone poles along the line moved 0.3 m back from the track, so the train clears them.
+  - The grass along the track's north edge no longer grows where the train runs.
+  - Captions now sit above the dark of a page change, so you can read the ride's lines in it.
+- **Checked:**
+  - `node t/train.js` runs the whole loop with no errors: it comes in and stops (doors 0.99 open); you walk in through a door (step-free, *inside…*); choosing aldridge place on the map (*ドアが閉まります · the doors close behind you.*); it leaves with you riding, into the dark (*つぎは オールドリッジ・プレイス · next, aldridge place.*); the stand-in stop is asked for (`stop`, `f:3:f03`). Opening the page as a ride's end puts you beside the standing train.
+  - Pictures: it coming in through the fog, the cab ends, inside, the map, it going into the tunnel.
+  - Walking, clicks, close-ups and the pocket unchanged; no blue. Its cost while it stands: about 170 draw calls from the platform. Nothing when it isn't there.
+- **To try it on the Mac:** the four pages have to sit **in one folder** so they can find each other: `missing-mile-station.html`, `furusato.html`, `mainstreet.html`, `stop.html`. Sent as `missing-mile-train-test.zip`.
+- **Aisling's call, pending:**
+  - **Which Missing Mile the line stops at while both exist.** Seam's pages still send you to Seam's Missing Mile (`mainstreet.html`). Riding *out* of Embroidery's works now; for riding *in*, the Seam pages need one small switch.
+  - Whether the **tunnel's bigger mouth** is OK (Seam's is low).
+  - The train sounds (her files).
+- **Not yet (for the graphics pass):**
+  - The train's windows have no glass, and its light doesn't fall on the platform yet (a pool of light was tried earlier and the ink grade spoiled it).
+  - No passengers: *nobody here*.
+  - Seam's hanging cards over the aisle (中吊り) aren't in.
+  - The ride is a short stretch of the platform and the tunnel, then dark. Seam's ride from Furusato has the long country stretch (`f9j`); that comes when Embroidery has more of the line to show.

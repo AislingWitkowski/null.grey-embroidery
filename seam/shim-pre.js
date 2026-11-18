@@ -16,6 +16,7 @@ var CU = { open:false }, LOOK = { open:false };
 var WALK_ASK = null;
 function walkAskHide(){} function walkAskShow(){} function walkAskPlace(){}
 var seamStep = function(now, dt){};
+var RIDE_HERE = 2;   /* (the ride's line map: this page is F 03, main street, missing mile) */
 
 /* Seam's world-building calls, standing in: Embroidery draws the world, so these only remember (their pictures and their
    boxes' click names), and Seam's click actions (hubBoxAction) are asked when Embroidery's thing is clicked */

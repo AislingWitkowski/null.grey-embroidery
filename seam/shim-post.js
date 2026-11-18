@@ -31,5 +31,8 @@ EG_SEAM.where = function(x, z, a){ me.x = x; me.y = z; me.a = a; };
 EG_SEAM.closeUpOpen = function(){ return !!((typeof F3C !== 'undefined' && F3C.open) || (typeof FVM !== 'undefined' && FVM.open)); };
 EG_SEAM.closeAll = function(){ try { if (typeof F3C !== 'undefined' && F3C.open) f3Close(); } catch (e) {} try { if (typeof FVM !== 'undefined' && FVM.open) fvmClose(); } catch (e) {} };
 EG_SEAM.pic = function(name){ return FPIC[name] || null; };
+/* (the train) going between pages, as every Seam page does (shared/hy2-journey.js), and the ride's line map and words */
+EG_SEAM.ride = { stops:RIDE_STOPS, pages:F_STOP_PAGES, say:RIDE_SAY, map:RIDE_MAP, svg:RIDE_MAP_SVG, warn:F_WARN, here:RIDE_HERE,
+  arrived:(typeof ngArrivedHere !== 'undefined' ? ngArrivedHere : null), go:function(page, at){ keys = {}; ngGoTo(page, at); }, fade:function(on){ ngFade(on); }, leaving:function(){ return NGJ.leaving; } };
 EG_SEAM.step = function(now, dt){ try { if (POK.open) pkFrame(now); seamStep(now, dt); }   /* (as Seam's d2-frame: while the pocket is open, it's what's drawn) */ catch (e) { if (!EG_SEAM.err) { EG_SEAM.err = e; console.error(e); } } };
 })();

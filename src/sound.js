@@ -15,6 +15,13 @@ export const SLOTS = {
   mm_lamp_buzz: { loop:true,  what:'the street lamp buzzing on its pole',                           cc:'the street lamp buzzes' },
   mm_wires:     { loop:true,  what:'the wires singing a little in the gusts, near the poles',       cc:'the wires sing in the wind' },
   mm_vend_hum:  { loop:true,  what:'the drinks machine’s cold hum, close to it',                    cc:'the drinks machine hums' },
+  /* (Nov 17, night) the train: the same slot names as the Seam pages' train (doc 31), so one file serves both */
+  train_arrive:      { loop:false, what:'the train coming in out of the dusk and braking to a stop (8–10 s)', cc:'a train pulls in, brakes sighing' },
+  train_doors_open:  { loop:false, what:'the doors opening: a soft chime and the air of the doors (2–3 s)',   cc:'the doors open' },
+  train_doors_close: { loop:false, what:'the doors closing (2–3 s)',                                           cc:'the doors close' },
+  train_depart:      { loop:false, what:'the train pulling away into the tunnel (8–10 s)',                     cc:'the train pulls away into the tunnel' },
+  train_melody:      { loop:false, what:'the departure melody (5–8 s); until there is a file, the soft chime of 故郷', cc:'a soft departure melody' },
+  train_ride:        { loop:true,  what:'inside the carriage while it moves: the rumble of the wheels, the joints in the rail', cc:'the wheels rumble under the floor' },
   mm_step_concrete:{ loop:false, what:'a footstep on the platform’s concrete' },
   mm_step_gravel:  { loop:false, what:'a footstep on gravel and ballast' },
   mm_step_road:    { loop:false, what:'a footstep on old asphalt' },
@@ -135,3 +142,37 @@ export function soundTick(cam, P, t, gust, bulbK, surface){
   if (S.lx != null) { const mv = Math.hypot(P.x - S.lx, P.z - S.lz); if (mv > 0 && mv < 0.5 && P.onGround) { S.step += mv; if (S.step > 0.62*(P.running ? 1.35 : 1)) { S.step = 0; footstep(surface); } } }
   S.lx = P.x; S.lz = P.z;
 }
+
+/* ---- the train (Nov 17, night): one-off sounds that come from the train itself, moving with it; their captions ---- */
+export function trainSound(k, pos){
+  if (UI.cc && SLOTS[k] && SLOTS[k].cc) ccSay('tr_' + k, SLOTS[k].cc, 2000);
+  if (!S.ctx || !S.dry) return null;
+  const c = S.ctx, T = c.currentTime, p = panner(pos.x, pos.y, pos.z, 3, 60), H = { p, stop:null };
+  if (S.buf[k]) { const s = c.createBufferSource(), g = c.createGain(); s.buffer = S.buf[k]; s.loop = SLOTS[k].loop; g.gain.value = 0.8; s.connect(g); g.connect(p); s.start(); H.stop = () => { try { s.stop(); } catch (e) {} }; return H; }
+  const env = (g, pts) => { g.gain.setValueAtTime(0, T); for (const [t, v] of pts) g.gain.linearRampToValueAtTime(v, T + t); };
+  if (k === 'train_arrive' || k === 'train_depart' || k === 'train_ride') {   /* a very quiet low rumble, and a sigh of brakes as it stops */
+    const s = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain(); s.buffer = S.brown; s.loop = true; f.type = 'lowpass'; f.frequency.value = 160;
+    s.connect(f); f.connect(g); g.connect(p); s.start();
+    if (k === 'train_ride') { g.gain.value = 0; H.g = g; } else env(g, k === 'train_arrive' ? [[1.5, 0.22], [7, 0.18], [9.5, 0]] : [[2, 0.2], [8, 0.16], [10, 0]]);
+    if (k === 'train_arrive') { const s2 = c.createBufferSource(), f2 = c.createBiquadFilter(), g2 = c.createGain(); s2.buffer = S.noise; f2.type = 'bandpass'; f2.frequency.value = 3400; f2.Q.value = 0.8; s2.connect(f2); f2.connect(g2); g2.connect(p); s2.start(); env(g2, [[7.2, 0], [7.6, 0.035], [9.4, 0]]); setTimeout(() => { try { s2.stop(); } catch (e) {} }, 10500); }
+    H.stop = () => { try { s.stop(); } catch (e) {} };
+    if (k !== 'train_ride') setTimeout(H.stop, 10500);
+    return H;
+  }
+  if (k === 'train_doors_open' || k === 'train_doors_close') {   /* two soft sine tones */
+    const fr = k === 'train_doors_open' ? [880, 698] : [698, 587];
+    fr.forEach((f, i) => { const o = c.createOscillator(), g = c.createGain(); o.frequency.value = f; o.connect(g); g.connect(p); const t0 = T + i*0.42;
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.05, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0005, t0 + 1.2); o.start(t0); o.stop(t0 + 1.3); });
+    return H;
+  }
+  if (k === 'train_melody') {   /* 故郷, the old song: Seam's chime (f8-train.js fMelody), note for note */
+    const f = m => 440*Math.pow(2, (m - 69)/12), N = [[60, 1], [60, 1], [60, 1], [62, 1.5], [64, 0.5], [62, 1], [64, 1], [64, 1], [65, 1], [67, 3]], q = 0.42; let t = T + 0.05;
+    for (const n of N) { const o = c.createOscillator(), o2 = c.createOscillator(), g = c.createGain(), g2 = c.createGain(), lp = c.createBiquadFilter();
+      o.type = 'sine'; o2.type = 'triangle'; o.frequency.value = f(n[0] + 12); o2.frequency.value = f(n[0] + 24)*1.002; lp.type = 'lowpass'; lp.frequency.value = 2200; g2.gain.value = 0.18;
+      const d = n[1]*q, tail = Math.min(1.6, d + 0.6); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0008, t + tail);
+      o.connect(g); o2.connect(g2); g2.connect(g); g.connect(lp); lp.connect(p); o.start(t); o2.start(t); o.stop(t + tail + 0.05); o2.stop(t + tail + 0.05); t += d; }
+    return H;
+  }
+  return H;
+}
+export function soundAt(H, x, y, z){ if (!H || !H.p) return; const p = H.p; if (p.positionX) { p.positionX.value = x; p.positionY.value = y; p.positionZ.value = z; } else p.setPosition(x, y, z); }

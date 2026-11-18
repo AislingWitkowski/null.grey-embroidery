@@ -3,7 +3,8 @@
    ================================================================ */
 import * as THREE from 'three';
 import { makeLook } from './look.js';
-import { buildStation, applyLook, tickLights, L, CLICK } from './station.js';
+import { buildStation, applyLook, tickLights, L, CLICK, tag, halo } from './station.js';
+import { buildTrain, trainTick, trainArrive, TR } from './train.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
 import { UI, initUI, say, tickUI, ccSay } from './ui.js';
 import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
@@ -63,10 +64,12 @@ function start(){
   look = makeLook(renderer);
   DETAIL.value = paintDetail();
   world = buildStation(scene);
+  buildTrain(scene, tag, halo); world.rideSolids = TR.solids;   /* (the train: milestone 2's last part) */
   giveMist(scene);
   setWorld(world);
   P.x = 33.2; P.z = 5.6; P.yaw = Math.PI/2 - 0.12; P.y = world.ground(P.x, P.z);   /* off the platform's east end, looking back along it, as in the Seam version */
   P.y = 0;
+  const byTrain = trainArrive();   /* (a ride from a Seam page ended here: you're beside the train) */
   initInput(cv);
   initUI(); setSoundFiles(SOUND_FILES);
   /* Seam's pocket (milestone 2): its captions are ours, its sounds follow our switch, its sounds get CC */
@@ -82,7 +85,7 @@ function start(){
   setLook(cur);
   renderer.shadowMap.needsUpdate = true;
   document.getElementById('wait').classList.add('gone');
-  setTimeout(() => say('本町 · main street, missing mile. dusk. the lights under the canopy are coming on, one by one. nobody here.', 6500), 600);
+  if (!byTrain) setTimeout(() => say('本町 · main street, missing mile. dusk. the lights under the canopy are coming on, one by one. nobody here.', 6500), 600);
   setTimeout(() => say(matchMedia('(pointer: coarse)').matches ? 'hold to walk · hold low to step back · drag to look' : 'w a s d · drag to look · shift run · c crouch · space jump · 1 2 3 4 looks · 5 side by side', 7000), 7600);
   requestAnimationFrame(loop);
 }
@@ -124,7 +127,7 @@ function frame(now){
   if (SEAM && SEAM.where) SEAM.where(P.x, P.z, P.yaw);
   const pkOpen = !!(SEAM && ((SEAM.pocket && SEAM.pocket.isOpen()) || (SEAM.closeUpOpen && SEAM.closeUpOpen())));   /* (the pocket or a close-up: the world waits behind it) */ if (document.body.classList.contains('pk-open') !== pkOpen) document.body.classList.toggle('pk-open', pkOpen);
   if (pkOpen) { tickUI(now); return; }   /* the pocket is open: it's what's drawn (as in Seam); the world waits */
-  if (!window.__frozen) { stepPlayer(dt); adapt(dt); }
+  if (!window.__frozen) { trainTick(now, dt); stepPlayer(dt); adapt(dt); }
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
   camera.rotation.set(P.pitch, P.yaw, 0);
   K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = gust(t);
@@ -187,7 +190,7 @@ let fAcc = 0, fN = 0;
 function fpsCount(dt){ fAcc += dt; fN++; if (fAcc > 0.5) { document.getElementById('fps').textContent = Math.round(fN/fAcc) + ' fps · ' + CW + '×' + CH; fAcc = 0; fN = 0; } }
 
 /* test hooks: pictures from fixed spots (t/shots.js) */
-window.__eg = { tapCenter(){ const r = cv.getBoundingClientRect(); reach(r.left + r.width/2, r.top + r.height/2); return document.getElementById('caption').textContent; }, soundOn(){ UI.heard = true; UI.cc = true; soundSync(); }, pause(v){ window.__paused = v; }, renderOnce(){ frame(performance.now()); }, sim(ks, sec){ window.__frozen = true; simKeys(ks); for (let i = 0; i < sec*60; i++) { if (i === 20) simKeys(ks.filter(k => k !== 'Space')); stepPlayer(1/60); } simKeys([]); for (let i = 0; i < 60; i++) stepPlayer(1/60); window.__frozen = false; return [P.x, P.y, P.z].map(v => +v.toFixed(2)); }, ground:(x, z) => world.ground(x, z), P, setLook, setSplit, freeze(v){ window.__frozen = v; }, info(){ return { CW, CH, resK, cur, split }; }, renderer };
+window.__eg = { tapCenter(){ const r = cv.getBoundingClientRect(); reach(r.left + r.width/2, r.top + r.height/2); return document.getElementById('caption').textContent; }, soundOn(){ UI.heard = true; UI.cc = true; soundSync(); }, pause(v){ window.__paused = v; }, renderOnce(){ frame(performance.now()); }, sim(ks, sec){ window.__frozen = true; simKeys(ks); for (let i = 0; i < sec*60; i++) { if (i === 20) simKeys(ks.filter(k => k !== 'Space')); stepPlayer(1/60); } simKeys([]); for (let i = 0; i < 60; i++) stepPlayer(1/60); window.__frozen = false; return [P.x, P.y, P.z].map(v => +v.toFixed(2)); }, ground:(x, z) => world.ground(x, z), P, TR, trainTick, setLook, setSplit, freeze(v){ window.__frozen = v; }, info(){ return { CW, CH, resK, cur, split }; }, renderer };
 
 setWait('mixing the inks…');
 setTimeout(() => { try { start(); } catch (e) { setWait('something went wrong: ' + e.message); console.error(e); } }, 30);

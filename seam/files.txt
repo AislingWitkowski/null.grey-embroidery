@@ -1,5 +1,6 @@
 src/shared/hy2-journey.js
 src/f0-stubs.js
+src/f03/f03-0-page.js
 src/a2-hands.js
 src/d5-pocket-art.js
 src/d5-pocket-art2.js

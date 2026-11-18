@@ -15,3 +15,14 @@ The same list is in doc 31 (the sound slots doc).
 | `mm_step_gravel` | once | a footstep on gravel and ballast | a crunch |
 | `mm_step_road` | once | a footstep on old asphalt | a dull tap |
 | `mm_step_grass` | once | a footstep through dead grass | a swish |
+
+**The train (Nov 17, night).** The same slot names as the Seam pages' train (doc 31), so one file can serve both: put it in each repo's `sounds/`. `train_ride` is new.
+
+| slot | plays | what | stand-in |
+|---|---|---|---|
+| `train_arrive` | once | the train coming in out of the dusk and braking to a stop (8–10 s) | a very quiet low rumble, a sigh of brakes |
+| `train_doors_open` | once | the doors opening: a soft chime and the air of the doors (2–3 s) | two soft sine tones |
+| `train_doors_close` | once | the doors closing (2–3 s) | two soft sine tones |
+| `train_depart` | once | the train pulling away into the tunnel (8–10 s) | a very quiet low rumble |
+| `train_melody` | once | the departure melody (5–8 s) | the soft chime of 故郷 (Seam's, note for note) |
+| `train_ride` | loop | inside the carriage while it moves: the wheels, the joints in the rail | a low rumble that follows the speed |

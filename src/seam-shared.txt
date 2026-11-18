@@ -19,6 +19,7 @@ var CU = { open:false }, LOOK = { open:false };
 var WALK_ASK = null;
 function walkAskHide(){} function walkAskShow(){} function walkAskPlace(){}
 var seamStep = function(now, dt){};
+var RIDE_HERE = 2;   /* (the ride's line map: this page is F 03, main street, missing mile) */
 
 /* Seam's world-building calls, standing in: Embroidery draws the world, so these only remember (their pictures and their
    boxes' click names), and Seam's click actions (hubBoxAction) are asked when Embroidery's thing is clicked */
@@ -183,6 +184,47 @@ fpic('f3mile', 0.92, 0.46, 240, 110, 55, '', function(){
 fpic('f3signBack', 0.92, 0.46, 120, 110, 55, '', function(){ return '<rect width="110" height="55" rx="5" fill="#8a8580"/><rect x="50" width="10" height="55" fill="#6c6864"/>'; });
 fpic('f3mailF', 0.32, 0.25, 300, 32, 25, '', function(){ return '<path d="M0,25 L0,9 Q0,0 16,0 Q32,0 32,9 L32,25 Z" fill="#7a7672"/><path d="M3,25 L3,10 Q3,3 16,3 Q29,3 29,10 L29,25 Z" fill="#5e5a56"/><circle cx="16" cy="14" r="1.6" fill="#3a3632"/>'; });
 fpic('f3mailS', 0.5, 0.25, 300, 50, 25, '', function(){ return '<path d="M0,25 L0,9 Q0,0 9,0 L50,0 L50,25 Z" fill="#7a7672"/><rect x="0" y="20" width="50" height="5" fill="#8a4a30" opacity="0.5"/>' + fTx('R.R. 2', 26, 15, '#2e2a26', 6, { f:F_EN, w:800 }) + '<rect x="40" y="-0" width="3" height="10" fill="#9a2a22"/><rect x="40" y="0" width="8" height="4" fill="#9a2a22"/>'; });
+var RIDE_MAP = { W:1400, H:380, x0:130, x1:1270, yl:196 };
+var RIDE_STOPS = [
+  ['？', '？', 'F 01'], ['ふるさと', 'furusato', 'F 02'], ['本町', 'main street, missing mile', 'F 03'], ['オールドリッジ・プレイス', 'aldridge place', 'F 04'],
+  ['国立庭園', 'national garden', 'F 05'], ['スターライト岬', 'starlight point', 'F 06'], ['＊', '', 'F 07', 1]
+  /* (Oct 26, Aisling) 1989 Shire is no longer a stop: the pool sits in the world between Main Street and Aldridge Place.
+     F 07 is a secret last stop, marked ＊ for now: on the map, but you can't choose it (the 4th field marks it) */
+];
+var F_STOP_PAGES = { 0:'stop', 1:'furusato', 2:'f03', 3:'stop', 4:'stop', 5:'stop' };   /* (Oct 31) the rest go to the stand-in stop page (stop.html) until each is built */
+var RIDE_MAP_SVG = (function(){
+  var W = 1400, H = 380, x0 = 130, x1 = 1270, yl = 196, n = RIDE_STOPS.length;
+  var s = '<rect width="1400" height="380" rx="14" fill="#4e4e4c"/><rect x="8" y="8" width="1384" height="364" rx="9" fill="#ecebe6"/>';
+  s += '<rect x="8" y="8" width="1384" height="58" rx="9" fill="#c9a067"/><rect x="8" y="50" width="1384" height="16" fill="#c9a067"/>';
+  s += fTx('ふるさと線', 330, 48, '#1c1511', 36, { w:900, ls:4 }) + fTx('furusato line', 600, 47, '#3c2f1f', 22, { f:F_EN, w:700, ls:2 });
+  s += fTx('この電車は 各駅に停まります · this train stops at every station', 1240, 46, '#3c2f1f', 17, { w:700, a:'end' });
+  s += '<rect x="' + (x0 - 30) + '" y="' + (yl - 11) + '" width="' + (x1 - x0 + 60) + '" height="22" rx="11" fill="#c9a067"/>';   /* the line */
+  s += '<path d="M' + (x1 + 44) + ',' + (yl - 18) + ' l26,18 l-26,18 z" fill="#c9a067"/>';   /* the way it runs */
+  for (var i = 0; i < n; i++) {
+    var x = x0 + i*(x1 - x0)/(n - 1), S = RIDE_STOPS[i], here = i === RIDE_HERE;
+    s += '<circle cx="' + x + '" cy="' + yl + '" r="' + (here ? 24 : 18) + '" fill="' + (here ? '#9a5038' : '#f2f0ea') + '" stroke="#1c1511" stroke-width="4"/>';
+    s += '<rect x="' + (x - 34) + '" y="88" width="68" height="28" rx="6" fill="#f2f0ea" stroke="#c9a067" stroke-width="3"/>' + fTx(S[2], x, 109, '#1c1511', 18, { f:F_EN, w:900 });
+    if (S[0].length > 8 && S[0].indexOf('・') > 0) { var jp = S[0].split('・'); s += fTx(jp[0], x, 146, '#1c1511', 23, { w:900 }) + fTx(jp[1], x, 176, '#1c1511', 23, { w:900 }); }   /* (Oct 26) a long name on two lines (オールドリッジ / プレイス) */
+    else s += fTx(S[0], x, 160, '#1c1511', S[0].length > 5 ? 23 : 30, { w:900 });
+    var en = S[1].split(', '); en.forEach(function(e, k){ s += fTx(e, x, 252 + k*24, '#5d554e', 19, { f:F_EN, w:700 }); });
+    if (here) s += fTx('いまここ · you are here', x, 320, '#9a5038', 18, { w:900 });
+  }
+  s += fTx('ドアから はなれて ください · please stand clear of the doors', 700, 356, '#8a8076', 15, { w:700 });
+  return s;
+})();
+var RIDE_SAY = {
+  board: 'inside, it\'s cool and very clean, and smells faintly of the tunnel. the line map is over the doors.',
+  close: 'ドアが閉まります · the doors close behind you.',
+  sit: 'you sit. the seat is soft, a little worn where everyone sits.',
+  alone: 'i’m the only one on this car... alone again.',
+  aloneCut: 'i’m the only one on this car... alone agai—',
+  here: 'いまここ · that\'s here. you\'re already here.',
+  first: 'the first stop has no name on the map. the train doesn\'t go back that way.',
+  off: 'you step back out onto the platform.',
+  fog: 'the doors open on fog. nothing out there yet. the doors close, and the train carries you back.',   /* TEMPORARY: until the stops exist */
+  back: 'のりば ２ · ふるさと. you\'re back where you started.'
+};
+var F_WARN = 'ドアが閉まります。ご注意ください · the doors are closing. please be careful.';
 ;
 /* ---- from src/f03/a-head-f03.html (the inks and helpers) ---- */
 
@@ -864,6 +906,15 @@ function buildHubLight(){} function buildStreetLight(){}
 function ivanChooseRoom(){} function ivanRoomStep(){} function boardStep(){} function clockTick(){}
 function exitsStep(){}   /* f1 has Furusato's own (the stairs up) */
 var NG_PAGE = 'furusato';   /* (Oct 24) which page this is, for the shared files (the station page has none) */
+
+;
+/* ---- copied from null.grey-furusatostation/src/f03/f03-0-page.js ---- */
+/* ================================================================
+   F03 — THIS PAGE. which page it is (for the shared files), and what came with you from the last one.
+   ================================================================ */
+NG_PAGE = 'f03';
+var ngArrivedHere = ngArrival('f03');   /* read what came with you before anything reads the storage (shared/hy2-journey.js) */
+(function(){ try { var L = JSON.parse(localStorage.getItem('nullgrey.furusato.stops') || '[]'); if (L.indexOf('main-st') < 0) { L.push('main-st'); localStorage.setItem('nullgrey.furusato.stops', JSON.stringify(L)); } } catch (e) {} })();   /* you've been here (the line's stops, all visited, open Furusato's narrow way) */
 
 ;
 /* ---- copied from null.grey-furusatostation/src/a2-hands.js ---- */
@@ -3644,5 +3695,8 @@ EG_SEAM.where = function(x, z, a){ me.x = x; me.y = z; me.a = a; };
 EG_SEAM.closeUpOpen = function(){ return !!((typeof F3C !== 'undefined' && F3C.open) || (typeof FVM !== 'undefined' && FVM.open)); };
 EG_SEAM.closeAll = function(){ try { if (typeof F3C !== 'undefined' && F3C.open) f3Close(); } catch (e) {} try { if (typeof FVM !== 'undefined' && FVM.open) fvmClose(); } catch (e) {} };
 EG_SEAM.pic = function(name){ return FPIC[name] || null; };
+/* (the train) going between pages, as every Seam page does (shared/hy2-journey.js), and the ride's line map and words */
+EG_SEAM.ride = { stops:RIDE_STOPS, pages:F_STOP_PAGES, say:RIDE_SAY, map:RIDE_MAP, svg:RIDE_MAP_SVG, warn:F_WARN, here:RIDE_HERE,
+  arrived:(typeof ngArrivedHere !== 'undefined' ? ngArrivedHere : null), go:function(page, at){ keys = {}; ngGoTo(page, at); }, fade:function(on){ ngFade(on); }, leaving:function(){ return NGJ.leaving; } };
 EG_SEAM.step = function(now, dt){ try { if (POK.open) pkFrame(now); seamStep(now, dt); }   /* (as Seam's d2-frame: while the pocket is open, it's what's drawn) */ catch (e) { if (!EG_SEAM.err) { EG_SEAM.err = e; console.error(e); } } };
 })();

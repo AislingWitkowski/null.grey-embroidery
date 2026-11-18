@@ -13,12 +13,13 @@ export const P = {
 };
 /* the world gives us: ground(x, z) → height of the earth; solids: [{x0,x1,z0,z1,y0,y1}]; bounds {x0,x1,z0,z1} */
 let W = { ground:() => 0, solids:[], bounds:null };
+const SOL = () => (P.riding && W.rideSolids) ? W.rideSolids : W.solids;   /* (on the train: only the carriage holds you) */
 export function setWorld(w){ W = w; }
 
 /* the highest thing you could be standing on here, at most `reach` above your feet */
 function standHeight(x, z, feet, reach){
   let h = W.ground(x, z);
-  for (const b of W.solids) {
+  for (const b of SOL()) {
     if (b.y1 > feet + reach) continue;
     const cx = clamp(x, b.x0, b.x1), cz = clamp(z, b.z0, b.z1), dx = x - cx, dz = z - cz;
     if (dx*dx + dz*dz < P.r*P.r*0.5 && b.y1 > h) h = b.y1;
@@ -28,7 +29,7 @@ function standHeight(x, z, feet, reach){
 function blocked(b, feet, top){ return b.y1 > feet + P.step && b.y0 < top; }
 function pushOut(nx, nz, feet){
   const top = feet + P.eye + 0.15;
-  for (let it = 0; it < 3; it++) for (const b of W.solids) {
+  for (let it = 0; it < 3; it++) for (const b of SOL()) {
     if (!blocked(b, feet, top)) continue;
     const cx = clamp(nx, b.x0, b.x1), cz = clamp(nz, b.z0, b.z1); let dx = nx - cx, dz = nz - cz; const d2 = dx*dx + dz*dz;
     if (d2 >= P.r*P.r) continue;
@@ -111,7 +112,7 @@ export function stepPlayer(dt){
   /* standing up needs room overhead */
   const want = P.sit ? 1.12 : (P.crouch ? P.eyeCrouch : P.eyeStand); P.eye += clamp(want - P.eye, -dt*3, dt*3);
   [nx, nz] = pushOut(nx, nz, P.y);
-  if (W.bounds) { nx = clamp(nx, W.bounds.x0, W.bounds.x1); nz = clamp(nz, W.bounds.z0, W.bounds.z1); }
+  if (W.bounds && !P.riding) { nx = clamp(nx, W.bounds.x0, W.bounds.x1); nz = clamp(nz, W.bounds.z0, W.bounds.z1); }
   /* a step up only if it's low enough; a drop is fine (you fall) */
   const gh = standHeight(nx, nz, P.y, P.step);
   if (gh - P.y <= P.step || !P.onGround) { P.x = nx; P.z = nz; }
