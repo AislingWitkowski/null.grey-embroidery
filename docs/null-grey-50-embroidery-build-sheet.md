@@ -225,3 +225,21 @@ Aisling: *"I feel making sure the train works is important like mechanically"*, 
   - No passengers: *nobody here*.
   - Seam's hanging cards over the aisle (中吊り) aren't in.
   - The ride is a short stretch of the platform and the tunnel, then dark. Seam's ride from Furusato has the long country stretch (`f9j`); that comes when Embroidery has more of the line to show.
+
+### Nov 17, 2026 (night, later) — the train runs both ways; Aldridge first
+Aisling: *"it goes to Aldridge yes.. and I think drop the place on Aldridge place and I think weirdly the train runs both ways on one track cause dream logic"*, then *"make it open after Aldridge they can pick any spot but this one goes to Aldridge first for test purposes"*.
+- **Both ways on one track, turn and turn about.**
+  - **East:** a train comes out of the dusk from the west, stops, and goes on east into the tunnel, to **Aldridge**.
+  - **West:** the next comes out of the tunnel's dark, stops, and goes west past the platform's end into the fog, to **Furusato**.
+  - They never meet. The lamps follow the direction: white at whichever end leads, red at the end that follows; the beam in the fog goes ahead.
+- **No choosing at first.** The line map over the doors says where you are and what's next (*つぎは オールドリッジ · next, aldridge.* or *つぎは ふるさと · next, furusato.*). The doors close on time. If you're on, it takes you:
+  - east into the tunnel's dark, then the stand-in stop for Aldridge (`stop.html`, until Aldridge is built);
+  - west into the fog, then Furusato's page (Seam), arriving by train.
+- **After you've been to Aldridge, the map lets you pick any stop.** Aldridge goes into the same list of stops you've been to as the Seam pages (`nullgrey.furusato.stops`), because the stand-in stop page keeps nothing.
+- **F 04's name is Aldridge everywhere** (doc 32).
+- **Checked** (`node t/train.js`, no errors):
+  - east: it comes in, you walk on, the map says *next, aldridge*, the doors close, you ride into the dark, and the stand-in stop is asked for (`f:3:f03`);
+  - Aldridge is remembered and the map then lets you pick;
+  - west: out of the tunnel, you on, into the fog, and Furusato's page is asked for (`train`);
+  - arriving by train still puts you beside it.
+- **Later, with the story's puzzles:** whether the line opens stop by stop (doc 48).

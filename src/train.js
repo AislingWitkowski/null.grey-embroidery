@@ -13,10 +13,14 @@
      over the platform open (step-free: the floor is level with the platform). after a while, the departure melody,
      "ドアが閉まります…", the doors close, and it pulls away east into the tunnel, its windows lit, the red tail lamps
      last. first 25–40 s after you arrive, then every 2–3 min (Seam's numbers).
-   - getting on: walk in through an open door (Seam's words: "inside, it's cool and very clean…"). the train waits for
-     you. click the line map over a door and choose your stop; the doors close and it pulls out with you on it; off the
-     platform, into the tunnel, and into the dark, and the next page opens: Furusato (Seam's page) or the stand-in stop
-     (stop.html), exactly as a Seam page's ride ends. step back out and it goes on without you.
+   - (Nov 17, later; Aisling: "it goes to Aldridge yes … weirdly the train runs both ways on one track cause dream
+     logic") it runs both ways on the one track, turn and turn about: one comes from the west and goes on east into the
+     tunnel, to Aldridge; the next comes out of the tunnel and goes west into the fog, to Furusato. they never meet.
+   - getting on: walk in through an open door (Seam's words: "inside, it's cool and very clean…"). no choosing: the
+     line map over the doors says where you are and what's next. when the doors close with you on, it pulls out with
+     you: east, off the platform into the tunnel's dark; west, past the platform's end into the fog. the ride's lines,
+     and the next page opens: the stand-in stop for Aldridge (stop.html, until Aldridge is built) or Furusato (Seam's
+     page), as a Seam ride ends. step back out before the doors close and it goes on without you.
    - arriving by train (a Seam page's ride ending here): you open your eyes on the platform beside it; the doors close
      behind you and it goes on into the tunnel.
    The ride's line map, its words and where each stop goes are Seam's own, through the bridge (EG_SEAM.ride).
@@ -33,8 +37,9 @@ import { trainSound, soundAt } from './sound.js';
 const col = (r, t) => { const c = inkRGB(r, t); return 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')'; };
 export const TR = {
   L:8.7, G:0.3, N:4, DOORS:[1.35, 4.35, 7.35], DHW:0.5, ZC:2.0, HW:0.9, FL:0.02, BOT:-0.15, ROOF:2.25, TOP:2.47,
+  dir:1,   /* (Nov 17, Aisling: "the train runs both ways on one track cause dream logic": east to Aldridge, west to Furusato, turn and turn about) */
   STOP:39.6, V0:8.5, BRAKE:36, ACC:0.95, DWELL:24, FIRST:[25000, 40000], EVERY:[120000, 180000], START:-46,
-  state:'off', front:-200, v:0, t0:0, next:0, doorK:0, cars:[], solids:[], doorSol:[], boarded:-1, said:{}, chosen:-1, ride:null, sounds:{}, darkU:{ value:40.3 }
+  state:'off', front:-200, v:0, t0:0, next:0, doorK:0, cars:[], solids:[], doorSol:[], boarded:-1, said:{}, chosen:-1, pick:-1, ride:null, sounds:{}, darkU:{ value:40.3 }
 };
 const rnd = (a, b) => a + Math.random()*(b - a);
 const WINS = (() => { const W = [[0.14, 0.62]], D = TR.DOORS; for (let i = 0; i < D.length - 1; i++) { const a = D[i] + TR.DHW + 0.09, b = D[i + 1] - TR.DHW - 0.09, m = (a + b)/2; W.push([a, m - 0.03], [m + 0.03, b]); } W.push([TR.L - 0.62, TR.L - 0.14]); return W; })();
@@ -189,8 +194,9 @@ export function buildTrain(scene, tag, haloFn){
       add(cab ? 'steel' : 'steel', bgeo(x0, x1, TR.BOT, TR.ROOF + 0.05, -HW, HW, [1, 1]));
       add('cream', bgeo(e ? x0 - 0.012 : x1, e ? x0 : x1 + 0.012, TR.FL, TR.ROOF, -HW + inn, HW - inn, [1, 1]));
       TR.solids.push({ car:k, lx0:e ? L - 0.07 : 0, lx1:e ? L : 0.07, y0:TR.BOT, y1:TR.ROOF, z0:TR.ZC - HW, z1:TR.ZC + HW, x0:0, x1:0 });
-      if (cab) {   /* the lamps: headlights at the front, red tail lamps at the back */
-        for (const z of [-0.62, 0.62]) { const lg = new THREE.CircleGeometry(0.075, 14); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + 0.006 : -0.006, 0.46, z); add(e ? 'head' : 'tail', lg.toNonIndexed()); }
+      if (cab) {   /* the lamps: white at whichever end leads, red at the end that follows (it runs both ways) */
+        const lgs = []; for (const z of [-0.62, 0.62]) { const lg = new THREE.CircleGeometry(0.075, 14); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + 0.006 : -0.006, 0.46, z); lgs.push(lg.toNonIndexed()); }
+        const lm = new THREE.Mesh(mergeGeometries(lgs), MT.head); G.add(lm); (TR.lamps = TR.lamps || {})[e ? 'east' : 'west'] = lm; TR.MT = MT;
       }
     }
     /* the floor, as a solid you stand on (in the tunnel too) */
@@ -234,10 +240,11 @@ function place(){
   for (const s of TR.solids) { const x0 = carX0(s.car); s.x0 = x0 + s.lx0; s.x1 = x0 + s.lx1;
     if (s.door !== undefined) { const open = s.door && TR.doorK > 0.25; s.y0 = open ? 99 : TR.FL; s.y1 = open ? 99.5 : 2.0; } }
   for (const G of TR.cars) for (const D of G.userData.leaves) { const o = D.s > 0 ? TR.doorK*TR.DHW*0.98 : 0; D.lf.position.x = D.x + D.side*o; }
-  const fx = TR.front, on = TR.state !== 'off';
-  TR.halo.forEach((h, i) => { h.position.x = fx + 0.15; h.visible = on; h.material.opacity = TR.state === 'stopped' ? 0.45 : 0.95; });
-  TR.tailHalo.forEach(h => { h.position.x = trainRear() - 0.12; h.visible = on; });
-  TR.beam.position.x = fx + 0.1; TR.beam.visible = on && TR.state !== 'stopped';
+  const on = TR.state !== 'off', east = TR.dir > 0, lead = east ? TR.front + 0.15 : trainRear() - 0.15, tail = east ? trainRear() - 0.12 : TR.front + 0.12;
+  if (TR.lamps) { TR.lamps.east.material = east ? TR.MT.head : TR.MT.tail; TR.lamps.west.material = east ? TR.MT.tail : TR.MT.head; }
+  TR.halo.forEach(h => { h.position.x = lead; h.visible = on; h.material.opacity = TR.state === 'stopped' ? 0.45 : 0.95; });
+  TR.tailHalo.forEach(h => { h.position.x = tail; h.visible = on; });
+  TR.beam.position.x = east ? TR.front + 0.1 : trainRear() - 0.1; TR.beam.rotation.y = east ? 0 : Math.PI; TR.beam.visible = on && TR.state !== 'stopped';
   TR.darkU.value = TUNX;
 }
 const TUNX = 40.3;
@@ -250,23 +257,30 @@ function inCar(){
 const RS = () => (window.EG_SEAM && EG_SEAM.ride) || null;
 function rideSay(t, ms){ say(t, ms || 4200); }
 function sit(){ const R = RS(); if (inCar() < 0) return null; P.sit = true; if (R && !TR.said.sit) { TR.said.sit = 1; return R.say.sit; } return R ? R.say.sit : null; }
+/* the next stop: east, Aldridge; west, Furusato (Seam's own line map and pages) */
+const nextStop = () => TR.dir > 0 ? 3 : 1;
+function nextLine(){ const R = RS(), N = R && R.stops[TR.pick >= 0 ? TR.pick : nextStop()]; return N ? 'つぎは ' + N[0] + ' · next, ' + N[1] + '.' : null; }
+/* (Nov 17, later; Aisling: "make it open after Aldridge they can pick any spot but this one goes to Aldridge first for
+   test purposes"; how the line opens up for good is for later, with the story's puzzles.) until you've been to Aldridge,
+   the train takes you there (or west, home to Furusato); after, you can pick any stop on the map. it remembers Aldridge
+   in the same list of stops you've been to as the Seam pages (nullgrey.furusato.stops) */
+function stopsSeen(){ try { return JSON.parse(localStorage.getItem('nullgrey.furusato.stops') || '[]'); } catch (e) { return []; } }
+const aldridgeSeen = () => stopsSeen().indexOf('aldridge') >= 0;
+function markAldridge(){ try { const L = stopsSeen(); if (L.indexOf('aldridge') < 0) { L.push('aldridge'); localStorage.setItem('nullgrey.furusato.stops', JSON.stringify(L)); } } catch (e) {} }
 function mapClick(hit){
   const R = RS(); if (!R || !hit.uv) return null;
   if (inCar() < 0) return null;   /* (you read it from inside) */
-  const px = (hit.object.geometry ? hit.uv.x : 0)*R.map.W, n = R.stops.length;
+  const px = hit.uv.x*R.map.W, n = R.stops.length;
   let best = -1, bd = 60; for (let i = 0; i < n; i++) { const x = R.map.x0 + i*(R.map.x1 - R.map.x0)/(n - 1), d = Math.abs(px - x); if (d < bd) { bd = d; best = i; } }
-  if (best < 0) return null;
-  if (R.stops[best][3]) return null;   /* (the secret last stop: on the map, but you can't choose it) */
   if (best === R.here) return R.say.here;
   if (best === 0) return R.say.first;
-  if (TR.chosen >= 0) return 'つぎは ' + R.stops[TR.chosen][0] + ' · next, ' + R.stops[TR.chosen][1] + '.';
-  TR.chosen = best; TR.t0 = (TR.lastNow || performance.now()) - (TR.DWELL - 2.2)*1000; TR.melody = true;   /* the doors close soon */
-  return R.say.close;
+  if (best < 0 || !aldridgeSeen() || R.stops[best][3]) return nextLine();   /* (not open yet, or the secret last stop: it goes where it goes) */
+  TR.pick = best; const N = R.stops[best]; return 'つぎは ' + N[0] + ' · next, ' + N[1] + '.';
 }
 
 export function trainArrive(){   /* a Seam page's ride ended here: you open your eyes beside it */
   const R = RS(); if (!(R && R.arrived && R.arrived.at === 'train')) return false;
-  TR.state = 'stopped'; TR.front = TR.STOP; TR.v = 0; TR.doorK = 1; TR.t0 = performance.now() - Math.max(0, TR.DWELL - 6)*1000; TR.arrivedNow = true;   /* (its clock starts on the first frame: see trainTick) */
+  TR.state = 'stopped'; TR.dir = 1; TR.front = TR.STOP; TR.v = 0; TR.doorK = 1; TR.t0 = performance.now() - Math.max(0, TR.DWELL - 6)*1000; TR.arrivedNow = true;   /* (its clock starts on the first frame: see trainTick) */
   P.x = 20.6; P.z = 4.6; P.yaw = -0.4; P.y = 0;
   place();
   setTimeout(() => say('本町 · main street. you step off. the doors close behind you, and the train goes on without you, into the corn.', 4800), 600);   /* (Seam's own line, f9i-arrive-train.js, word for word) */
@@ -275,49 +289,49 @@ export function trainArrive(){   /* a Seam page's ride ended here: you open your
 
 export function trainTick(now, dt){
   TR.lastNow = now;
-  const R = RS(), cx = () => TR.front - 4;
+  const R = RS(), cx = () => TR.dir > 0 ? TR.front - 4 : trainRear() + 4;
   if (TR.arrivedNow) { TR.arrivedHold = (TR.arrivedHold == null ? 45 : TR.arrivedHold) - 1; if (TR.arrivedHold <= 0) TR.arrivedNow = false; TR.t0 = now - Math.max(0, TR.DWELL - 8)*1000; }   /* (you've just stepped off: it waits a few seconds, then the doors close behind you; held over the first frames, which can be slow while the page warms up) */
   if (TR.state === 'off') {
     if (!TR.next) TR.next = now + rnd(TR.FIRST[0], TR.FIRST[1]);
-    else if (now > TR.next) { TR.state = 'coming'; TR.front = TR.START; TR.v = TR.V0; TR.doorK = 0; TR.said = {}; TR.chosen = -1; TR.melody = false; TR.warned = false; TR.played = false; TR.closing = false; TR.boarded = -1;
+    else if (now > TR.next) { TR.state = 'coming'; TR.front = TR.dir > 0 ? TR.START : TR.STOP + 46;   /* (east: out of the dusk; west: out of the tunnel's dark) */ TR.v = TR.V0; TR.doorK = 0; TR.said = {}; TR.chosen = -1; TR.melody = false; TR.warned = false; TR.played = false; TR.closing = false; TR.boarded = -1; TR.pick = -1;
       TR.sounds.arrive = trainSound('train_arrive', { x:TR.front, y:1, z:TR.ZC }); }
   } else if (TR.state === 'coming') {
-    const rem = TR.STOP - TR.front;
+    const rem = Math.abs(TR.STOP - TR.front);
     TR.v = rem > TR.BRAKE ? TR.V0 : Math.max(0.06, Math.sqrt(TR.V0*TR.V0*rem/TR.BRAKE));
-    TR.front = Math.min(TR.STOP, TR.front + TR.v*dt);
-    if (TR.STOP - TR.front < 0.002) { TR.front = TR.STOP; TR.v = 0; TR.state = 'stopped'; TR.t0 = now; }
+    TR.front = TR.dir > 0 ? Math.min(TR.STOP, TR.front + TR.v*dt) : Math.max(TR.STOP, TR.front - TR.v*dt);
+    if (Math.abs(TR.STOP - TR.front) < 0.002) { TR.front = TR.STOP; TR.v = 0; TR.state = 'stopped'; TR.t0 = now; }
   } else if (TR.state === 'stopped') {
     const k = inCar();
-    if (k >= 0 && TR.chosen < 0) TR.t0 = Math.min(TR.t0 + dt*1000, now - 3000);   /* (someone's on: it waits for you to choose, as Seam's ride does) */
     if (k >= 0 && TR.boarded < 0) { TR.boarded = k; if (R && !TR.said.board) { TR.said.board = 1; rideSay(R.say.board, 5200); } }
-    if (k < 0 && TR.boarded >= 0) { TR.boarded = -1; if (R && TR.chosen < 0) rideSay(R.say.off, 3600); }
+    if (k < 0 && TR.boarded >= 0) { TR.boarded = -1; if (R && !TR.closing) rideSay(R.say.off, 3600); }
     const e = (now - TR.t0)/1000, D = TR.DWELL;
     const was = TR.doorK;
     TR.doorK = e < 2.6 + D ? sm(1.2, 2.5, e) : 1 - sm(D + 2.8, D + 4.0, e);
     if (was < 0.05 && TR.doorK >= 0.05) trainSound('train_doors_open', { x:cx(), y:1.2, z:TR.ZC });
-    if (!TR.played && e > D - 5.2 && !TR.melody) { TR.played = true; trainSound('train_melody', { x:20, y:2.5, z:5.9 }); }
-    if (!TR.warned && e > D + 0.6) { TR.warned = true; if (R && P.z < 9 && inCar() < 0) say(R.warn, 4200, 'v-train'); }
-    if (!TR.closing && e > D + 2.8) { TR.closing = true; trainSound('train_doors_close', { x:cx(), y:1.2, z:TR.ZC });
+    if (!TR.played && e > D - 5.2) { TR.played = true; trainSound('train_melody', { x:20, y:2.5, z:5.9 }); }
+    if (!TR.warned && e > D + 0.6) { TR.warned = true; if (R && P.z < 9) say(R.warn, 4200, 'v-train'); }
+    if (!TR.closing && e > D + 2.8) { TR.closing = true; trainSound('train_doors_close', { x:cx(), y:1.2, z:TR.ZC }); if (R && inCar() >= 0) rideSay(R.say.close, 2600);
       if (P.z > TR.ZC + TR.HW - 0.35 && P.z < TR.ZC + TR.HW + 0.4 && inCar() < 0) P.z = TR.ZC + TR.HW + 0.45; }   /* (standing in a doorway as they close: you step back onto the platform) */
     if (e > D + 5.4) { TR.state = 'leaving'; TR.v = 0; TR.doorK = 0; TR.closing = false;
-      TR.riding = inCar() >= 0 && TR.chosen >= 0;
+      TR.riding = inCar() >= 0; TR.chosen = TR.pick >= 0 ? TR.pick : nextStop();
       if (TR.riding) { P.riding = true; TR.rideT0 = now; TR.sounds.ride = trainSound('train_ride', { x:P.x, y:0.3, z:P.z }); }
       TR.sounds.depart = trainSound('train_depart', { x:cx(), y:1, z:TR.ZC }); }
   } else if (TR.state === 'leaving') {
-    TR.v = Math.min(11, TR.v + TR.ACC*dt); const dx = TR.v*dt; TR.front += dx;
+    TR.v = Math.min(11, TR.v + TR.ACC*dt); const dx = TR.dir*TR.v*dt; TR.front += dx;
     if (TR.riding) {
       if (!TR.dark) P.x += dx; else TR.front -= dx;   /* (in the dark the world stops: only the ride goes on) */
       const t = (now - TR.rideT0)/1000;
       if (TR.sounds.ride && TR.sounds.ride.g) TR.sounds.ride.g.gain.setTargetAtTime(Math.min(0.25, 0.04 + TR.v*0.03), TR.sounds.ride.g.context.currentTime, 0.3);
-      if (!TR.dark && P.x > 42.6) { TR.dark = now; if (R) R.fade(true); }   /* into the tunnel's dark */
+      if (!TR.dark && (TR.dir > 0 ? P.x > 42.6 : P.x < 1.5)) { TR.dark = now; if (R) R.fade(true); }   /* east: into the tunnel's dark; west: into the fog past the corn */
       const td = TR.dark ? (now - TR.dark)/1000 : -1;
       if (R && !TR.said.alone && (t > 3.2 || td > 1.0)) { TR.said.alone = 1; rideSay(Math.random() < 0.1 ? R.say.aloneCut : R.say.alone, 4200); }
       if (R && !TR.said.next && td > 5.0) { TR.said.next = 1; const N = R.stops[TR.chosen]; rideSay('つぎは ' + N[0] + ' · next, ' + N[1] + '.', 3600); }
       if (td > 9.0 && !TR.gone) { TR.gone = true;   /* the next page: the stop you chose (Seam's own ride ending, f9g-car-run.js) */
         const dest = R && R.pages[TR.chosen];
+        if (TR.chosen === 3) markAldridge();   /* (the stand-in stop keeps nothing, so the ride remembers it; Aldridge's own page will) */
         if (dest) R.go(dest, dest === 'stop' ? 'f:' + TR.chosen + ':f03' : 'train');
       }
-    } else if (trainRear() > 62) { TR.state = 'off'; TR.next = now + rnd(TR.EVERY[0], TR.EVERY[1]); TR.front = -200; }
+    } else if (TR.dir > 0 ? trainRear() > 62 : TR.front < -25) { TR.state = 'off'; TR.next = now + rnd(TR.EVERY[0], TR.EVERY[1]); TR.front = -200; TR.dir = -TR.dir; }   /* (the next one comes the other way) */
   }
   if ((TR.state === 'coming' || TR.state === 'leaving') && !TR.riding && P.y < 1.6 && P.x > trainRear() - 0.6 && P.x < TR.front + 0.6 && P.z > TR.ZC - TR.HW - 0.35 && P.z < TR.ZC + TR.HW + 0.3) {
     P.z = TR.ZC + TR.HW + 0.36; if (P.x < 9 || P.x > 32) P.y = Math.max(P.y, -0.12); }   /* (out of its way, onto the platform's edge) */

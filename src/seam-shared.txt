@@ -71,7 +71,7 @@ var F3_SAYS = {
   bench:['an old wooden bench, worn pale where people sat. (click again to sit and wait.)'],
   poster:['HARVEST FEST & HAYRIDE · 収穫祭 · MISSING MILE · OCT 31. pie, cider, the maze. it doesn\'t say which year.'],
   linemap:['the furusato line. YOU ARE HERE: 本町, main street. the dot\'s been touched so often it\'s worn grey.'],
-  time:['TIMETABLE. to furusato, to aldridge place. the last train to furusato is —:—. the last one the other way is at 25:61.'],
+  time:['TIMETABLE. to furusato, to aldridge. the last train to furusato is —:—. the last one the other way is at 25:61.'],
   grass:['tall grass gone gold, growing up over the platform\'s edge.'],
   phone:['a green payphone in its little glass box. you lift the receiver: a dial tone, very far away, and under it, the wind in the corn.', 'the payphone. someone has written a number on the glass in marker and rubbed it out.'],
   bin:['a concrete bin with two holes in its lid, like eyes. it\'s looking at the road.'],
@@ -115,7 +115,7 @@ var F_JP = 'Hiragino Sans, Hiragino Kaku Gothic ProN, Noto Sans CJK JP, Noto San
 var Q3 = { rust:'#7a3a26', drust:'#4e2418', iron:'#3a2c26', board:'#8a8076', dboard:'#5d554e', cream:'#e8dcc0', ink:'#1c1511', sage:'#696b50', olive:'#6e7440', gold:'#c9a067', plum:'#5e4652', glow:'#f2d898' };
 fpic('f3time', 0.8, 0.95, 260, 80, 95, '', function(){
   var s = '<rect width="80" height="95" fill="#4e3a26"/><rect x="3" y="3" width="74" height="89" fill="#e5e0d6"/>' + fTx('TIMETABLE', 40, 12, Q3.ink, 6.4, { f:F_EN, w:900, ls:1 }) + fTx('時刻表', 40, 18.5, '#5d554e', 4.6, { w:700 });
-  s += fTx('to FURUSATO', 21, 27, Q3.ink, 3.8, { f:F_EN, w:800 }) + fTx('to ALDRIDGE PL.', 59, 27, Q3.ink, 3.8, { f:F_EN, w:800 }) + '<rect x="40" y="23" width="0.6" height="62" fill="#8a8076"/>';
+  s += fTx('to FURUSATO', 21, 27, Q3.ink, 3.8, { f:F_EN, w:800 }) + fTx('to ALDRIDGE', 59, 27, Q3.ink, 3.8, { f:F_EN, w:800 }) + '<rect x="40" y="23" width="0.6" height="62" fill="#8a8076"/>';
   var a = ['6:12', '7:40', '9:05', '12:31', '15:16', '17:52', '19:08', '—:—'], b = ['6:58', '8:27', '11:13', '13:40', '16:02', '18:30', '20:44', '25:61'];
   a.forEach(function(t, i){ s += fTx(t, 21, 34 + i*6.8, i === 7 ? '#9a5038' : Q3.ink, 4.4, { f:F_MONO, w:700 }); });
   b.forEach(function(t, i){ s += fTx(t, 59, 34 + i*6.8, i === 7 ? '#9a5038' : Q3.ink, 4.4, { f:F_MONO, w:700 }); });
@@ -124,7 +124,7 @@ fpic('f3time', 0.8, 0.95, 260, 80, 95, '', function(){
 fpic('f3linemap', 1.6, 0.6, 220, 160, 60, '', function(){
   var s = '<rect width="160" height="60" fill="#4e4740"/><rect x="2" y="2" width="156" height="56" fill="#e5e0d6"/>' + fTx('FURUSATO LINE · ふるさと線', 80, 11, Q3.ink, 5.6, { f:F_EN, w:900 });
   s += '<rect x="14" y="27" width="134" height="4" fill="' + Q3.gold + '"/>';
-  var st = [['？', '?'], ['ふるさと', 'furusato'], ['本町', 'main st'], ['オールドリッジ', 'aldridge pl.'], ['庭園', 'nat. garden'], ['岬', 'starlight pt'], ['＊', '']];
+  var st = [['？', '?'], ['ふるさと', 'furusato'], ['本町', 'main st'], ['オールドリッジ', 'aldridge'], ['庭園', 'nat. garden'], ['岬', 'starlight pt'], ['＊', '']];
   st.forEach(function(q, i){ var x = 16 + i*21.6, here = i === 2; s += '<circle cx="' + x + '" cy="29" r="' + (here ? 4 : 3) + '" fill="' + (here ? '#9a5038' : '#f2f0ea') + '" stroke="' + Q3.ink + '" stroke-width="1"/>' + fTx(q[0], x, 22, Q3.ink, Math.min(4, 19/q[0].length), { w:800 }) + fTx(q[1], x, 39, '#5d554e', 3.2, { f:F_EN, w:700 }); });
   return s + fTx('YOU ARE HERE', 59.2, 47, '#9a5038', 3.6, { f:F_EN, w:900 }) + '<path d="M59,43 l0,-4" stroke="#9a5038" stroke-width="0.8"/>';
 });
@@ -186,9 +186,9 @@ fpic('f3mailF', 0.32, 0.25, 300, 32, 25, '', function(){ return '<path d="M0,25 
 fpic('f3mailS', 0.5, 0.25, 300, 50, 25, '', function(){ return '<path d="M0,25 L0,9 Q0,0 9,0 L50,0 L50,25 Z" fill="#7a7672"/><rect x="0" y="20" width="50" height="5" fill="#8a4a30" opacity="0.5"/>' + fTx('R.R. 2', 26, 15, '#2e2a26', 6, { f:F_EN, w:800 }) + '<rect x="40" y="-0" width="3" height="10" fill="#9a2a22"/><rect x="40" y="0" width="8" height="4" fill="#9a2a22"/>'; });
 var RIDE_MAP = { W:1400, H:380, x0:130, x1:1270, yl:196 };
 var RIDE_STOPS = [
-  ['？', '？', 'F 01'], ['ふるさと', 'furusato', 'F 02'], ['本町', 'main street, missing mile', 'F 03'], ['オールドリッジ・プレイス', 'aldridge place', 'F 04'],
+  ['？', '？', 'F 01'], ['ふるさと', 'furusato', 'F 02'], ['本町', 'main street, missing mile', 'F 03'], ['オールドリッジ', 'aldridge', 'F 04'],
   ['国立庭園', 'national garden', 'F 05'], ['スターライト岬', 'starlight point', 'F 06'], ['＊', '', 'F 07', 1]
-  /* (Oct 26, Aisling) 1989 Shire is no longer a stop: the pool sits in the world between Main Street and Aldridge Place.
+  /* (Oct 26, Aisling) 1989 Shire is no longer a stop: the pool sits in the world between Main Street and Aldridge. (Nov 17, Aisling: "drop the place on Aldridge place": it's just Aldridge now)
      F 07 is a secret last stop, marked ＊ for now: on the map, but you can't choose it (the 4th field marks it) */
 ];
 var F_STOP_PAGES = { 0:'stop', 1:'furusato', 2:'f03', 3:'stop', 4:'stop', 5:'stop' };   /* (Oct 31) the rest go to the stand-in stop page (stop.html) until each is built */

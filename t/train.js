@@ -1,5 +1,7 @@
-// the train, mechanically: it comes in and stops, the doors open, you walk in, choose a stop on the line map, the doors
-// close, it pulls out with you on it, into the tunnel's dark, and the next page is asked for. then arriving by train.
+// the train, mechanically, both ways (Nov 17: it runs both ways on one track). east: it comes in and stops, the doors
+// open, you walk in, read the line map (it says what's next), the doors close, it pulls out with you on it, into the
+// tunnel's dark, and Aldridge's page (the stand-in stop) is asked for. then west: out of the tunnel, you on, into the fog,
+// Furusato's page. then arriving by train.
 // node t/train.js [PREFIX]   (pictures: PREFIX0.png …)
 const { chromium } = require('playwright'); const path = require('path');
 const pre = process.argv[2] || '/tmp/tr_';
@@ -28,14 +30,28 @@ const page = 'file://' + path.resolve('dist/missing-mile-station.html');
   console.log('walk in:', JSON.stringify(walk));
   await snap(dx - 1.8, 2.1, -90, 0.0, 0.02);   // inside, looking down the car
   await snap(dx, 2.2, 180, 0.75, 0.02);     // looking up at the line map over the door
-  /* 3. choose a stop: click the middle of the map */
+  /* 3. read the line map (no choosing: it says what's next) */
   const chose = await p.evaluate(dx => { const E = window.__eg, P = E.P; P.x = dx; P.z = 2.2; P.y = 0.02; P.yaw = Math.PI; P.pitch = 0.75; window.__frozen = true; E.renderOnce(); const line = E.tapCenter(); return { line, chosen:E.TR.chosen }; }, dx);
   console.log('choose:', JSON.stringify(chose));
-  /* 4. the doors close, it pulls out with you on it, into the dark, the next page */
+  /* 4. the doors close on time, it pulls out with you on it, into the dark, the next page */
   const ride = await p.evaluate(() => { const E = window.__eg, T = E.TR, P = E.P; let now = window.__now; const log = [];
-    for (let i = 0; i < 60*40; i++) { now += 1000/60; E.trainTick(now, 1/60); if (i % 90 === 0) log.push(T.state + ' P.x ' + P.x.toFixed(1) + (P.riding ? ' riding' : '') + (T.dark ? ' dark' : '')); if (window.__went) break; }
+    for (let i = 0; i < 60*60; i++) { now += 1000/60; E.trainTick(now, 1/60); if (i % 90 === 0) log.push(T.state + ' P.x ' + P.x.toFixed(1) + (P.riding ? ' riding' : '') + (T.dark ? ' dark' : '')); if (window.__went) break; }
     return { log:log.join(' | '), went:window.__went, said:document.getElementById('caption').textContent }; });
   console.log('ride:', ride.log); console.log('  → next page:', JSON.stringify(ride.went), '| last line:', ride.said);
+  /* 4b. the other way: out of the tunnel, westbound, you on it, into the fog: Furusato */
+  const west = await p.evaluate(() => { const E = window.__eg, T = E.TR, P = E.P; let now = window.__now + 60000; window.__went = null;
+    T.state = 'off'; T.dir = -1; T.next = now - 1; T.dark = 0; T.gone = false; T.riding = false; P.riding = false; P.x = 20; P.z = 5.5; P.y = 0; const log = [];
+    for (let i = 0; i < 60*60; i++) { now += 1000/60; E.trainTick(now, 1/60);
+      if (T.state === 'stopped' && T.doorK > 0.99 && !window.__in) { window.__in = 1; const x0 = T.front - T.L - 2*(T.L + T.G) + 4.35; P.x = x0; P.z = 2.0; P.y = 0.02; log.push('front stopped at ' + T.front.toFixed(1) + ', you get on at x ' + x0.toFixed(1)); }
+      if (i % 120 === 0) log.push(T.state + ' P.x ' + P.x.toFixed(1) + (P.riding ? ' riding' : '') + (T.dark ? ' dark' : '')); if (window.__went) break; }
+    return { log:log.join(' | '), went:window.__went, said:document.getElementById('caption').textContent, dir:T.dir }; });
+  /* 4c. after Aldridge, the map lets you pick: choose national garden (F 05) */
+  const pick = await p.evaluate(dx => { const E = window.__eg, T = E.TR, P = E.P; T.riding = false; P.riding = false; T.state = 'stopped'; T.dir = 1; T.front = T.STOP; T.t0 = window.__now; T.doorK = 1; T.pick = -1; E.trainTick(window.__now, 0); T.doorK = 1; E.trainTick(window.__now, 0);
+    const seen = JSON.parse(localStorage.getItem('nullgrey.furusato.stops') || '[]');
+    P.x = dx; P.z = 2.2; P.y = 0.02; P.yaw = Math.PI; P.pitch = 0.75; const R = window.EG_SEAM.ride, n = R.stops.length, x4 = R.map.x0 + 4*(R.map.x1 - R.map.x0)/(n - 1);
+    window.__frozen = true; E.renderOnce(); const line = E.tapCenter(); return { seen, line, pick:T.pick }; }, dx);
+  console.log('after aldridge, stops seen:', JSON.stringify(pick.seen), '| the map now picks:', pick.pick, pick.line);
+  console.log('west:', west.log); console.log('  → next page:', JSON.stringify(west.went), '| last line:', west.said);
   /* 5. arriving by train, from a Seam page */
   const p2 = await b.newPage({ viewport:{ width:960, height:540 } });
   p2.on('pageerror', e => { errs++; console.log('ERR2', String(e.stack).slice(0, 400)); });
