@@ -118,7 +118,7 @@ function resize(){
   if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/(V.px || 1.25))*resK); h = Math.round(w/asp); }
   CW = split ? Math.floor(w/3)*3 : w; CH = h;
   renderer.setSize(CW, CH, false);
-  camera.aspect = CW/CH; camera.fov = asp < 1 ? Math.min(100, 2*Math.atan(Math.tan(33*Math.PI/180)/asp)*180/Math.PI*0.8) : 66;
+  camera.aspect = CW/CH; camera.fov = asp < 1 ? Math.min(100, 2*Math.atan(Math.tan(31*Math.PI/180)/asp)*180/Math.PI*0.8) : 62;   /* (Nov 18: a little narrower: less of a fish-eye stretch at the bottom when you look down) */
   if (L.motes) L.motes.uniforms.uPx.value = CH/300; camera.updateProjectionMatrix();
 }
 addEventListener('resize', resize);
@@ -147,7 +147,7 @@ function frame(now){
   /* (Nov 18, Aisling: "it gets weird when you walk forward and look downwards..its like you float upwards") the eyes turn on a
      neck, not on the spot: looking down tips the head forward and a little lower, as yours does; and a soft shadow under
      you follows the ground, so you stand on it */
-  { const nk = 0.16, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), dn = Math.max(0, -P.pitch);
+  { const nk = 0.24, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), dn = Math.max(0, -P.pitch);
     camera.position.set(P.x + fx*nk*Math.sin(dn), P.y + P.eye - nk*(1 - Math.cos(dn)) + (P.onGround ? Math.sin(t*7)*0.008*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z + fz*nk*Math.sin(dn)); }
   camera.rotation.set(P.pitch, P.yaw, 0);
   if (YOU) { YOU.visible = !P.riding; YOU.position.set(P.x, P.y + 0.012, P.z); }

@@ -75,7 +75,7 @@ export function buildMore(C){
   const R = rnd(9177);
   const barkT = T.woodD.clone(); barkT.repeat.set(3, 1.2); barkT.needsUpdate = true;
   barkT.userData = {}; if (T.woodD.userData.normal) { const n = T.woodD.userData.normal.clone(); n.userData = {}; n.repeat.set(3, 1.2); n.needsUpdate = true; barkT.userData.normal = n; }   /* (a texture's clone turns its userData into plain copies: give it real ones) */
-  const bark = mat(barkT, { color:0xb8aaa0 }); bark.userData.m = [1, 1];
+  const bark = mat(barkT, { color:0xe6d8cc });   /* (Nov 18: lighter, so its bark shows instead of a black cut-out) */ bark.userData.m = [1, 1];
   const ironR = mat(T.iron, { color:0x9a6a50 }), greyP = mat(null, { color:0x8a857e }); greyP.userData.m = [1, 1];
   const earth = mat(paint(256, 256, 2, 2, (x, y) => [fbm(x*2, y*2) > 0.55 ? 'hwood' : 'hrust', 0.14 + 0.08*vn(x*12, y*12) + 0.04*vn(x*40, y*40), 1, null, 1], { nrm:1 }));
   const TK = { sway:[] };
@@ -129,16 +129,16 @@ export function buildMore(C){
       (leaf ? ' float fl = sin(uTime*(1.6 + mod(aVar, 5.0)*0.12) + aVar*1.7 + wp.x*2.3 + wp.z*1.9)*(0.006 + uGust*0.018);\n egSw += vec3(fl, fl*0.6, fl*0.8);\n' : '') +
       ' mvPosition = viewMatrix*(wp + vec4(egSw, 0.0)); gl_Position = projectionMatrix*mvPosition; }'); };
   bark.onBeforeCompile = sh => swayVert(sh, false); bark.customProgramCacheKey = () => 'tree-bark';
-  function leafMat(map){
+  function leafMat(map, still){
     const m = new THREE.MeshStandardMaterial({ map, alphaTest:0.5, roughness:0.85, side:THREE.DoubleSide }); m.userData.noDetail = true;
     m.onBeforeCompile = sh => {
       sh.vertexShader = 'attribute float aVar; uniform float uTime; uniform float uGust;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv = vMapUv*0.25 + vec2(mod(aVar, 4.0), floor(aVar/4.0))*0.25;');
-      swayVert(sh, true);
+      if (!still) swayVert(sh, true);
       sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n' +
         ' { vec3 d = normalize(-vViewPosition), up = normalize((viewMatrix*vec4(0.0, 1.0, 0.0, 0.0)).xyz); float back = clamp(-dot(d, up)*1.4 + 0.15, 0.0, 1.0);\n' +
         '   reflectedLight.indirectDiffuse += diffuseColor.rgb*vec3(1.0, 0.86, 0.66)*(0.1 + 0.42*back*back); }');   /* (thin leaves: the dusk comes through them) */
     };
-    m.customProgramCacheKey = () => 'tree-leaf';
+    m.customProgramCacheKey = () => still ? 'tree-leaf-still' : 'tree-leaf';
     return m;
   }
   function leafField(items, m, flat){
@@ -148,9 +148,9 @@ export function buildMore(C){
     g.setAttribute('aVar', new THREE.InstancedBufferAttribute(v, 1)); im.castShadow = !flat; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); return im;
   }
   function tree(tx, tz, ph, seed, say){
-    const Rt = rnd(seed*97 + 5), Lf = LEAF[ph], gy = groundAt(tx, tz) - 0.05, H1 = 1.3 + Rt()*0.5, tl = (Rt() - 0.5)*0.16, tlx = tl*Math.cos(seed), tlz = tl*Math.sin(seed);
+    const Rt = rnd(seed*97 + 5), Lf = LEAF[ph], gy = groundAt(tx, tz) - 0.05, tl = (Rt() - 0.5)*0.16, tlx = tl*Math.cos(seed), tlz = tl*Math.sin(seed);
     const geos = [], sites = [], m = leafMat(leafAtlas(Lf));
-    const trunkTop = [tx + tlx*H1, gy + H1, tz + tlz*H1];
+
     
     const site = (A, B, f) => sites.push([A[0] + (B[0] - A[0])*f, A[1] + (B[1] - A[1])*f, A[2] + (B[2] - A[2])*f]);
     /* (Nov 18, Aisling: the limbs looked "sliced choppy … the disconnection is a little odd"; keep them "a little janky
@@ -180,22 +180,44 @@ export function buildMore(C){
       if (r1 >= 0.015) { const a = sm[sm.length - 2], b = sm[sm.length - 1], d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], dl = Math.hypot(...d) || 1, k = Math.max(r1*6, 0.3)/dl;   /* (the limb carries on past its fork as a leader, thinning to a spike) */ sm.push([b[0] + d[0]*k, b[1] + d[1]*k, b[2] + d[2]*k]); }   /* (a short taper closes the end, so no flat cut shows where the next limb bends away) */
       geos.push(tube(sm, r0, 0.002, r0 > 0.05 ? 10 : 6, true)); { const a = pts[pts.length - 2], b = pts[pts.length - 1]; lastDir = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]; }   /* (only the twigs end in a point; a limb ends as thick as what grows from it) */
       return P; };
-    { const tp = []; for (let i = 0; i <= 10; i++) { const f = i/10; tp.push([tx + tlx*H1*f + Math.sin(f*3 + seed)*0.03, gy - 0.1 + (H1 + 0.32)*f, tz + tlz*H1*f + Math.cos(f*2.6 + seed)*0.03]); }
-      const tg = tube(tp, 0.34, 0.17, 14), q = tg.attributes.position;   /* (Nov 18: thicker, like the trees on her block; one smooth trunk, flaring at its foot, running up into the fork) */
-      for (let i = 0; i < q.count; i++) { const y = q.getY(i) - gy, fl = 1 + 0.45*Math.max(0, 1 - y/0.5)**2; q.setX(i, tx + (q.getX(i) - tx)*fl); q.setZ(i, tz + (q.getZ(i) - tz)*fl); }
+    /* (Nov 18, from Aisling's own tree photos: "the trees just arent quite there") grown the way hers grow: one tall trunk,
+       straight a long way, that forks at about head height into two or three leaders; each leader keeps going up, forking
+       again and again (five or six times), thinner each time, the side branches leaving at an angle and curving up, the
+       longest ones sagging a little under their own weight, until the ends are a fine net of twigs. the leaves live out
+       on that net (the crown's shell), not along the big limbs. still a little crooked and spiky. */
+    const V3 = (x, y, z) => new THREE.Vector3(x, y, z), up = V3(0, 1, 0);
+    const turn = (d, ang, around) => d.clone().applyAxisAngle(around, ang);
+    const perp = d => { const p = V3(1, 0, 0).cross(d); if (p.lengthSq() < 1e-4) p.set(0, 0, 1); return p.normalize(); };
+    const grow = (P, dir, len, r0, depth, maxD, buried) => {
+      /* the branch's own path: a few bends, a crook now and then, drooping more the longer and thinner it is */
+      const n = Math.max(3, Math.round(len*4)), pts = [], d = dir.clone().normalize();
+      const start = buried ? P.clone().sub(d.clone().multiplyScalar(r0*2.5)) : P.clone(); pts.push(start.toArray()); let Q = P.clone(); pts.push(Q.toArray());
+      const sag = (depth >= 2 ? 0.05 : 0.0)*(len/1.6), crook = Rt() < 0.3 ? (Rt() - 0.5)*0.9 : 0;
+      for (let i = 1; i <= n; i++) { const f = i/n; d.add(V3((Rt() - 0.5)*0.22, -sag + (depth <= 1 ? 0.03 : 0), (Rt() - 0.5)*0.22)); if (i === Math.round(n/2) && crook) d.applyAxisAngle(perp(d), crook); d.normalize(); Q = Q.clone().add(d.clone().multiplyScalar(len/n)); pts.push(Q.toArray()); }
+      const r1 = r0*(depth >= maxD ? 0.15 : 0.55);
+      const cv = new THREE.CatmullRomCurve3(pts.map(p => V3(...p))), sm = cv.getPoints(r0 > 0.03 ? n*3 : n + 1).map(v => [v.x, v.y, v.z]);   /* (thin twigs: fewer rings, they're too small to show bends) */
+      geos.push(tube(sm, r0, r1 < 0.006 ? 0.0015 : r1, r0 > 0.08 ? 12 : (r0 > 0.03 ? 8 : (r0 > 0.012 ? 5 : 3)), buried));
+      if (depth >= maxD - 1) for (const f of [0.45, 0.75, 1.0]) { const s = cv.getPoint(f); sites.push([s.x, s.y, s.z]); }   /* the outer net: where the leaves go */
+      if (depth >= maxD) return;
+      /* its children: one carries on (the leader), one to three leave at the side along its outer half */
+      const end = cv.getPoint(1), endDir = cv.getTangent(1).normalize();
+      const lead = turn(endDir, (Rt() - 0.5)*0.35, perp(endDir)).lerp(up, depth < 2 ? 0.25 : 0.05).normalize();
+      grow(end, lead, len*(0.72 + Rt()*0.12), r1, depth + 1, maxD, true);
+      const ns = depth === 0 ? 0 : 1 + Math.floor(Rt()*(depth < 3 ? 2.4 : 2));
+      for (let k = 0; k < ns; k++) { const f = 0.45 + Rt()*0.5, at = cv.getPoint(f), t = cv.getTangent(f).normalize(), spin = Rt()*6.283;
+        const out = turn(turn(t, 0.55 + Rt()*0.45, perp(t)), spin, t).lerp(up, 0.2).normalize();
+        grow(at, out, len*(0.5 + Rt()*0.25), r1*(0.75 + Rt()*0.15), depth + 1, maxD, true); }
+    };
+    /* the trunk, straight a long way, flaring at its foot; then it forks into two or three leaders */
+    const TH = 2.1 + Rt()*1.0, maxD = ph >= 3 ? 5 : 6;
+    { const tp = []; for (let i = 0; i <= 14; i++) { const f = i/12; tp.push([tx + tlx*TH*f + Math.sin(f*3 + seed)*0.04, gy - 0.1 + (TH + 0.1)*f, tz + tlz*TH*f + Math.cos(f*2.6 + seed)*0.04]); }   /* (on a little past the fork, closing inside the leaders: no cut end) */
+      const tg = tube(tp, 0.3, 0.06, 16), q = tg.attributes.position;
+      for (let i = 0; i < q.count; i++) { const y = q.getY(i) - gy, fl = 1 + 0.5*Math.max(0, 1 - y/0.6)**2; q.setX(i, tx + (q.getX(i) - tx)*fl); q.setZ(i, tz + (q.getZ(i) - tz)*fl); }
       tg.computeVertexNormals(); geos.push(tg); }
-    const nL = ph >= 2 ? 4 : 3, a0 = Rt()*6.283;
-    for (let i = 0; i < nL; i++) { const ang = a0 + i*6.283/nL + (Rt() - 0.5)*0.6, mm = 0.45 + Rt()*0.3, P0 = [trunkTop[0], trunkTop[1] - 0.15, trunkTop[2]];
-      const E = limb(P0, 1.3 + Rt()*0.7, Math.cos(ang)*mm, Math.sin(ang)*mm, 0.15, 0.065, [0, 1, 0]); const dE = lastDir;
-      if (ph < 2) { site(P0, E, 0.55); site(P0, E, 0.85); }
-      const nb = ph >= 2 ? 3 : 2;
-      for (let j = 0; j < nb; j++) { const a2 = ang + (j - (nb - 1)/2)*0.9 + (Rt() - 0.5)*0.4, m2 = 0.55 + Rt()*0.45, P1 = [E[0], E[1] - 0.05, E[2]];
-        const E2 = limb(P1, 0.8 + Rt()*0.5, Math.cos(a2)*m2, Math.sin(a2)*m2, 0.038, 0.016, dE); const dE2 = lastDir;   /* (thinner than the limb it grows from, so the joint is a fork, not an elbow) */
-        for (const f of [0.3, 0.55, 0.8, 0.98]) site(P1, E2, f);
-        for (let w = 0; w < (ph === 2 ? 1 : 2); w++) { const a3 = a2 + (w - 0.5)*1.1 + (Rt() - 0.5)*0.5, m3 = 0.7 + Rt()*0.6, P2 = [E2[0], E2[1] - 0.03, E2[2]];
-          const E3 = limb(P2, 0.45 + Rt()*0.4, Math.cos(a3)*m3, Math.sin(a3)*m3, 0.013, 0.005, dE2);   /* its twigs */
-          for (const f of [0.35, 0.65, 0.9, 1.02]) site(P2, E3, f); }   /* (Nov 18: on the twig, not past its end: Aisling, "they float a little too much") */
-      } }
+    const top = V3(tx + tlx*TH, gy + TH - 0.1, tz + tlz*TH), nLead = 2 + (Rt() < 0.5 ? 1 : 0), a0 = Rt()*6.283;
+    for (let i = 0; i < nLead; i++) { const ang = a0 + i*6.283/nLead + (Rt() - 0.5)*0.5, lean = 0.28 + Rt()*0.22;
+      grow(top.clone().add(V3(0, -0.35 - i*0.2, 0)), V3(Math.cos(ang)*lean*0.8, 1, Math.sin(ang)*lean*0.8), 1.7 + Rt()*0.6, 0.15 - i*0.012, 1, maxD, true); }   /* (starting well down inside the trunk, so the fork has no notch) */
+    const H1 = TH;
     ROOTS.add(tx, tz, 0.3, 'earth');   /* (its foot in the earth: roots.js) */
     for (let k = 0; k < 5; k++) { const a = Rt()*6.283 + k*1.25, L = 0.75 + Rt()*0.4;   /* (Nov 18) its roots flaring into the ground, so it doesn't stand like a pipe */
       geos.push(rodGeo([tx + Math.cos(a)*0.12, gy + 0.14, tz + Math.sin(a)*0.12], [tx + Math.cos(a)*L, gy - 0.04, tz + Math.sin(a)*L], 0.11, 0.03, 8)); }
@@ -209,7 +231,7 @@ export function buildMore(C){
       qq.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (Rt() - 0.5)*1.1));
       lv.push([N[0], N[1], N[2], sz, 0, 0, 0, Math.floor(Rt()*16), qq]); };
     const nUse = Math.min(sites.length, Math.round(sites.length*Math.min(1, Lf.n/86)));
-    for (let t = 0; t < nUse; t++) { const S = sites[t], nt = ph >= 3 ? 1 : (ph === 2 ? 3 : 5 + Math.floor(Rt()*3));
+    for (let t = 0; t < nUse; t++) { const S = sites[t], nt = ph >= 3 ? 1 : (ph === 2 ? 1 : 2);
       for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = (ph >= 2 ? 0.4 : 0.25) + Rt()*0.4, d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
         const B = [S[0] + d.x*len, S[1] + d.y*len, S[2] + d.z*len]; tw.push(rodGeo(S, B, 0.009, 0.004, 3));
         for (const f of (ph >= 2 ? [1.0] : [0.35, 0.68, 1.0])) {   /* (the barer trees keep their last leaves out at the twig ends, not clinging at the joints) */ const N = [S[0] + d.x*len*f, S[1] + d.y*len*f, S[2] + d.z*len*f], nl = f === 1 ? 4 + Math.floor(Rt()*3) : 2 + Math.floor(Rt()*2);
@@ -223,9 +245,9 @@ export function buildMore(C){
     for (let i = 0; i < Lf.ground; i++) { const a = Rt()*6.283, d = 0.3 + Math.pow(Rt(), 0.7)*3.2, x = tx + Math.cos(a)*d*1.1, z = tz + Math.sin(a)*d;
       if (x > 8.9 && x < 32.1 && z > 2.9 && z < 8.05) continue;   /* (not into the platform) */
       gl.push([x, groundAt(x, z) + 0.006 + Rt()*0.004, z, 0.1 + Rt()*0.06, (Rt() - 0.5)*0.3, Rt()*6.3, (Rt() - 0.5)*0.3, Math.floor(Rt()*16)]); }
-    leafField(gl, m, true);
+    leafField(gl, leafMat(m.map, true), true);   /* (Nov 18, Aisling: the leaves on the ground were bobbing up and down: they lie still) */
   }
-  [[4.6, 6.0, 1, 7, 'tree'], [36.8, 6.2, 0, 19, 'tree'], [45.5, 15.5, 2, 23, 'treeF'], [14.0, 19.0, 3, 37, 'treeF']].forEach(t => tree(t[0], t[1], t[2], t[3], t[4]));
+  [[4.6, 6.0, 1, 7, 'tree'], [36.8, 6.2, 0, 19, 'tree'], [45.5, 15.5, 2, 23, 'treeF'], [14.0, 19.0, 3, 37, 'treeF'], [51.2, 23.4, 2, 41, 'treeF'], [50.6, 16.6, 3, 43, 'treeF'], [52.6, 19.8, 1, 47, 'treeF']]   /* (Nov 18: three behind the windmill, in the corn) */.forEach(t => tree(t[0], t[1], t[2], t[3], t[4]));
 
   /* ================= the windmill, far out in the corn: a lattice tower going up and up, a small tank partway, the
      wheel of blades at the top, still; its vane lettered once. (Seam's f3Windmill, in the round) ================= */

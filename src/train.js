@@ -230,8 +230,8 @@ export function buildTrain(scene, tag, haloFn){
         const lm = new THREE.Mesh(mergeGeometries(lgs), MT.head); G.add(lm); (TR.lamps = TR.lamps || {})[e ? 'east' : 'west'] = lm; TR.MT = MT;
         /* (Nov 18) the destination board lit from inside: its LED dots glow on their own panel */
         if (!TR.ledMat) { const c2 = document.createElement('canvas'); c2.width = 720; c2.height = 130; const g = c2.getContext('2d'), m = document.createElement('canvas'); m.width = 240; m.height = 44; const q = m.getContext('2d');
-          q.fillStyle = '#fff'; q.textAlign = 'center'; q.textBaseline = 'middle'; q.font = '800 24px "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans CJK JP","Yu Gothic",sans-serif'; q.fillText('各停  ？？', 120, 16);
-          q.font = '700 12px "Avenir Next","Helvetica Neue",Arial,sans-serif'; q.fillText('LOCAL  ??', 120, 36);
+          q.fillStyle = '#fff'; q.textAlign = 'center'; q.textBaseline = 'middle'; q.font = '800 24px "Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","M PLUS Rounded 1c","Kosugi Maru","Hiragino Sans",sans-serif'; q.fillText('各停  ？？', 120, 16);
+          q.font = '700 12px Futura,"Century Gothic","Avenir Next",sans-serif'; q.fillText('LOCAL  ??', 120, 36);
           const d = q.getImageData(0, 0, 240, 44).data; g.fillStyle = '#0c0806'; g.fillRect(0, 0, 720, 130);
           for (let yy = 0; yy < 44; yy++) for (let xx = 0; xx < 240; xx++) { const on = d[(yy*240 + xx)*4 + 3] > 90; g.fillStyle = on ? '#ffb24a' : '#24160c'; g.beginPath(); g.arc(xx*3 + 1.5, yy*3 + 1.5, on ? 1.35 : 0.7, 0, Math.PI*2); g.fill(); }
           const t = new THREE.CanvasTexture(c2); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;

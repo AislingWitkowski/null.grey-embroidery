@@ -204,7 +204,12 @@ var RIDE_STOPS = [
      F 07 is a secret last stop, marked ＊ for now: on the map, but you can't choose it (the 4th field marks it) */
 ];
 var F_STOP_PAGES = { 0:'stop', 1:'furusato', 2:'f03', 3:'stop', 4:'stop', 5:'stop' };   /* (Oct 31) the rest go to the stand-in stop page (stop.html) until each is built */
+var fTxRideBase = fTx;   /* (the shared drawing helper, kept before the line map's own rounded one stands in for it) */
 var RIDE_MAP_SVG = (function(){
+  /* (Nov 18, Aisling: "something less generic but readable" for the train's signs) the line map in a rounded gothic, the face of
+     old Japanese railway signs and line maps, with Futura for the English; both clear at a glance */
+  var F_RJ = 'Hiragino Maru Gothic ProN, Hiragino Maru Gothic Pro, M PLUS Rounded 1c, Kosugi Maru, Hiragino Sans, sans-serif', F_RE = 'Futura, Century Gothic, Avenir Next, Helvetica Neue, Arial, sans-serif';
+  var fTx = function(t, x, y, fill, sz, o){ o = Object.assign({}, o || {}); o.f = o.f === F_EN ? F_RE : (o.f || F_RJ); return fTxRideBase(t, x, y, fill, sz, o); };
   var W = 1400, H = 380, x0 = 130, x1 = 1270, yl = 196, n = RIDE_STOPS.length;
   var s = '<rect width="1400" height="380" rx="14" fill="#4e4e4c"/><rect x="8" y="8" width="1384" height="364" rx="9" fill="#ecebe6"/>';
   s += '<rect x="8" y="8" width="1384" height="58" rx="9" fill="#c9a067"/><rect x="8" y="50" width="1384" height="16" fill="#c9a067"/>';

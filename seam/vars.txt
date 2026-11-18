@@ -33,6 +33,7 @@ src/f03/f03-things.js|fpic('f3mailS'
 src/f9c-ride-map.js|var RIDE_MAP = 
 src/f9c-ride-map.js|var RIDE_STOPS
 src/f9c-ride-map.js|var F_STOP_PAGES
+src/f9c-ride-map.js|var fTxRideBase
 src/f9c-ride-map.js|var RIDE_MAP_SVG
 src/f9d-ride.js|var RIDE_SAY
 src/f8-train.js|var F_WARN
