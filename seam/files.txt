@@ -17,4 +17,5 @@ src/f8-sound.js
 src/f03/f03-vend.js
 src/f6x-vend.js
 src/f03/f03-vend2.js
+src/c7-tags.js
 src/f03/f03-details.js

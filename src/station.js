@@ -230,10 +230,10 @@ export function buildStation(scene){
   /* the canopy's rafters, from the beam back to the wall */
   for (const x of [10.5, 13.5, 16.5, 19.5, 22.5, 9.05, 24.95]) box(x - 0.05, x + 0.05, 2.98, 3.15, 4.21, 8, M.woodD, { solid:false });
 
-  /* on the wall: the bench, the poster, the line map, the timetable (their pictures come with milestone 2's close-ups;
-     for now plain aged paper, nothing written) */
+  /* on the wall: the bench, the poster, the line map, the timetable (Seam's own pictures, below) */
   tag(box(11.4, 12.76, 0.38, 0.43, 7.57, 7.95, M.wood), 'bench'); box(11.45, 11.55, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false }); box(12.61, 12.71, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false });
   tag(box(11.4, 12.76, 0.5, 0.81, 7.9, 7.95, M.wood, { solid:false }), 'bench');
+  for (const x of [11.44, 12.64]) tag(box(x, x + 0.08, 0.43, 0.84, 7.86, 7.95, M.woodD, { solid:false }), 'bench');   /* (Nov 17, Aisling: the back was floating; two posts hold it to the seat) */
   [[14.6, 1.48, 0.7, 0.95, 'poster', 'f3poster'], [18, 1.65, 1.6, 0.6, 'linemap', 'f3linemap'], [20.7, 1.48, 0.8, 0.95, 'time', 'f3time']].forEach(p => {   /* (Nov 17, evening: Seam's own pictures of them, word for word) */
     const pm = new THREE.MeshStandardMaterial({ map:seamTex(p[5], 520, '#d8ccb0'), roughness:0.95 }); pm.userData.m = [1, 1]; tag(plane(p[2], p[3], pm, p[0], p[1], 7.985, Math.PI, { cast:false }), p[4]); });
 
@@ -289,8 +289,9 @@ export function buildStation(scene){
   const vmT = seamTex('f3vm2', 420, '#8e2a22'), vsT = seamTex('f3vmSide2', 300, '#8e2a22');
   const vmF = new THREE.MeshStandardMaterial({ map:vmT, emissiveMap:vmT, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.22, roughness:0.55 });
   const vmS = new THREE.MeshStandardMaterial({ map:vsT, roughness:0.6 });
-  vmF.userData.m = [1.02, 1.86]; vmS.userData.m = [0.75, 1.86];   /* (one picture per face, not tiled) */
-  tag(box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vmS, vmS, vs, vs, vmS, vmF]), 'vending'); SRC.vend = { x:27.43, y:1.2, z:7.15 };
+  const vcT = seamTex('f3vmClip2', 420, '#8e2a22'), vmC = new THREE.MeshStandardMaterial({ map:vcT, roughness:0.75 });   /* (Nov 17: the east side carries the clippings, as in Seam) */
+  vmF.userData.m = [1.02, 1.86]; vmS.userData.m = [0.75, 1.86]; vmC.userData.m = [0.75, 1.86];   /* (one picture per face, not tiled) */
+  tag(box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vmC, vmS, vs, vs, vmS, vmF]), 'vending'); SRC.vend = { x:27.43, y:1.2, z:7.15 };
   L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.9); scene.add(L.vend);
   const ab = spot(26.6, 2.42, 7.4, 1.2, 6, 0xffb070, 512); ab.userData = { weak:false, ph:4 }; L.bulbs.push(ab);
   lathe([[0.01, 0.1], [0.06, 0.07], [0.12, 0.0]], shadeM, 26.6, 2.42, 7.4, 10, { cast:false });
@@ -313,6 +314,8 @@ export function buildStation(scene){
   const dF = seamTex('f3dumpF', 260, '#30261d'), dS = seamTex('f3dumpS', 260, '#30261d');
   const dmF = new THREE.MeshStandardMaterial({ map:dF, roughness:0.8 }), dmS = new THREE.MeshStandardMaterial({ map:dS, roughness:0.8 }); dmF.userData.m = [1.9, 1.6]; dmS.userData.m = [1.1, 1.6];
   tag(box(14.1, 16.0, -0.3, 1.3, 13.12, 14.22, [dmS, dmS, mat(T.iron, { color:0x6a5040 }), dmS, dmF, dmS]), 'dump');
+  { const skT = seamTex('f3sky', 600, null); const sk = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.2325), new THREE.MeshStandardMaterial({ map:skT, transparent:true, alphaTest:0.4, roughness:0.85 }));
+    sk.position.set(16.004, 0.716, 13.67); sk.rotation.y = Math.PI/2; sk.receiveShadow = true; scene.add(sk); tag(sk, 'dump'); }   /* (Nov 17) "sky", the Columbus tag, on the dumpster's east side: Seam's own picture of it */
   const msT = seamTex('f3miss', 900, '#dcd4c4');
   const ms = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.48), new THREE.MeshStandardMaterial({ map:msT, roughness:0.95 })); ms.position.set(31.86, 1.24, 24.58); ms.rotation.y = -Math.PI/2; ms.receiveShadow = true; scene.add(ms); tag(ms, 'missing');
 

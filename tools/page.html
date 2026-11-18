@@ -19,7 +19,7 @@ html,body{margin:0;height:100%;background:#130d0a;overflow:hidden;touch-action:n
 /* (milestone 2) Seam's pocket lives in its own layer over the 3D view, as it does in Seam */
 #page-root{position:fixed;inset:0;pointer-events:none;z-index:20;font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;color:#e4dcd0}
 #stage{position:absolute;inset:0;pointer-events:none}
-#stage #pk-icon,#stage #pocket.open,#stage #pocket.open *{pointer-events:auto}
+#stage #pk-icon,#stage #pocket.open,#stage #pocket.open *,#stage #pk-drop,#stage #f3close.open,#stage #f3close.open *,#stage #fvm.open,#stage #fvm.open *{pointer-events:auto}   /* (the pocket, and Seam's close-ups: they take their own clicks, so you can step back out of them) */
 #seam-caption,#grain{display:none}
 body.pk-open .sw,body.pk-open #looks,body.pk-open #fps,body.pk-open #caption,body.pk-open #ccline,body.pk-open #tbtn{visibility:hidden}   /* (as in Seam: the switches step aside while the pocket is open) */
 </style></head><body>

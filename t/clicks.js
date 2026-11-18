@@ -17,7 +17,7 @@ const C = [
   const b = await chromium.launch({ args:['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport:{ width:640, height:360 } }); let errs = 0;
   p.on('pageerror', e => { errs++; console.log('ERR', String(e.stack).slice(0, 300)); });
-  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed');
+  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed', { waitUntil:'domcontentloaded', timeout:120000 });
   await p.waitForFunction(() => document.getElementById('wait').classList.contains('gone'), null, { timeout:180000 });
   await p.evaluate(() => { window.__eg.pause(true); window.__eg.soundOn(); });
   for (const [name, s] of C) {

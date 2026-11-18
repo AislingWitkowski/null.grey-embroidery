@@ -92,7 +92,7 @@ var F3_SAYS = {
   fpic('f3vm2', 1.02, 1.86, 220, 85, 182, function(x, y){ return (y > 6 && y < 30) || (y > 33 && y < 62 && x > 7 && x < 78) || (y > 66 && y < 72 && x > 60 && x < 70); }, function(){
     var s = '<rect width="85" height="182" fill="#8e2a22"/><rect x="0" y="0" width="85" height="4" fill="#e8dcc0"/><rect x="0" y="0" width="3" height="182" fill="#a8322a"/><rect x="82" y="0" width="3" height="182" fill="#6a1e18"/>';
     s += '<rect x="5" y="6" width="75" height="24" fill="#a8322a"/><path d="M5,22 Q30,13 52,20 Q68,25 80,17 L80,22 Q68,29 52,24 Q30,17 5,26 Z" fill="#f2ece0"/>';   /* the header: a cream wave */
-    s += fTx('Drink', 20, 13.5, '#f2ece0', 4.2, { f:F_EN, w:700 }) + fTx('Smile', 44, 15.5, '#f2ece0', 9, { f:'Snell Roundhand, Brush Script MT, cursive', w:700 }) + fTx('スマイル', 66, 28.4, '#f2ece0', 3, { w:800 });
+    s += fTx('Drink', 20, 13.5, '#f2ece0', 4.2, { f:F_EN, w:700 }) + fTx('Smile', 44, 15.5, '#f2ece0', 9, { f:'Snell Roundhand, Brush Script MT, cursive', w:700 }) + fTx('スマイル', 69, 11.6, '#f2ece0', 3, { w:800 });   /* (Nov 17, Aisling: it ran into the cream wave; now in the red above the wave's end) */
     s += '<rect x="6" y="33" width="73" height="30" fill="#c7c6c3"/><rect x="8" y="35" width="69" height="26" fill="#efe9dc"/>';   /* the lit window */
     F3_FLAV.forEach(function(F, k){ var cx = 17 + k*17;
       s += '<rect x="' + (cx - 5.5) + '" y="38" width="11" height="19" rx="1.5" fill="' + F[2] + '"/>' + (F[4] ? '<path d="M' + (cx - 5.5) + ',50 Q' + cx + ',45 ' + (cx + 5.5) + ',47 L' + (cx + 5.5) + ',50 Q' + cx + ',48 ' + (cx - 5.5) + ',53 Z" fill="' + F[4] + '"/>' : '') + '<rect x="' + (cx - 5.5) + '" y="38" width="11" height="2.4" fill="#c7c6c3"/><rect x="' + (cx - 4.6) + '" y="41" width="2" height="15" fill="#ffffff" opacity="0.25"/>';
@@ -111,6 +111,8 @@ var F3_SAYS = {
     return s;
   });
   fpic('f3vmSide2', 0.75, 1.86, 120, 75, 186, '', function(){ return '<rect width="75" height="186" fill="#8e2a22"/><rect width="75" height="4" fill="#e8dcc0"/><path d="M10,0 L12,186 M50,40 L52,150" stroke="#5a1a14" stroke-width="3" opacity="0.5"/>'; });
+  fpic('f3vmClip2', 0.75, 1.83, 140, 75, 183, '', function(){ var C = FPIC.f3vmClip, red = '<rect width="75" height="183" fill="#8e2a22"/><rect width="75" height="4" fill="#e8dcc0"/><path d="M10,0 L12,183 M50,110 L52,170" stroke="#5a1a14" stroke-width="3" opacity="0.5"/>';
+    return C ? C.svg().replace('<rect width="75" height="183" fill="#d6d5d1"/><rect width="75" height="6" fill="#bdbab3"/>', red) : red; });
 var F_JP = 'Hiragino Sans, Hiragino Kaku Gothic ProN, Noto Sans CJK JP, Noto Sans JP, Yu Gothic, Meiryo, sans-serif';
 var Q3 = { rust:'#7a3a26', drust:'#4e2418', iron:'#3a2c26', board:'#8a8076', dboard:'#5d554e', cream:'#e8dcc0', ink:'#1c1511', sage:'#696b50', olive:'#6e7440', gold:'#c9a067', plum:'#5e4652', glow:'#f2d898' };
 fpic('f3time', 0.8, 0.95, 260, 80, 95, '', function(){
@@ -3380,6 +3382,138 @@ function fvmClose(){ if (!FVM.open) return; FVM.open = false; FVM.drag = null; c
 })();
 
 ;
+/* ---- copied from null.grey-furusatostation/src/c7-tags.js ---- */
+/* ================================================================
+   THE TAGS. easter eggs: the tags Aisling and her friends used to write —
+   sky · PLUR · Rain · Faint · Sin · Faust · tabb. small, in odd corners,
+   almost hidden. Faint is hers (so: Null Aisling / Constant / Blue's).
+   no graffiti font can be counted on offline, so each tag is drawn here as
+   single handwritten strokes — slanted, letters run together, smoothed through
+   their points — with its own flourish (a swoosh with an arrow, a star, a
+   crown, drips, a heart), then rasterised once into a small mask that the wall
+   painters read from.
+   ================================================================ */
+var TAG_G = {   /* single-stroke letters. y: 0 cap top, 0.45 x-height, 1 baseline, 1.35 descender */
+  P:[[[0,1],[0,0],[0.4,0],[0.55,0.12],[0.55,0.33],[0.4,0.45],[0,0.45]]],
+  L:[[[0.02,0],[0,1],[0.5,0.98]]],
+  U:[[[0,0],[0,0.75],[0.12,1],[0.4,1],[0.52,0.75],[0.52,0]]],
+  R:[[[0,1],[0,0],[0.4,0],[0.55,0.12],[0.55,0.33],[0.4,0.45],[0,0.45]], [[0.22,0.45],[0.58,1.02]]],
+  F:[[[0.6,0],[0,0.02],[0,1]], [[0,0.46],[0.42,0.44]]],
+  S:[[[0.52,0.1],[0.35,0],[0.12,0.02],[0.02,0.2],[0.15,0.42],[0.4,0.55],[0.52,0.78],[0.4,0.98],[0.15,1],[0,0.88]]],
+  s:[[[0.36,0.5],[0.22,0.45],[0.06,0.5],[0.06,0.64],[0.3,0.74],[0.38,0.88],[0.28,1],[0.04,0.96]]],
+  k:[[[0,0],[0,1]], [[0.38,0.45],[0.04,0.72],[0.4,1]]],
+  y:[[[0,0.45],[0.18,0.92]], [[0.42,0.45],[0.14,1.35],[-0.02,1.28]]],
+  a:[[[0.4,0.55],[0.25,0.45],[0.06,0.55],[0.02,0.85],[0.15,1],[0.35,0.9],[0.4,0.6],[0.4,0.45],[0.42,0.95],[0.52,1]]],
+  i:[[[0.06,0.5],[0.06,1]], [[0.05,0.26],[0.08,0.3]]],
+  n:[[[0,1],[0,0.45],[0,0.6],[0.15,0.46],[0.32,0.46],[0.4,0.6],[0.4,1]]],
+  t:[[[0.14,0.08],[0.14,0.9],[0.24,1],[0.36,0.95]], [[0,0.45],[0.32,0.43]]],
+  u:[[[0,0.45],[0,0.85],[0.12,1],[0.3,0.95],[0.4,0.8],[0.4,0.45],[0.42,1]]],
+  b:[[[0,0],[0,1],[0,0.7],[0.15,0.5],[0.32,0.5],[0.42,0.7],[0.36,0.92],[0.18,1],[0,0.95]]]
+};
+var TAG_W = { P:0.58, L:0.52, U:0.55, R:0.6, F:0.52, S:0.55, s:0.4, k:0.42, y:0.45, a:0.52, i:0.12, n:0.44, t:0.36, u:0.46, b:0.44 };
+/* style: w stroke width (px at mask scale), skew, gap (letter spacing), and extras */
+var TAG_DEFS = {
+  sky:   { w:5,  skew:0.32, gap:-0.04, swoosh:true, star:true, seed:3 },
+  PLUR:  { w:6,  skew:0.18, gap:0.02,  heart:true, seed:7 },
+  Rain:  { w:15, skew:0.22, gap:-0.02, throwie:true, drips:true, seed:11 },
+  Faint: { w:6,  skew:0.36, gap:-0.06, swoosh:true, star:true, seed:13 },
+  Sin:   { w:9,  skew:0.26, gap:0.0,   drips:true, seed:17 },
+  Faust: { w:5,  skew:0.3,  gap:-0.03, underline2:true, seed:19 },
+  tabb:  { w:5,  skew:0.24, gap:-0.05, crown:true, seed:23 }
+};
+var TAGS = {};
+(function(){
+  var MW_ = 320, MH_ = 120, CH = 58, BASE = 88;
+  function rng(seed){ var s = seed*9301 + 49297; return function(){ s = (s*9301 + 49297) % 233280; return s/233280; }; }
+  Object.keys(TAG_DEFS).forEach(function(word){
+    var D = TAG_DEFS[word], cv = document.createElement('canvas'); cv.width = MW_; cv.height = MH_;
+    var g = cv.getContext('2d'), R = rng(D.seed);
+    g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#fff'; g.fillStyle = '#fff';
+    /* lay the word out, then scale it to fit the mask */
+    var total = 0; for (var c = 0; c < word.length; c++) total += TAG_W[word[c]] + D.gap;
+    var sc = Math.min(CH, (MW_ - 60)/total), x0 = 24, strokes = [], lows = [];
+    for (var c2 = 0; c2 < word.length; c2++) {
+      var ch = word[c2], lift = (R() - 0.5)*6, size = sc*(0.92 + R()*0.16);
+      TAG_G[ch].forEach(function(st){
+        strokes.push(st.map(function(p){
+          var yy = BASE - size + p[1]*size + lift;
+          return [x0 + p[0]*size + D.skew*(BASE - yy) + (R() - 0.5)*2.2, yy + (R() - 0.5)*2.2];
+        }));
+      });
+      lows.push([x0 + TAG_W[ch]*size*0.5, BASE + lift]);
+      x0 += (TAG_W[ch] + D.gap)*sc;
+    }
+    function path(pts){
+      g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+      if (pts.length === 2) { g.lineTo(pts[1][0], pts[1][1]); return; }
+      for (var k = 1; k < pts.length - 1; k++) { var mx = (pts[k][0] + pts[k + 1][0])/2, my = (pts[k][1] + pts[k + 1][1])/2; g.quadraticCurveTo(pts[k][0], pts[k][1], mx, my); }
+      g.lineTo(pts[pts.length - 1][0], pts[pts.length - 1][1]);
+    }
+    function drawAll(w){ g.lineWidth = w; strokes.forEach(function(st){ path(st); g.stroke(); }); }
+    drawAll(D.w);
+    if (D.throwie) {   /* bubble letters: thick outline, hollow middle */
+      g.globalCompositeOperation = 'destination-out'; drawAll(D.w*0.45); g.globalCompositeOperation = 'source-over';
+    }
+    g.lineWidth = Math.max(2.5, D.w*0.55);
+    var endX = x0 + 6;
+    if (D.swoosh) {   /* underline swoosh with an arrow */
+      g.beginPath(); g.moveTo(18, BASE + 14); g.quadraticCurveTo((18 + endX)/2, BASE + 26, endX + 10, BASE - 8); g.stroke();
+      g.beginPath(); g.moveTo(endX + 10, BASE - 8); g.lineTo(endX - 4, BASE - 6); g.moveTo(endX + 10, BASE - 8); g.lineTo(endX + 6, BASE + 6); g.stroke();
+    }
+    if (D.underline2) { for (var q = 0; q < 2; q++) { g.beginPath(); g.moveTo(20, BASE + 10 + q*7); g.lineTo(endX, BASE + 6 + q*7); g.stroke(); } }
+    function star(cx, cy, r){ g.beginPath(); for (var k = 0; k < 10; k++) { var a = -Math.PI/2 + k*Math.PI/5, rr = k & 1 ? r*0.42 : r; g.lineTo(cx + Math.cos(a)*rr, cy + Math.sin(a)*rr); } g.closePath(); g.fill(); }
+    if (D.star) star(endX + 4, BASE - CH - 2, 9);
+    if (D.crown) { g.beginPath(); var cx0 = 30, cy0 = BASE - CH - 6; g.moveTo(cx0, cy0 + 12); g.lineTo(cx0 + 2, cy0); g.lineTo(cx0 + 9, cy0 + 7); g.lineTo(cx0 + 15, cy0 - 3); g.lineTo(cx0 + 21, cy0 + 7); g.lineTo(cx0 + 28, cy0); g.lineTo(cx0 + 30, cy0 + 12); g.closePath(); g.stroke(); }
+    if (D.heart) { var hx = endX + 6, hy = BASE - 22; g.beginPath(); g.moveTo(hx, hy + 12); g.bezierCurveTo(hx - 16, hy, hx - 8, hy - 12, hx, hy - 3); g.bezierCurveTo(hx + 8, hy - 12, hx + 16, hy, hx, hy + 12); g.fill(); }
+    if (D.drips) { g.lineWidth = 2.5; lows.forEach(function(p, k){ if (R() < 0.7) { var len = 8 + R()*22; g.beginPath(); g.moveTo(p[0] + (R() - 0.5)*10, p[1] - 2); g.lineTo(p[0] + (R() - 0.5)*10, p[1] + len); g.stroke(); } }); }
+    var id = g.getImageData(0, 0, MW_, MH_).data, m = new Uint8Array(MW_*MH_);
+    for (var i = 0; i < MW_*MH_; i++) m[i] = id[i*4 + 3];
+    TAGS[word] = { w:MW_, h:MH_, m:m };
+  });
+})();
+/* is (a, b) — 0..1 across and down the tag's box — on the tag? */
+function tagAt(word, a, b){
+  var T = TAGS[word]; if (!T || a < 0 || a >= 1 || b < 0 || b >= 1) return 0;
+  return T.m[((b*T.h) | 0)*T.w + ((a*T.w) | 0)]/255;
+}
+/* a tag laid on a wall: s across (world units), h up; box from (s0, top) w wide.
+   the mask is 320x120, so the box is w x w*0.375 */
+function tagOn(word, s, h, s0, top, w){ return tagAt(word, (s - s0)/w, (top - h)/(w*0.375)); }
+
+/* in this room there's just one (Aisling hides the rest around the world):
+   Faint — hers — low on the machine's side, in plum-lavender paint marker.
+   the other tags are drawn and ready: tagOn('sky' | 'PLUR' | 'Rain' | 'Sin' | 'Faust' | 'tabb', ...) */
+/* Aisling's real Faint tag (her high-school drawing, scanned Sept 30):
+   traced from the scan into a 360 x 204 mask, strokes thickened a touch so
+   they survive in pixels — 1 = the dark outline, 2 = the paint. run-length
+   packed: value, then the run length in base 36. */
+var FAINT_SCAN = (function(){
+  var W = 360, H = 204, m = new Uint8Array(W*H), s = "0hp,13,05k,13,049,15,05g,17,048,15,05f,17,04a,15,05b,19,04b,15,059,1a,04c,15,056,1c,04d,15,053,1d,04f,16,04y,1f,04h,16,04u,1h,04j,16,04r,1i,04l,16,04o,1j,04n,17,04j,1l,04p,13,21,13,04g,1m,04r,12,23,12,04c,17,21,1f,04u,12,23,12,048,18,25,1b,04x,12,23,13,042,19,29,17,051,12,24,12,03y,19,2c,15,054,12,24,12,01u,12,01y,19,2d,15,057,12,24,12,01t,14,01u,18,2f,15,059,12,24,13,01r,15,01q,18,2g,16,05b,12,24,13,01r,15,01m,19,2h,15,05e,12,24,13,01r,15,01i,19,2j,15,05g,12,25,13,01p,16,01d,1a,2k,16,05i,12,25,13,01p,16,01a,19,2m,15,05k,13,25,13,01n,19,015,19,2o,15,05m,13,25,14,01j,1c,012,18,2q,14,05p,13,25,14,01f,17,21,17,0z,19,2r,14,05r,13,25,14,01b,17,26,15,0w,19,2t,14,05t,13,26,13,015,18,2a,15,0s,1b,2u,14,05v,13,26,13,0z,19,2e,13,0h,1l,2w,15,05w,12,27,14,0r,1c,2f,14,0i,1i,2y,15,05y,12,27,16,0h,1g,2h,14,0k,1e,210,15,04n,11,01c,12,27,1c,06,1f,2l,13,0n,16,216,15,04o,13,01b,12,28,1q,2o,14,0p,15,215,15,04p,15,01a,12,28,1k,2r,15,0s,14,213,15,04r,15,01a,12,29,1d,2u,15,0v,14,211,15,03b,13,01f,15,019,13,2a,11,213,15,0x,14,210,14,03c,15,01d,16,016,16,21b,16,010,14,2u,17,03d,16,01d,17,012,19,218,17,012,14,2t,16,03f,17,01c,17,011,17,218,17,015,14,2r,16,03h,17,01b,18,010,15,219,16,019,13,2p,17,03h,18,01b,13,21,14,0z,15,218,16,01b,13,2n,17,03j,18,01b,12,23,13,010,14,215,16,01e,13,2m,17,03k,14,21,14,019,13,24,13,0z,13,214,15,01i,13,2j,17,03m,13,23,13,019,13,24,13,0z,13,212,15,01k,13,2i,16,03o,13,24,12,019,12,26,12,0z,13,210,15,01m,13,2h,16,03p,14,23,12,018,13,26,13,0x,13,2y,15,01q,12,2g,15,03q,15,23,13,017,13,27,12,0x,13,2w,15,01s,13,2f,14,03r,15,24,12,017,12,28,13,0w,13,2u,15,01u,13,2f,14,03r,15,24,12,016,13,29,12,0w,13,2s,16,01w,12,2f,13,03r,16,24,13,015,13,29,13,0v,13,2q,16,01y,12,2f,13,03r,13,21,11,26,12,015,12,2b,12,0v,12,2p,16,020,12,2f,13,03q,13,29,12,014,13,2b,13,0t,13,2o,16,021,13,2d,14,03p,15,21,11,26,14,012,13,2c,12,0t,13,2o,15,022,13,2d,14,03p,17,27,15,0z,13,2d,13,0s,13,2a,13,2b,15,023,12,2d,14,03o,17,29,16,0x,13,2e,13,0r,14,24,17,2d,14,023,12,2d,15,03n,17,2a,1a,0s,13,2e,13,0r,1f,2d,14,023,13,2c,15,03m,13,21,13,2e,18,0q,13,2g,12,0r,1b,02,12,2d,14,023,13,2c,15,03l,13,23,12,2g,17,0p,13,2g,13,0p,18,06,13,2c,14,023,13,2c,15,03l,14,21,12,2i,16,0p,13,29,11,27,13,0o,16,09,12,2c,14,024,12,2c,15,03k,16,2k,16,0p,12,29,12,28,12,0o,15,0a,12,2c,14,024,12,2c,15,03i,17,2k,16,0p,13,29,12,28,13,0n,14,0b,12,2c,14,024,12,2d,14,03h,17,2j,17,0q,13,29,13,28,12,0n,14,0b,12,2c,14,024,13,2c,14,03g,17,2i,17,0s,12,29,14,28,13,0l,15,0b,12,2c,14,024,13,2c,13,03h,16,2h,18,0t,12,29,14,29,12,0l,15,0b,12,2c,14,025,12,2c,14,03h,16,2f,17,0u,13,28,16,28,13,0k,14,0c,12,2c,14,025,12,2c,14,03i,1a,2a,15,0w,12,29,16,29,12,0k,14,0c,12,2c,14,025,12,2c,14,03n,18,27,13,0y,12,29,12,01,13,29,13,0j,14,0c,12,2c,14,025,13,2b,14,03s,14,26,13,0x,12,29,13,02,13,29,12,0j,14,0c,12,2c,14,025,13,2c,13,03t,14,25,13,0x,12,29,12,03,14,28,13,0j,12,0d,12,2c,14,025,13,2c,13,03u,14,24,12,0y,12,28,13,03,14,29,12,0y,12,2c,13,027,12,2c,13,03w,12,23,13,0x,12,29,12,05,13,29,13,0x,12,2c,13,027,12,2c,13,03w,13,21,15,0w,12,28,13,05,13,2a,12,0x,12,2c,13,027,13,2b,13,03x,19,0u,13,28,12,07,12,2a,13,0w,12,2c,13,027,13,2b,13,03x,1a,0t,12,29,12,07,13,2a,12,0w,12,2c,13,027,13,2b,14,02n,11,018,1a,0t,12,28,13,08,12,2a,13,0v,12,2c,13,028,12,2b,14,02k,15,017,19,0t,12,29,12,09,13,2a,13,0u,12,2c,13,028,12,2b,14,02f,1b,016,13,21,14,0u,12,28,13,0a,12,2a,13,0u,12,2c,13,028,12,2c,13,02a,1b,22,14,015,12,23,13,0u,12,28,12,0b,13,2a,13,0t,12,2c,13,028,13,2b,13,024,1a,2a,13,015,12,23,13,0t,12,29,12,0c,12,2a,13,0t,12,2c,13,028,13,2b,13,020,18,2g,14,014,12,23,14,0s,12,28,13,0c,13,2a,13,0s,12,2c,13,029,12,2b,14,01t,19,2m,13,013,12,25,13,0s,12,28,12,0e,12,2a,13,0s,12,2c,13,029,12,2b,14,01o,1a,2q,14,012,12,25,13,0r,12,29,12,0e,13,2a,13,0r,13,2b,13,029,13,2a,14,01k,1a,2v,13,012,12,25,13,0r,12,28,13,0f,12,2a,13,0r,13,2b,13,029,13,2a,14,01g,1b,2y,14,011,12,25,13,0q,12,29,12,0g,13,2a,13,0q,13,2b,13,029,13,2a,14,01b,1d,212,14,0z,13,25,13,0q,12,28,13,0g,13,2a,13,0r,12,2b,13,02a,12,2b,13,017,19,24,11,215,14,0y,13,26,13,0q,12,28,13,0h,13,2a,13,0q,12,2b,13,02a,13,2a,13,012,19,21h,13,0x,12,27,13,0p,12,29,12,0j,12,2a,13,0q,12,2b,13,02a,13,2a,13,0x,1a,21m,13,0v,13,27,13,0p,12,28,13,0j,12,2b,13,0p,12,2b,13,02a,13,2a,14,0r,1b,21q,13,0u,13,28,13,0o,12,29,12,0l,12,2b,12,0p,12,2b,13,02a,13,2a,14,0n,1c,21u,13,0s,13,29,13,0o,12,29,12,0l,12,2b,13,0o,12,2b,13,02b,12,2a,14,0j,1c,21e,12,23,15,29,14,0r,13,2a,14,0m,13,28,13,0m,12,2b,12,0o,12,2b,13,02b,13,29,14,0d,1e,21j,19,29,11,21,13,0p,13,2b,14,0m,12,29,12,0n,13,2a,13,0n,12,2b,13,02b,13,28,15,09,1c,21o,1b,2b,12,0n,14,2c,14,0l,13,29,12,0o,12,2b,12,0n,12,2b,13,02c,12,28,15,06,1a,21i,11,27,1e,2c,12,0l,14,2d,14,0l,12,29,13,0o,13,2a,13,0m,12,2b,13,02c,13,28,14,03,19,21i,16,22,1a,07,12,2b,12,0i,15,2f,14,0k,13,29,12,0q,12,2b,13,0l,12,2b,13,02c,13,28,1b,21k,1h,0b,13,2b,12,0f,15,2h,14,0k,13,28,13,0q,13,2a,13,0l,12,2b,13,02c,13,29,17,21m,1d,0h,12,2c,12,0c,15,2c,11,26,14,0j,13,29,12,0s,12,2b,13,0k,12,2b,13,02c,13,29,15,21n,1a,0m,12,2b,12,0a,15,2d,11,27,14,0j,13,29,12,0s,13,2a,13,0k,12,2b,13,02c,13,2a,11,21p,17,0q,13,2b,12,06,16,2e,12,28,13,0i,13,29,13,0s,13,2b,13,0j,12,2a,14,02c,14,21w,17,0u,12,2b,15,01,17,2e,13,28,13,0i,13,29,12,0u,13,2a,13,0j,13,29,14,02b,15,21h,12,2a,17,0x,13,2b,18,2g,15,28,14,0g,13,29,13,0u,13,2b,13,0i,13,29,14,02b,14,21b,19,29,15,011,13,2a,16,2h,16,28,14,0g,13,29,12,0w,12,2c,13,0i,12,29,14,02a,14,217,1f,28,13,014,12,2b,13,2h,14,02,12,28,14,0f,14,29,12,0w,13,2b,13,0i,12,29,14,02a,14,213,1e,03,12,28,13,014,13,2b,11,2g,15,03,12,28,14,0f,13,29,13,0w,13,2c,13,0h,12,29,14,029,14,210,1d,08,13,27,13,014,13,2q,16,04,12,28,14,0e,14,29,12,0y,12,2c,13,0h,12,29,14,029,13,2x,1c,0e,13,26,12,016,13,2m,17,06,12,28,14,0e,13,29,13,0y,13,2c,13,0g,12,29,14,028,13,2u,1c,0i,14,24,13,016,14,2j,15,01,12,07,12,28,14,0e,13,29,12,010,12,2d,12,0g,12,29,14,027,13,2s,1c,0l,14,24,13,017,13,2h,14,0d,12,28,14,0d,13,29,13,010,13,2c,13,0f,12,29,14,026,14,2p,1b,0q,14,23,12,018,13,2f,14,0f,12,28,14,0d,13,29,12,012,12,2d,12,0f,12,29,14,026,13,2n,1a,0u,15,21,13,017,13,2e,14,0i,11,28,15,0b,13,2a,12,012,13,2c,13,0e,12,29,14,024,15,2k,1a,0y,18,016,13,2f,13,0j,12,28,14,0b,13,29,12,014,12,2d,12,0e,12,29,14,023,15,2k,18,011,18,015,13,2h,12,0j,12,28,14,0a,14,29,12,014,13,2c,13,0d,12,29,14,022,16,2k,16,013,17,015,13,2i,12,0j,12,28,14,0a,13,29,13,014,13,2d,12,0d,12,29,14,020,18,2k,16,014,16,014,13,2j,13,0i,12,28,14,0a,13,29,12,016,13,2c,13,0c,12,29,13,020,18,26,13,2c,15,015,16,013,13,2k,13,0i,12,28,14,09,13,2a,12,016,13,2d,12,0c,12,29,13,020,17,26,15,2b,14,017,14,013,14,2l,12,0i,12,28,14,09,13,29,12,018,13,2c,13,0b,12,29,13,020,18,23,1a,28,14,018,12,013,14,2b,11,2a,12,0j,12,27,15,08,12,2a,12,018,13,2d,12,0b,12,29,13,020,1l,28,13,02d,14,2b,12,2a,12,0j,12,27,15,07,13,29,13,019,13,2c,13,0a,12,28,14,021,1f,02,13,28,13,02c,14,2b,14,2a,12,0i,12,27,15,07,13,29,12,01a,13,2d,12,0a,12,28,14,022,18,09,12,28,13,02b,14,2b,15,2a,12,0i,12,27,15,06,13,29,13,01a,14,2d,12,09,12,28,14,02j,12,28,13,02a,14,2b,13,01,12,2a,12,0i,12,28,14,06,13,29,12,01c,14,2c,12,09,12,28,14,02j,13,27,13,029,14,2b,13,02,13,2a,12,0i,12,27,14,05,13,2a,12,01c,14,2c,13,08,12,28,14,02k,12,27,13,028,14,2b,13,04,12,2a,12,0i,12,27,14,05,13,29,12,01d,14,2d,12,08,12,28,14,02k,12,28,13,026,14,2b,13,05,12,2a,13,0h,12,27,14,04,13,2a,12,01e,14,2c,13,07,12,28,14,02k,12,28,13,025,14,2b,13,06,13,2a,12,0h,12,27,14,03,14,29,13,01f,13,2d,12,07,12,28,14,02k,12,28,13,024,14,2b,13,07,13,2a,12,0h,12,27,14,03,13,2a,12,01h,13,2c,13,06,12,28,14,02k,13,27,13,023,13,2c,13,09,12,2a,13,0g,13,26,14,02,14,2a,12,01i,13,2c,12,05,13,28,14,02k,13,27,13,022,13,2c,13,0a,12,2b,12,0g,13,26,14,02,13,2a,12,01j,13,2d,12,04,13,28,13,02l,13,27,13,020,14,2c,13,0b,13,2a,13,0f,13,26,14,01,14,2a,12,01k,13,2c,13,03,13,28,13,02l,13,27,13,01z,14,2c,13,0c,13,2b,12,0f,13,26,18,2a,13,01k,13,2d,12,03,13,28,13,02k,14,27,13,01y,14,2c,13,0e,12,2b,12,0f,13,26,18,2a,12,01l,14,2d,12,02,13,28,13,02k,14,28,12,01x,14,2c,13,0f,12,2b,13,0e,14,25,18,2a,12,01m,13,2d,12,02,13,27,14,02l,13,28,12,01w,14,2c,13,0g,12,2c,12,0e,14,26,16,2a,13,01m,14,2d,12,01,13,27,14,02l,14,27,12,01v,13,2d,13,0h,12,2c,13,0d,14,26,16,2a,12,01o,13,2d,12,01,13,27,14,02l,14,27,13,01t,13,2d,13,0i,12,2d,12,0d,14,26,15,2b,12,01o,14,2d,15,27,14,02l,14,27,13,01s,13,2d,12,0l,12,2c,12,0d,14,26,15,2a,12,01q,13,2e,14,27,14,02m,13,27,13,01r,13,2c,13,0m,12,2d,12,0c,14,26,14,2b,12,01r,13,2d,14,27,14,02m,13,27,13,01q,13,2c,13,0n,12,2d,12,0c,14,27,13,2a,13,01r,13,2e,13,27,14,02m,14,27,12,01p,13,2c,13,0o,12,2d,13,0b,13,28,13,2a,12,01t,13,2d,13,27,14,02m,14,27,12,01o,13,2c,13,0q,11,2e,12,0b,13,28,12,2b,12,01t,14,2d,12,27,14,02m,14,27,13,01m,13,2c,13,0q,13,2d,13,0a,13,28,12,2a,13,01u,13,2d,13,26,14,02m,14,27,13,01m,12,2b,14,0q,14,2e,12,0a,13,29,11,2a,12,01v,14,2d,12,26,14,02m,14,27,13,01l,12,2b,13,0r,15,2e,12,0a,13,2j,13,01w,14,2c,12,26,14,02n,14,26,13,01k,12,2b,13,0r,16,2f,12,09,13,2j,12,01x,15,2c,11,26,14,02n,14,27,12,01j,12,2b,13,0r,18,2e,12,09,13,2j,12,01y,14,2c,11,26,13,02o,14,27,12,01i,12,2b,13,0r,19,2e,12,09,13,2i,13,01z,14,2b,11,26,13,02o,14,27,13,01g,12,2b,13,0r,1a,2f,12,08,12,2j,12,020,14,2b,11,26,13,02p,13,27,13,01f,13,2a,13,0q,1c,2f,12,07,13,2j,12,021,14,2a,11,26,13,02p,14,26,13,01e,13,2a,13,0q,1e,2f,12,06,13,2i,13,021,14,2h,13,02p,14,27,12,01d,13,2a,13,0p,1c,2j,12,06,13,2i,12,023,14,2g,13,02p,14,27,12,01c,13,2a,13,0o,1b,2n,12,05,13,2i,12,024,13,2g,13,02q,13,27,12,01b,13,2a,13,0o,19,2q,13,03,14,2i,12,024,14,2f,13,02q,13,27,13,019,13,2a,13,0n,17,2v,12,03,14,2h,13,025,13,2f,13,02q,14,26,13,018,13,2a,13,0k,18,2y,13,02,13,2i,13,025,13,2f,13,02r,13,26,13,017,13,2a,13,0h,18,212,14,01,13,2i,13,026,13,2e,13,02r,13,27,12,016,13,2a,13,0e,18,216,18,2i,14,026,12,2e,13,02r,13,27,12,015,13,29,15,0b,17,2z,11,29,1a,23,19,26,13,026,13,2d,13,02r,13,27,13,013,13,29,15,09,16,212,13,27,1r,21,15,026,13,2c,13,02s,13,26,13,012,15,27,15,07,16,214,15,23,15,04,1r,026,13,2c,13,02s,13,26,13,011,14,28,15,05,16,214,1d,09,13,0e,18,027,13,2b,13,02s,13,27,12,010,14,28,15,03,15,216,1d,0u,15,029,13,2a,13,02t,12,27,12,0z,14,28,15,01,16,215,1d,03c,12,2a,13,02t,12,27,13,0x,14,28,19,215,1e,03f,13,29,13,02t,13,26,13,0w,14,28,17,214,1h,03h,12,29,13,02t,13,26,13,0v,14,28,14,214,1e,04,11,03j,13,28,13,02u,12,27,12,0u,14,28,12,214,1e,03s,13,27,13,02u,12,27,13,0s,14,28,12,212,1d,03w,13,27,13,02u,12,27,13,0r,14,28,12,210,1e,03z,12,27,13,02u,13,26,13,0q,14,26,11,22,11,2y,1f,041,13,26,13,02u,13,26,13,0p,14,216,1g,044,12,26,13,02v,12,26,13,0o,14,214,1i,045,13,25,13,02v,12,27,13,0m,14,212,1d,04e,12,25,13,02v,12,27,13,0k,15,2z,1d,04i,13,24,13,02v,13,26,13,0j,15,2x,1c,04m,13,24,13,02v,13,26,14,0h,15,2u,1d,04q,12,24,13,02v,14,21,11,23,14,0g,17,2o,1e,04u,13,23,13,02w,15,24,13,0f,16,2m,1f,04x,13,23,13,02w,16,23,14,0d,16,2k,1e,052,13,21,14,02w,17,21,15,0c,15,2h,1f,056,18,02w,1d,0b,15,28,13,21,1e,05e,17,02w,1e,09,17,23,1j,05h,17,02f,12,0g,1d,06,1q,02,12,05k,16,02e,15,0e,1d,05,1i,05x,17,02d,18,0b,1e,03,1e,062,17,02e,19,09,1e,03,18,069,16,02f,1b,07,1e,03,12,06e,16,02i,1b,04,1e,06k,15,02k,1b,02,1e,06k,15,02n,1p,06k,14,02p,1n,06k,14,02r,1m,06j,15,02s,1l,06i,15,02v,1i,06j,14,02x,1h,06i,14,02z,1g,06h,14,030,1f,06i,12,033,1e,09n,1e,09o,1d,09o,1d,09p,1c,09q,1b,088,", i = 0;
+  s.split(',').forEach(function(r){ if (!r) return; var v = +r.charAt(0), n = parseInt(r.slice(1), 36); m.fill(v, i, i + n); i += n; });
+  return { w:W, h:H, m:m };
+})();
+function faintAt(a, b){
+  if (a < 0 || a >= 1 || b < 0 || b >= 1) return 0;
+  return FAINT_SCAN.m[((b*FAINT_SCAN.h) | 0)*FAINT_SCAN.w + ((a*FAINT_SCAN.w) | 0)];
+}
+/* on the machine's side, low down: pink-plum marker with a dark outline and a
+   bit of gloss down each stroke, like the drawing. box 0.24 wide from 0.03 in,
+   its top at 0.5 up. */
+function vendTag(e, h, flip){
+  if (flip) return -1;
+  var sw = e*(VBOXM.y1 - VBOXM.y0), W = 0.235, H = W*204/360, a = (sw - 0.03)/W, b = (0.5 - h)/H;
+  var PXQ = 110, a = (Math.floor(a*PXQ) + 0.5)/PXQ, b = (Math.floor(b*PXQ*0.567) + 0.5)/(PXQ*0.567);   /* chunkier, like it was drawn in the room's own pixels */
+  var f = faintAt(a, b);
+  if (f === 2) {
+    var up = faintAt(a, b - 0.03), gl = up === 2 && faintAt(a - 0.012, b) === 2 && faintAt(a + 0.012, b) === 2;
+    return PK(R_HEART, clamp(0.56 + (gl ? 0.1 : -0.05) + (vn(a*60, b*60) - 0.5)*0.08, 0, 1), 0);
+  }
+  if (f === 1) return PK(R_BLACK, 0.1, 0);
+  return -1;
+}
+
+
+;
 /* ---- copied from null.grey-furusatostation/src/f03/f03-details.js ---- */
 /* ================================================================
    F03 — DETAILS, ROUND 1 (Aisling, Oct 25, with reference pictures; she's on her desktop now).
@@ -3602,6 +3736,14 @@ fpic('f3dumpF', 1.9, 1.3, 160, 190, 130, '', function(){
   return s;
 });
 fpic('f3dumpS', 1.1, 1.3, 160, 110, 130, '', function(){ return '<rect width="110" height="130" fill="#30261d"/><path d="M0,0 L110,0 L110,14 L0,14 Z" fill="#3a2e24"/><rect x="40" y="40" width="30" height="10" fill="#4a4440"/><rect x="0" y="122" width="110" height="8" fill="#2a2420"/><rect x="0" y="100" width="110" height="22" fill="#6a3e2c" opacity="0.4"/>'; });
+/* (Nov 17) "sky": the infamous Columbus tag (the hub's rule: twice in the hub, once in every other place). here it's on the
+   dumpster's east side, low, quick, in white paint marker. one picture, so Seam and Embroidery draw the same tag */
+fpic('f3sky', 0.62, 0.2325, 600, 320, 120, '', function(){
+  var W = 320, H = 120, c = document.createElement('canvas'); c.width = W; c.height = H; var g = c.getContext('2d'), id = g.createImageData(W, H), d = id.data;
+  for (var j = 0; j < H; j++) for (var i = 0; i < W; i++) { var m = typeof tagAt === 'function' ? tagAt('sky', (i + 0.5)/W, (j + 0.5)/H) : 0, n = ((i*73856093) ^ (j*19349663)) & 255;
+    if (m > 0.18 + n/255*0.24) { var o = (j*W + i)*4; d[o] = 232; d[o + 1] = 226; d[o + 2] = 214; d[o + 3] = 255; } }   /* paint marker: a little uneven, ragged at the edges */
+  g.putImageData(id, 0, 0); return '<image href="' + c.toDataURL() + '" x="0" y="0" width="320" height="120"/>';
+}, true);
 /* ---- placed ---- */
 (function(){
   var g = 'fp_grey';
@@ -3610,6 +3752,7 @@ fpic('f3dumpS', 1.1, 1.3, 160, 110, 130, '', function(){ return '<rect width="11
   nw.topFn = function(x, y){ var u = (x - 12.0)/0.55, v = (y - 7.6)/0.32; return f3PicTexel('f3newsTop', u, v); };
   /* the dumpster, out back */
   var dm = fAddBox(14.1, 16.0, 13.12, 14.22, 1.3, ['fp_f3dumpS', 'fp_f3dumpS', 'fp_f3dumpS', 'fp_f3dumpF']); dm.say = 'dump'; dm.topFn = function(x, y){ return PK(R_HRUST, 0.14 + 0.04*vn(x*8, y*8) + (frac(x*3) < 0.06 ? -0.05 : 0), 0); };
+  var sk = fHang(16.0, 16.003, 13.36, 13.98, 0.6, 0.8325, ['fp_grey', 'fp_f3sky', 'fp_grey', 'fp_grey']); sk.say = 'dump'; sk.noShadow = true;   /* (Nov 17) the sky tag on its east side */
   /* the missing poster, on the road's fourth pole, facing the road */
   fHang(31.46, 31.49, 24.4, 24.76, 1.3, 1.78, ['fp_f3miss', g, g, g]).say = 'missing';
 })();

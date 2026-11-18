@@ -305,3 +305,16 @@ Aisling: *"does pocket get a new look? dopes passport get a new look? i think we
   2. Missing Mile's graphics pass and the look pick;
   3. the transition;
   4. the pocket and passport look, with the list.
+
+### Nov 17 (late night) — her bug list: stuck close-ups, the newspaper, the bench, スマイル, the sky tag, the tunnel's glow
+Aisling: *"it was lik,e i couldnt move in and out of poicket, when i went into the newspaper on the side of the um soda machien i couldnt get out, and i cant see the newpaper and the train track glows a little too much in the tunnel and the seed isnt on bench and some object from orgianl place still missing and the sky tag not there and so on"*; *"oh an dthe bench is not connected and the japanese on smile machine runs into white looks odd"*.
+- **Stuck in close-ups (fixed).** The 3D canvas sat over Seam's close-ups, so a mouse or finger never reached them; only Escape worked. Now the clippings, the bench newspaper and the drinks machine take their own clicks (`tools/page.html`): their step-back buttons work, and clicking outside the clippings closes them. Tested with real clicks (`t/real-closeups.js`). The pocket closes with its own back button (also tested). Clicking inside the clippings still picks one clipping to look at alone, as in Seam.
+- **The clippings ("the newspaper on the side of the machine") are now on the machine.** Seam puts them on the machine's east side, and that face had been given the plain red side. Seam's own clippings picture was painted on the old grey machine, so it's now on red paint in both engines (`f3vmClip2`, doc 32).
+- **The newspaper and the pit on the bench are both there.** The pit is shared with Seam's save: if it was picked up on the Seam page it stays gone here too, and it's in the pocket.
+- **The bench back is connected:** two posts hold it to the seat.
+- **スマイル** no longer runs into the cream wave. It's moved up into the red above the wave's end, in Seam's picture, so both engines match.
+- **The "sky" tag.** The hub's rule says it goes twice in the hub and once in every other place, and Missing Mile had none in either engine. It's now on the **dumpster's east side**, low, in white paint marker: the same tag strokes as the hub's, as one shared picture (`f3sky`). Where it sits is a stand-in choice; she can move it.
+- **The track glowing in the tunnel:** the first metre inside the arch took the outside light. A shade now runs from clear at the arch to full dark, so the track goes into the dark.
+- **"Some object still missing":** every clickable thing on Seam's Missing Mile is now in Embroidery (checked name by name). If she means something that isn't clickable, she should say which.
+- Checks: walking, clicks, the train both ways, 0 errors, no blue.
+- **Still open:** which browser she uses; what "looking down moves a little odd" means; whether the sky tag's spot is right.

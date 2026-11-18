@@ -7,7 +7,7 @@ const page = process.argv[4] || 'dist/missing-mile-station.html';
   const p = await b.newPage({ viewport:{ width:+(process.env.VW || 960), height:+(process.env.VH || 540) }, deviceScaleFactor:+(process.env.DPR || 2) });
   p.on('pageerror', e => console.log('ERR', String(e.stack).slice(0, 500)));
   p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') console.log('CON', m.text().slice(0, 300)); });
-  await p.goto('file://' + path.resolve(page) + '?fixed');
+  await p.goto('file://' + path.resolve(page) + '?fixed', { waitUntil:'domcontentloaded', timeout:120000 });
   await p.waitForFunction(() => document.getElementById('wait').classList.contains('gone'), null, { timeout:180000, polling:500 });
   await p.evaluate(() => window.__eg.pause(true)); let i = 0;
   for (const s of shots) {

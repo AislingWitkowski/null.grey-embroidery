@@ -283,6 +283,12 @@ export function buildMore(C){
       m.customProgramCacheKey = () => 'tun-dark' + side; return m; };
     const dark = darkM(THREE.BackSide);
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(16, hw*2 + 0.6), darkM(THREE.FrontSide)); floor.rotation.x = -Math.PI/2; floor.scale.x = 14.6/16; floor.position.set(X + 1.4 + 7.3, -0.36, zc); scene.add(floor);   /* (over the ground and the track going in, past the first metre or so) */
+    /* (Nov 17, Aisling: the track glowed just inside the mouth) the first stretch in, before the dark floor: a shade over
+       the bed and rails, clear at the arch and full dark where the floor starts, so the track goes into the dark, not into light */
+    { const gc = document.createElement('canvas'); gc.width = 64; gc.height = 4; const gg = gc.getContext('2d'), gr = gg.createLinearGradient(0, 0, 64, 0);
+      gr.addColorStop(0, '#000'); gr.addColorStop(0.15, '#262626'); gr.addColorStop(1, '#fff'); gg.fillStyle = gr; gg.fillRect(0, 0, 64, 4);
+      const gm = darkM(THREE.FrontSide); gm.transparent = true; gm.depthWrite = false; gm.alphaMap = new THREE.CanvasTexture(gc); gm.customProgramCacheKey = () => 'tun-shade';
+      const sh = new THREE.Mesh(new THREE.PlaneGeometry(1.15, hw*2 + 0.6), gm); sh.rotation.x = -Math.PI/2; sh.position.set(X + 0.45 + 0.575, -0.37, zc); sh.renderOrder = 2; scene.add(sh); }
     const inside = new THREE.Mesh(new THREE.BoxGeometry(16, ys + hw - yb + 0.3, hw*2 + 0.6), dark); inside.position.set(X + 0.1 + 8, (ys + hw + yb)/2, zc); scene.add(inside);
     box(X + 0.5, 57, ys + hw + 0.2, top + 0.02, zc - hw - 0.85, zc + hw + 0.85, earth, { solid:false, cast:false });
   })();

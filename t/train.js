@@ -10,7 +10,7 @@ const page = 'file://' + path.resolve('dist/missing-mile-station.html');
   const b = await chromium.launch({ args:['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport:{ width:960, height:540 } }); let errs = 0;
   p.on('pageerror', e => { errs++; console.log('ERR', String(e.stack).slice(0, 400)); });
-  await p.goto(page + '?fixed');
+  await p.goto(page + '?fixed', { waitUntil:'domcontentloaded', timeout:120000 });
   await p.waitForFunction(() => document.getElementById('wait').classList.contains('gone'), null, { timeout:180000 });
   await p.evaluate(() => { window.__eg.pause(true); window.EG_SEAM.ride.go = (pg, at) => { window.__went = [pg, at]; }; window.EG_SEAM.ride.fade = () => {}; });
   let shot = 0; const snap = async (x, z, yaw, pitch, y) => { await p.evaluate(s => { const E = window.__eg, P = E.P; P.x = s[0]; P.z = s[1]; P.yaw = s[2]*Math.PI/180; P.pitch = s[3]; P.y = s[4] == null ? 0 : s[4]; window.__frozen = true; E.renderOnce(); E.renderOnce(); }, [x, z, yaw, pitch, y]); await p.screenshot({ path:pre + (shot++) + '.png' }); };
