@@ -5,7 +5,7 @@
    built the way Seam's last pass built it (f03-3d2 … 3d4, f03-things, f03-details):
    - the four trees, four times of autumn (f03-3d3): a leaning, forking trunk, limbs, twigs; the leaves in loose
      bunches along them; their leaves on the ground round them.
-   - the windmill far out in the corn, much too tall, its wheel still, MAPLES & SONS on its vane (f03-paint, f03-3d3).
+   - the windmill far out in the corn, much too tall, its wheel still, GOOCH on its vane (f03-paint, f03-3d3).
    - the crossbuck: two real boards crossed on a post, lettered both sides, the 踏切 plate under them (f03-3d4).
    - the mileage sign, MISSING MILE 1, and the same sign again further down; the mailbox with no house (f03-things).
    - the cut pole hanging from its own wires, and the newer pole beside it with the transformer can (f03-3d3, 3d4).
@@ -32,8 +32,17 @@ const pick = A => A[(Math.random()*A.length) | 0];
 /* how far the tunnel's mouth is from you (the frame sets it): its dark takes the fog by this */
 export const MOUTH_D = { value:10 };
 export const TUN = { x:40.0, zc:2.0, hw:1.4, spring:2.15, bank:3.4 };   /* (the arch fits the train, real size: 1.8 m wide, its roof 2.45 m over the platform) */
+/* (Nov 18, Aisling: "yes path through corn to windmil") a trodden path from the east field, out through the corn to the
+   windmill's feet, wandering a little as paths do, and a small clearing round the windmill to stand in */
+export const WM_PATH = [[37.2, 17.2], [39.6, 18.4], [41.8, 18.9], [43.6, 19.8], [45.4, 19.9], [46.7, 20.4]];
+export const WM = { x:47.6, z:20.4, clear:2.1 };
+export function pathDist(x, z){ let d = 1e9;
+  for (let i = 0; i < WM_PATH.length - 1; i++) { const [ax, az] = WM_PATH[i], [bx, bz] = WM_PATH[i + 1], vx = bx - ax, vz = bz - az, t = Math.max(0, Math.min(1, ((x - ax)*vx + (z - az)*vz)/(vx*vx + vz*vz)));
+    d = Math.min(d, Math.hypot(x - ax - vx*t, z - az - vz*t)); }
+  return d; }
+export function onWindmillWay(x, z){ return pathDist(x, z) < 0.55 || Math.hypot(x - WM.x, z - WM.z) < WM.clear - 0.25; }
 export function cornClear(x, z){
-  if (Math.abs(x - 47.6) < 0.9 && Math.abs(z - 20.4) < 0.9) return true;
+  if (pathDist(x, z) < 0.62 || Math.hypot(x - WM.x, z - WM.z) < WM.clear) return true;
   if (Math.hypot(x - 45.5, z - 15.5) < 1.1) return true;
   return false;
 }
@@ -142,12 +151,29 @@ export function buildMore(C){
     const Rt = rnd(seed*97 + 5), Lf = LEAF[ph], gy = groundAt(tx, tz) - 0.05, H1 = 1.3 + Rt()*0.5, tl = (Rt() - 0.5)*0.16, tlx = tl*Math.cos(seed), tlz = tl*Math.sin(seed);
     const geos = [], sites = [], m = leafMat(leafAtlas(Lf));
     const trunkTop = [tx + tlx*H1, gy + H1, tz + tlz*H1];
-    geos.push(rodGeo([tx, gy - 0.1, tz], [tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], 0.3, 0.21, 10), rodGeo([tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], trunkTop, 0.21, 0.15, 10));
+    geos.push(rodGeo([tx, gy - 0.1, tz], [tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], 0.36, 0.27, 12), rodGeo([tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], trunkTop, 0.27, 0.2, 12));   /* (Nov 18: thicker, like the trees on her block) */
     const site = (A, B, f) => sites.push([A[0] + (B[0] - A[0])*f, A[1] + (B[1] - A[1])*f, A[2] + (B[2] - A[2])*f]);
-    const limb = (A, len, lx, lz, r0, r1) => { const B = [A[0] + lx*len, A[1] + len, A[2] + lz*len]; geos.push(rodGeo(A, B, r0, r1, r0 > 0.05 ? 8 : 5)); return B; };
+    /* (Nov 18, Aisling: the limbs looked "sliced choppy … the disconnection is a little odd"; keep them "a little janky
+       weird tim burton distortion..spikey") each limb is now one curving, tapering branch in a few segments: it starts
+       inside its parent (so it grows out of it), bends as it goes (outward first, then up or sagging), each joint rounded
+       with a knuckle, and the tip closed to a spike. */
+    const knuckle = (P, r) => { const g = new THREE.SphereGeometry(r, 8, 6); g.translate(P[0], P[1], P[2]); geos.push(g); };
+    const limb = (A, len, lx, lz, r0, r1) => {
+      const seg = len > 0.7 ? 4 : 3, bend = (Rt() - 0.35)*0.9, twist = (Rt() - 0.5)*0.8;
+      let P = [A[0] - lx*0.06, A[1] - 0.06, A[2] - lz*0.06], dx = lx, dy = 1, dz = lz;   /* (start a little inside the parent) */
+      for (let k = 0; k < seg; k++) { const f0 = k/seg, f1 = (k + 1)/seg, ra = r0 + (r1 - r0)*f0, rb = r0 + (r1 - r0)*f1;
+        const L = len/seg*(k === 0 ? 1.06 : 1); const n = Math.hypot(dx, dy, dz);
+        const Q = [P[0] + dx*L, P[1] + dy*L, P[2] + dz*L];
+        geos.push(rodGeo(P, Q, ra, rb, ra > 0.05 ? 9 : 6)); if (k > 0) knuckle(P, ra*0.99);
+        P = Q; const c = Math.cos(twist*0.4), sn = Math.sin(twist*0.4); [dx, dz] = [dx*c - dz*sn, dx*sn + dz*c];
+        dy += bend*0.35 - 0.06*k; dx *= 1.04; dz *= 1.04; }
+      knuckle(P, r1*1.02);
+      { const tip = [P[0] + dx*0.06, P[1] + dy*0.06, P[2] + dz*0.06]; const g = rodGeo(P, tip, r1, 0.001, 5); geos.push(g); }   /* the spike at its end */
+      return P; };
+    knuckle(trunkTop, 0.205); knuckle([tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], 0.27);   /* (the fork: round, so the limbs grow out of the trunk) */
     const nL = ph >= 2 ? 4 : 3, a0 = Rt()*6.283;
     for (let i = 0; i < nL; i++) { const ang = a0 + i*6.283/nL + (Rt() - 0.5)*0.6, mm = 0.45 + Rt()*0.3, P0 = [trunkTop[0], trunkTop[1] - 0.15, trunkTop[2]];
-      const E = limb(P0, 1.3 + Rt()*0.7, Math.cos(ang)*mm, Math.sin(ang)*mm, 0.12, 0.06);
+      const E = limb(P0, 1.3 + Rt()*0.7, Math.cos(ang)*mm, Math.sin(ang)*mm, 0.15, 0.065);
       if (ph < 2) { site(P0, E, 0.55); site(P0, E, 0.85); }
       const nb = ph >= 2 ? 3 : 2;
       for (let j = 0; j < nb; j++) { const a2 = ang + (j - (nb - 1)/2)*0.9 + (Rt() - 0.5)*0.4, m2 = 0.55 + Rt()*0.45, P1 = [E[0], E[1] - 0.05, E[2]];
@@ -200,7 +226,7 @@ export function buildMore(C){
       geos.push(rodGeo(corner(A[0], A[1], h), corner(B[0], B[1], h), 0.012, 0.012, 4));   /* its rings */
       geos.push(rodGeo(corner(A[0], A[1], h), corner(B[0], B[1], h + 0.85), 0.01, 0.01, 4), rodGeo(corner(B[0], B[1], h), corner(A[0], A[1], h + 0.85), 0.01, 0.01, 4)); }   /* the braces crossing */
     geos.push(rodGeo([WX, g0 + 1.6, WZ], [WX, g0 + 8.62, WZ], 0.018, 0.018, 4));   /* the pump rod */
-    for (const [sx, sz] of CN) ROOTS.add(WX + sx*0.62, WZ + sz*0.62, 0.06, 'earth');
+    for (const [sx, sz] of CN) { ROOTS.add(WX + sx*0.62, WZ + sz*0.62, 0.06, 'earth'); K.solids.push({ x0:WX + sx*0.62 - 0.08, x1:WX + sx*0.62 + 0.08, y0:g0 - 1, y1:g0 + 8, z0:WZ + sz*0.62 - 0.08, z1:WZ + sz*0.62 + 0.08 }); }   /* (its legs are solid: you can walk in under it, not through them) */
     const blk = mat(T.iron, { color:0x4a403a }); tag(meshOf(geos, blk), 'windmill');
     tag(cyl(0.36, 0.36, 0.85, mat(T.tinG, { color:0x8a5a40 }), WX, g0 + 4.1, WZ, 12), 'windmill');   /* the tank */
     box(WX - 0.32, WX + 0.32, g0 + top, g0 + top + 0.07, WZ - 0.32, WZ + 0.32, blk, { solid:false });   /* the platform */
@@ -214,7 +240,7 @@ export function buildMore(C){
     const wh = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 1.36), wm); wh.castShadow = true; head.add(wh); tag(wh, 'windmill');
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 1.2), blk); arm.position.z = -0.62; head.add(arm);
     const vaneT = cvTex(256, 128, (c) => { c.fillStyle = col('hcream', 0.48); c.beginPath(); c.moveTo(0, 34); c.lineTo(256, 4); c.lineTo(256, 124); c.lineTo(0, 94); c.closePath(); c.fill();
-      c.fillStyle = col('hrust', 0.3); c.font = '900 30px Arial Black, Arial, sans-serif'; c.textAlign = 'center'; c.fillText('MAPLES', 132, 62); c.fillText('& SONS', 132, 96);
+      c.fillStyle = col('hrust', 0.3); c.font = '900 30px Arial Black, Arial, sans-serif'; c.textAlign = 'center'; c.font = '900 40px Arial Black, Arial, sans-serif'; c.fillText('GOOCH', 132, 80);   /* (Nov 18, Aisling: "windmill will be gooch") */
       for (let i = 0; i < 40; i++) { c.fillStyle = col('hwood', 0.2); c.fillRect(Math.random()*256, 20 + Math.random()*90, 3, 2); } });   /* (its old letters, as Seam's vane has them) */
     const vm = new THREE.MeshStandardMaterial({ map:vaneT, alphaTest:0.5, side:THREE.DoubleSide, roughness:0.9 });
     const vn2 = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 0.42), vm); vn2.rotation.y = Math.PI/2; vn2.position.z = -1.3; head.add(vn2); tag(vn2, 'windmill');

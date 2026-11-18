@@ -8,7 +8,7 @@ export const F3_SAYS = {
   bench:['an old wooden bench, worn pale where people sat. (click again to sit and wait.)'],
   poster:['HARVEST FEST & HAYRIDE · 収穫祭 · MISSING MILE · OCT 31. pie, cider, the maze. it doesn\'t say which year.'],
   linemap:['the furusato line. YOU ARE HERE: 本町, main street. the dot\'s been touched so often it\'s worn grey.'],
-  time:['TIMETABLE. to furusato, to aldridge place. the last train to furusato is —:—. the last one the other way is at 25:61.'],
+  time:['TIMETABLE. to furusato, to aldridge. the last train to furusato is —:—. the last one the other way is at 25:61.'],
   grass:['tall grass gone gold, growing up over the platform\'s edge.'],
   phone:['a green payphone in its little glass box. you lift the receiver: a dial tone, very far away, and under it, the wind in the corn.', 'the payphone. someone has written a number on the glass in marker and rubbed it out.'],
   bin:['a concrete bin with two holes in its lid, like eyes. it\'s looking at the road.'],
@@ -28,7 +28,7 @@ F3_SAYS.station = ['the station building. stucco over brick, the paint gone. its
 F3_SAYS.corn = ['corn, taller than you. the leaves rasp against each other though there isn\'t any wind.', 'you could walk in. you don\'t.'];   /* (from f03-3d2.js) */
 F3_SAYS.door = ['the doors are old boards, gone grey. a chain through the handles, a padlock, rusted shut.', 'the padlock is newer than the chain.'];   /* (from f03-3d2.js) */
 F3_SAYS.window = ['newspaper pasted over the glass from inside, gone brown. one pane is broken. only dark behind it.'];   /* (from f03-3d2.js) */
-F3_SAYS.windmill = ['far out in the field, an old windmill, much too tall. its wheel doesn\'t turn. there\'s no farm near it.', 'the windmill. on its vane, old letters: MAPLES & SONS. the wheel is still, though the corn is moving.'];   /* (from f03-3d3.js) */
+F3_SAYS.windmill = ['far out in the field, an old windmill, much too tall. its wheel doesn\'t turn. there\'s no farm near it.', 'the windmill. on its vane, old letters: GOOCH. the wheel is still, though the corn is moving.'];   /* (from f03-3d3.js) */
 F3_SAYS.pole = ['a telephone pole, grey and split with age. the wires sing a little when the wind comes through the corn.', 'the wires sag pole to pole down the road and off into the fog.'];   /* (from f03-3d3.js) */
 F3_SAYS.streetlamp = ['an old lamp on the pole, a tin shade over a bare bulb.', 'the lamp over the road. the fog takes most of its light before it gets to the ground.'];   /* (from f03-3d4.js) */
 F3_SAYS.chopped = ['a pole hanging from its own wires, cut clean through a metre and a half up. the bottom of it is nowhere. a newer pole stands beside it, doing its job.', 'it sways a little, the cut pole, when the wind comes over the corn. it never touches the ground.'];   /* (from f03-details.js) */
@@ -41,7 +41,7 @@ export const F3_WALL = {
   stucco: ['stucco over brick. where it\'s fallen away, the brick underneath is soft and red.'],
   road: ['the road goes on into the dusk. far off, a little glow: the town, maybe.'],
   sit: ['you sit on the bench. the bulbs hum. the corn moves, all at once, and stops. somewhere far off a dog barks, once. you wait.'],
-  windmill: ['far out in the corn, an old windmill, much too tall. its wheel doesn\'t turn. there\'s no farm near it.', 'the windmill. on its vane, old letters: MAPLES & SONS. the wheel is still, though the corn is moving.'],
+  windmill: ['far out in the corn, an old windmill, much too tall. its wheel doesn\'t turn. there\'s no farm near it.', 'the windmill. on its vane, old letters: GOOCH. the wheel is still, though the corn is moving.'],
   tunnel: ['the line goes into the ground here: an old concrete mouth, low, in a bank, the corn standing thick on top. inside, only dark.', 'cold air comes out of the tunnel mouth, and a smell of earth. far in, very far, something drips.'],
   fields: ['the fields go on, flat, to a line of trees. a farm, very small. nothing moves.', 'flat land, cut to stubble, as far as the tree line. the poles go off along a road you can\'t see.', 'the line runs off into the fields. a grain elevator, very small, against the last of the light.'],
 };

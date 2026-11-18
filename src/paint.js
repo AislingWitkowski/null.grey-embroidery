@@ -200,6 +200,7 @@ export function paintGrassAtlas(){
       const bx = ox + 18 + rnd()*92, hgt = (back ? 40 : 20) + rnd()*rnd()*96 - (v === 3 ? 16 : 0), lean = (rnd() - 0.5)*46, green = rnd() < 0.2;
       const ramp = green ? 'hsage' : (rnd() < 0.6 ? 'hgold' : 'hcream'), t = (back ? 0.28 : 0.45) + rnd()*0.3;
       c.strokeStyle = rgb(ramp, t); c.lineWidth = 2 + (rnd() < 0.4 ? 1 : 0);
+      { const g = c.createLinearGradient(bx, 128, bx + lean, 128 - hgt); g.addColorStop(0, rgb(ramp, t*0.7)); g.addColorStop(0.6, rgb(ramp, t)); g.addColorStop(1, rgb(ramp === 'hsage' ? 'hgold' : ramp, Math.min(1, t + 0.08))); c.strokeStyle = g; }   /* (Nov 18) darker at its foot, paler and drier to the tip */
       c.beginPath(); c.moveTo(bx, 128); c.quadraticCurveTo(bx + lean*0.25, 128 - hgt*0.6, bx + lean, 128 - hgt); c.stroke();
       if (!green && rnd() < 0.2) { c.fillStyle = rgb('hcream', 0.62); c.fillRect(bx + lean - 2, 128 - hgt - 8, 4, 9); }   /* a seed head */
     }
@@ -215,11 +216,18 @@ export function paintCornAtlas(){
       const x0 = ox + 18 + st*(92/ns) + rnd()*10, top = 30 + rnd()*60, green = rnd() < 0.3, ramp = green ? 'holive' : 'hgold', back = st % 2 === 0;
       c.strokeStyle = rgb(ramp, (back ? 0.3 : 0.42) + rnd()*0.12); c.lineWidth = 4;
       c.beginPath(); c.moveTo(x0, 384); c.lineTo(x0 + (rnd() - 0.5)*8, top); c.stroke();
+      { c.strokeStyle = rgb(ramp, (back ? 0.2 : 0.3)); c.lineWidth = 1.2; for (let y = top + 40; y < 370; y += 34 + rnd()*10) { c.beginPath(); c.moveTo(x0 - 3, y); c.lineTo(x0 + 3, y); c.stroke(); } }   /* the stalk's joints */
       for (let l = 0; l < 11; l++) {
         const ly = top + 24 + l*((350 - top)/11) + rnd()*10, dir = (l % 2 ? 1 : -1), len = 26 + rnd()*30, lr = rnd() < 0.3 ? 'hsage' : (rnd() < 0.2 ? 'hcream' : ramp);
         const t = (back ? 0.3 : 0.45) + rnd()*0.22;
-        c.fillStyle = rgb(lr, t); c.beginPath(); c.moveTo(x0, ly - 3); c.quadraticCurveTo(x0 + dir*len*0.6, ly - 22, x0 + dir*len, ly + 14 + rnd()*20);
-        c.quadraticCurveTo(x0 + dir*len*0.55, ly - 10, x0, ly + 4); c.fill();
+        const ey = ly + 14 + rnd()*20, leaf = () => { c.beginPath(); c.moveTo(x0, ly - 3); c.quadraticCurveTo(x0 + dir*len*0.6, ly - 22, x0 + dir*len, ey); c.quadraticCurveTo(x0 + dir*len*0.55, ly - 10, x0, ly + 4); };
+        /* (Nov 18, Aisling: "the corn and everything will get a better like texture … not just like a color … just slightly") each
+           leaf shaded from its stalk out, a paler midrib along it, its tip dried brown, a few spots */
+        leaf(); const lg = c.createLinearGradient(x0, ly, x0 + dir*len, ey); lg.addColorStop(0, rgb(lr, t*0.82)); lg.addColorStop(0.5, rgb(lr, t)); lg.addColorStop(0.85, rgb(lr, t*0.95)); lg.addColorStop(1, rgb('hwood', 0.3 + rnd()*0.1)); c.fillStyle = lg; c.fill();
+        c.save(); leaf(); c.clip();
+        c.strokeStyle = rgb(lr, Math.min(1, t + 0.14)); c.globalAlpha = 0.55; c.lineWidth = 0.8; c.beginPath(); c.moveTo(x0, ly); c.quadraticCurveTo(x0 + dir*len*0.58, ly - 15, x0 + dir*len, ey); c.stroke();
+        for (let k = 0; k < 5; k++) { c.fillStyle = rgb('hwood', 0.22 + rnd()*0.1); c.globalAlpha = 0.4; c.fillRect(x0 + dir*len*(0.2 + rnd()*0.7), ly - 12 + rnd()*20, 1.2, 1.2); }
+        c.restore(); c.globalAlpha = 1;
       }
       c.strokeStyle = rgb('hgold', 0.66); c.lineWidth = 2;   /* the tassel */
       for (let q = 0; q < 5; q++) { c.beginPath(); c.moveTo(x0, top); c.lineTo(x0 + (q - 2)*6, top - 14 - rnd()*10); c.stroke(); }

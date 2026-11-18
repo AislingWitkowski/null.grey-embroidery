@@ -387,3 +387,22 @@ Aisling: *"since the nature of null grey.. its like there but not there...maybe 
   - **The windmill:** far out in the east field, south-east of the station, past where you can walk; its vane still says MAPLES & SONS. *Pending, Aisling:* Gooch (once she's double-checked), and whether to open a path through the corn to it.
   - **Walking everywhere:** not yet, on purpose: the corn and fog bound the place (the platform, round the station, the near fields, the road to the corn).
 - **Speed:** the sharper picture costs more on the graphics card. The page still steps its resolution down by itself if frames run long. Aisling to check smoothness on her Mac and phone.
+
+### Nov 18 (midday) — the trees grow together; a setting sun and a moon; Gooch's windmill and the path to it; corn detail; the train reshaped
+Aisling: *"setting sun and smudge of moon...? windmill will be gooch? and yes path through corn to windmil, corn needs to bend sort of naturally too … the corn and everything will get a better like texture … just slightly … this is the pewrfect crunch i feel … tree shapes a little umm... janky? sliced choppy … the disconnection is a little odd … i like them a little janky weiord tim burton distortion..spikey so leave a little … move onto the train open up the world"*. With a screenshot of the cut-looking limbs and a photo of her own street's trees (a big trunk forking into long curving limbs).
+- **The look:** her words, "this is the perfect crunch". Missing Mile's look stays as it is.
+- **Trees:** each limb is one curving, tapering branch in several segments. It starts inside its parent, so it grows out of it; it bends outward then up or sags, with a rounded knuckle at each joint and a closed spike at the tip. The trunk is thicker and rounds into its fork. Still spiky and a little strange, but no sliced ends or gaps.
+- **The sky:** the sun is going down in the west, low behind the fog and cloud: a warm glow along the horizon and a veiled disc. High in the south-east there's a pale smudge of moon, half lost in the cloud. No blue.
+- **The windmill is Gooch's:** its vane reads GOOCH. Its click line now says *on its vane, old letters: GOOCH.* in both engines (Seam `f03-3d3.js`, `f03-road.js`; copied by `copy-says.py`). **Still MAPLES & SONS:** the shed's FEED · SEED · BAIT sign. *Pending, Aisling:* should that be Gooch too?
+- **The path to the windmill:** a trodden path from the east field, wandering out through the corn to the windmill's feet, with a small clearing round it. Packed earth with two worn ruts, no grass on it. You can walk it and stand right under the windmill; its legs are solid. Off the path, the corn still stops you.
+  - **The corn bends:** at the path's edges it leans out of the way, as trodden corn does; and as you walk through, the stalks near you are pushed aside and come back slowly behind you (all the corn and grass do this).
+- **Corn and grass detail (slight):** each corn leaf is shaded from its stalk out, with a paler midrib, a dried brown tip and a few spots; the stalks have joints. Grass blades are darker at the foot and paler, drier, toward the tip.
+- **The train, reshaped** (Aisling: *"the train is a little boxy and still seam"*):
+  - a real carriage roof: the sides carry up into rounded shoulders, then a long low arch, with a rain gutter along each side and three vent humps on top;
+  - the skirt under the body curves in below the floor, as real carriage sides do;
+  - rounded vertical corners where the sides meet the ends;
+  - the cab face sculpted: a brow over the windscreen, a heavy bumper beam with an anticlimber, the coupler and its hoses, hoods over the lamps;
+  - underneath: the bogies' side frames, axle boxes and springs, and the underframe's boxes and a tank between the bogies.
+  - **Still to do on it:** rounded window corners, glass, its light falling on the platform.
+- **Also pending:** the item close-ups (the drinks machine, buying) in the Embroidery look; textures in general (later); opening up the world further (next).
+- **Checked:** walking (including the path both ways and the windmill's legs), clicks, the train both ways, the text check, no blue.

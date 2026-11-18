@@ -6,6 +6,7 @@
    looks, i mostly want pumped up graphics."
    ================================================================ */
 import { ROOTS } from './roots.js';
+import { pathDist } from './station2.js';
 import * as THREE from 'three';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
@@ -95,6 +96,8 @@ function paintGround(){
       return r('sstone', (patch ? 0.24 : 0.34) + 0.1*vn(x*30, z*30) + 0.05*(fine - 0.5) - 0.06*f - (crack ? 0.12 : 0) - 0.04*wet, 0.5 + 0.2*fine - (crack ? 0.4 : 0), 0.72 - 0.45*wet);
     }
     /* the fields: mud, dead grass, the odd puddle (puddles are smooth and shine) */
+    { const pd = pathDist(x, z), wd = Math.hypot(x - 47.6, z - 20.4); if (pd < 0.62 || wd < 1.9) { const e = pd < 0.62 ? sm(0.62, 0.2, pd) : sm(1.9, 1.2, wd);   /* (Nov 18) the trodden path to the windmill: packed earth, two worn ruts, a few stones */
+      if (e > 0.25) { const rut = pd < 0.62 && Math.abs(pd - 0.22) < 0.07; return r('hwood', 0.2 + 0.08*vn(x*12, z*12) + 0.05*fine - (rut ? 0.05 : 0) + (vn(x*40, z*40) > 0.86 ? 0.15 : 0), 0.4 + 0.3*fine, 0.85); } } }
     const pud = fbm(x*0.35 + 11, z*0.35);
     if (pud > 0.69) return r('hnight', 0.2 + 0.14*vn(x*4, z*4), 0.1, 0.08 + 0.2*sm(0.69, 0.75, pud)*0);
     const mud = f > 0.55 || (Math.abs(frac(x*0.9) - 0.5) < 0.12 && z > 11), rim = pud > 0.64;
@@ -117,7 +120,21 @@ function sky(){
   const m = new THREE.ShaderMaterial({ side:THREE.BackSide, depthWrite:false, fog:false,
     uniforms:{ uHor:{ value:new THREE.Color() }, uTop:{ value:new THREE.Color() }, uWest:{ value:new THREE.Color() } },
     vertexShader:'varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position, 1.0); gl_Position.z = gl_Position.w; }',
-    fragmentShader:'uniform vec3 uHor, uTop, uWest; varying vec3 vD; void main(){ float h = clamp(vD.y, 0.0, 1.0); vec3 c = mix(uHor, uTop, smoothstep(0.02, 0.6, h)); float w = max(-vD.x, 0.0)*(1.0 - smoothstep(0.0, 0.25, h)); c = mix(c, uWest, w*0.6); gl_FragColor = vec4(c, 1.0); }' });
+    fragmentShader:'uniform vec3 uHor, uTop, uWest; varying vec3 vD;\n' +
+      'float hs(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7)))*43758.5453); }\n' +
+      'float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0 - 2.0*f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }\n' +
+      'float cl(vec2 p){ return vn(p)*0.55 + vn(p*2.3 + 7.0)*0.3 + vn(p*5.1 + 3.0)*0.15; }\n' +
+      'void main(){ float h = clamp(vD.y, 0.0, 1.0); vec3 c = mix(uHor, uTop, smoothstep(0.02, 0.6, h)); float w = max(-vD.x, 0.0)*(1.0 - smoothstep(0.0, 0.25, h)); c = mix(c, uWest, w*0.6);\n' +
+      /* (Nov 18, Aisling: "setting sun and smudge of moon") the sun going down in the west, low, behind the fog and the cloud: a soft disc you can just make out, its glow spreading along the horizon; and high in the south-east a smudge of moon, pale, half lost in cloud */
+      '  vec2 cp = vD.xz/(vD.y + 0.35)*2.2; float cloud = cl(cp);\n' +
+      '  vec3 S = normalize(vec3(-0.95, 0.21, 0.28)); float d = max(dot(vD, S), 0.0);\n' +
+      '  float veil = 0.55 + 0.45*smoothstep(0.75, 0.3, cloud);\n' +
+      '  c += uWest*vec3(1.15, 0.78, 0.55)*(pow(d, 6.0)*0.28 + pow(d, 40.0)*0.35)*veil;\n' +
+      '  c = mix(c, vec3(1.0, 0.74, 0.52)*max(uWest*1.9, vec3(0.5)), smoothstep(0.9989, 0.9995, d)*0.62*veil);\n' +
+      '  vec3 Mo = normalize(vec3(0.5, 0.5, 0.7)); float m = max(dot(vD, Mo), 0.0), md = smoothstep(0.99845, 0.99905, m), mg = pow(m, 220.0);\n' +
+      '  float smud = 0.35 + 0.65*smoothstep(0.85, 0.35, cl(cp*1.6 + 11.0));\n' +
+      '  c = mix(c, vec3(0.66, 0.62, 0.57), (md*0.5 + mg*0.2)*smud);\n' +
+      '  gl_FragColor = vec4(c, 1.0); }' });
   const me = new THREE.Mesh(new THREE.SphereGeometry(60, 24, 12), m); me.frustumCulled = false; me.renderOrder = -1; K.scene.add(me); return m;
 }
 
@@ -443,6 +460,7 @@ export function buildStation(scene){
     const verge = Math.abs(x - ROAD[0]) < 1.7 || Math.abs(x - ROAD[1]) < 1.7;
     if (!verge && fbm(x*0.35, z*0.35) < 0.36 && R() < 0.7) continue;   /* bare patches */
     if (verge && R() < 0.35) continue;
+    if (pathDist(x, z) < 0.5) continue;   /* (the path to the windmill) */
     grass.push([x, groundAt(x, z) - 0.02, z, (verge ? 0.55 : 0.36) + R()*0.4, R()*6.3, Math.floor(R()*4), (verge ? 1.0 : 0.8)*(0.5 + R()*R()*1.3)]);   /* heights all different: no hay bales */
   }
   for (let i = 0; i < 700; i++) {   /* the gravel past the platform's ends, along the track */
@@ -462,7 +480,10 @@ export function buildStation(scene){
       for (const o of feet) { const cx = (o.x0 + o.x1)/2, cz = (o.z0 + o.z1)/2, r = Math.max(o.x1 - o.x0, o.z1 - o.z0)/2, d = Math.hypot(g[0] - cx, g[2] - cz);
         if (d < r + 0.35) { grass.splice(i, 1); break; } if (d < r + 0.8) { g[3] *= 0.6; if (g[6]) g[6] *= 0.6; } } } }
   clumps(grass, paintGrassAtlas(), 3, 1, 1.0);   /* (atlas: 4 clumps) */
-  const cornAt = (x, z) => { if (R() < 0.08 || cornClear(x, z)) return; corn.push([x + (R() - 0.5)*0.25, onTunnelRoof(x, z) ? TUN.bank - 0.02 : groundAt(x, z) - 0.05, z + (R() - 0.5)*0.25, 1.0 + R()*0.3, R()*6.3, Math.floor(R()*4), 2.6]); };
+  const cornAt = (x, z) => { if (R() < 0.08 || cornClear(x, z)) return; const cx = x + (R() - 0.5)*0.25, cz = z + (R() - 0.5)*0.25;
+    let lx = 0, lz = 0; { const pd = pathDist(cx, cz); if (pd < 1.4) { const e = 0.03, gx = pathDist(cx + e, cz) - pathDist(cx - e, cz), gz = pathDist(cx, cz + e) - pathDist(cx, cz - e), gl = Math.hypot(gx, gz) || 1, k = (1 - pd/1.4)*0.32 + R()*0.06;
+      lz = -gx/gl*k; lx = gz/gl*k; } }   /* (Nov 18) at the path's edge the corn leans out of the way, as trodden corn does */
+    corn.push([cx, onTunnelRoof(x, z) ? TUN.bank - 0.02 : groundAt(x, z) - 0.05, cz, 1.0 + R()*0.3, R()*6.3, Math.floor(R()*4), 2.6, lx, lz]); };
   for (let x = -8; x < 48; x += 0.36) for (let z = -9; z < 0.55; z += 0.42) cornAt(x, z);              /* across the track */
   for (let x = -8; x < 48; x += 0.42) for (let z = 24.4; z < 37; z += 0.5) if (x < ROAD[0] - 0.6 || x > ROAD[1] + 1.6) cornAt(x, z);   /* (clear round the pole with the missing poster) */   /* the corn the road runs into */
   for (let x = -8; x < 0.6; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* west */

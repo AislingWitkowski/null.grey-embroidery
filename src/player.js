@@ -117,6 +117,7 @@ export function stepPlayer(dt){
      floor (through its open doors) is allowed there */
   if (W.noGo && !P.riding && W.noGo(nx, nz) && nz < P.z + 1e-6) {   /* (stepping out of it, away from the track, is always allowed) */
     if (!W.noGo(nx, P.z)) nz = P.z; else if (!W.noGo(P.x, nz)) nx = P.x; else { nx = P.x; nz = P.z; } if (W.onNoGo) W.onNoGo(); }
+  if (W.inside && !P.riding && !W.inside(nx, nz) && W.inside(P.x, P.z)) { if (W.inside(nx, P.z)) nz = P.z; else if (W.inside(P.x, nz)) nx = P.x; else { nx = P.x; nz = P.z; } }   /* (the place's own edge: the corn, the path) */
   if (W.bounds && !P.riding) { nx = clamp(nx, W.bounds.x0, W.bounds.x1); nz = clamp(nz, W.bounds.z0, W.bounds.z1); }
   /* a step up only if it's low enough; a drop is fine (you fall) */
   const gh = standHeight(nx, nz, P.y, P.step);

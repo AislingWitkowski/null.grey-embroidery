@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { hsh } from './paint.js';
 
-export const K = { scene:null, solids:[], wind:{ uTime:{ value:0 }, uGust:{ value:0 } }, statics:[] };
+export const K = { scene:null, solids:[], wind:{ uTime:{ value:0 }, uGust:{ value:0 }, uYou:{ value:new THREE.Vector3(0, -99, 0) } }, statics:[] };
 export function kitInit(scene){ K.scene = scene; K.solids = []; }
 
 export function mat(map, o = {}){
@@ -73,15 +73,18 @@ function cardGeo(n, h){
 function windMat(map, stiff){
   const m = new THREE.MeshStandardMaterial({ map, alphaTest:0.5, side:THREE.DoubleSide, roughness:1 }); m.userData.noDetail = true;
   m.onBeforeCompile = s => {
-    s.uniforms.uTime = K.wind.uTime; s.uniforms.uGust = K.wind.uGust;
-    s.vertexShader = 'attribute float aVar; uniform float uTime; uniform float uGust;\n' + s.vertexShader
+    s.uniforms.uTime = K.wind.uTime; s.uniforms.uGust = K.wind.uGust; s.uniforms.uYou = K.wind.uYou;
+    s.vertexShader = 'attribute float aVar; uniform float uTime; uniform float uGust; uniform vec3 uYou;\n' + s.vertexShader
       .replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv.x = vMapUv.x*0.25 + aVar*0.25;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\n' +
         ' { vec3 ip = instanceMatrix[3].xyz; float hk = position.y*position.y;\n' +
         '   float sway = sin(uTime*1.1 + ip.x*0.45 + ip.z*0.31)*0.5 + sin(uTime*2.3 + ip.x*1.7)*0.18;\n' +   /* slow: well under three a second */
         '   float push = (0.012 + uGust*0.11)*' + stiff.toFixed(3) + '*hk;\n' +
         '   vec3 wd = inverse(mat3(instanceMatrix))*vec3(0.85, 0.0, 0.5);\n' +
-        '   transformed += wd*(push*(0.6 + sway)); }');
+        '   transformed += wd*(push*(0.6 + sway));\n' +
+        /* (Nov 18, Aisling: "corn needs to bend sort of naturally too") as you walk through, the stalks near you are pushed aside and come back slowly behind you */
+        '   vec2 aw = ip.xz - uYou.xz; float dd = length(aw); if (dd < 1.15 && dd > 0.001) { float k = pow(1.0 - dd/1.15, 1.6)*0.55*hk*' + (1/Math.max(stiff, 0.3)).toFixed(3) + '*0.4;\n' +
+        '     vec3 ad = inverse(mat3(instanceMatrix))*vec3(aw.x/dd, -0.25, aw.y/dd); transformed += ad*k; } }');
   };
   return m;
 }
@@ -93,7 +96,7 @@ export function clumps(items, map, n, h, stiff, tile = 10){
   for (const k in groups) {
     const L = groups[k], g = g0.clone(), vars = new Float32Array(L.length);
     const im = new THREE.InstancedMesh(g, mat, L.length);
-    L.forEach((it, i) => { e.set(0, it[4], 0); q.setFromEuler(e); M.compose(new THREE.Vector3(it[0], it[1], it[2]), q, new THREE.Vector3(it[3], it[3]*(it[6] || 1), it[3])); im.setMatrixAt(i, M); vars[i] = it[5]; });
+    L.forEach((it, i) => { e.set(it[7] || 0, it[4], it[8] || 0, 'XZY'); q.setFromEuler(e); M.compose(new THREE.Vector3(it[0], it[1], it[2]), q, new THREE.Vector3(it[3], it[3]*(it[6] || 1), it[3])); im.setMatrixAt(i, M); vars[i] = it[5]; });
     g.setAttribute('aVar', new THREE.InstancedBufferAttribute(vars, 1));
     im.castShadow = false; im.receiveShadow = true; im.computeBoundingSphere(); K.scene.add(im);
   }

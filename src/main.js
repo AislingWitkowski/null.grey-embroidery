@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { makeLook } from './look.js';
 import { buildStation, applyLook, tickLights, L, CLICK, tag, halo } from './station.js';
 import { buildTrain, trainTick, trainArrive, TR, onTrainFloor } from './train.js';
-import { MOUTH_D, TUN } from './station2.js';
+import { MOUTH_D, TUN, onWindmillWay } from './station2.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
 import { UI, initUI, say, tickUI, ccSay, VOID_LINE } from './ui.js';
 import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
@@ -72,6 +72,8 @@ function start(){
      the train's own floor, through its open doors, is allowed past it. Aisling's line, word for word */
   let voidT = -1e9;
   world.noGo = (x, z) => z < 3.12 && !onTrainFloor(x, z);
+  /* (Nov 18) the place's edge, east: the field stops at the corn (x 40.8), except along the path out to the windmill */
+  world.bounds = Object.assign({}, world.bounds, { x1:49.4 }); world.inside = (x, z) => x <= 40.8 || onWindmillWay(x, z);
   world.onNoGo = () => { const n = performance.now(); if (n - voidT > 20000) { voidT = n; say(VOID_LINE, 5200); } };
   giveMist(scene);
   setWorld(world);
@@ -139,7 +141,7 @@ function frame(now){
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
   camera.rotation.set(P.pitch, P.yaw, 0);
   MOUTH_D.value = Math.hypot(camera.position.x - TUN.x, camera.position.y - 1, camera.position.z - TUN.zc);
-  K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = window.__gust != null ? window.__gust : gust(t);   /* (__gust: tests only) */
+  K.wind.uYou.value.set(P.x, P.y, P.z); K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = window.__gust != null ? window.__gust : gust(t);   /* (__gust: tests only) */
   tickLights(t); look.tick(dt); tickUI(now);
   try { soundTick(camera, P, t, K.wind.uGust.value, L.bulbs.slice(0, 5).map(b => b.intensity/(b.userData.base || 1)), surfaceAt(P.x, P.z, P.y)); } catch (e) {}
   if (!split) { camera.clearViewOffset(); look.draw(scene, camera, LOOKS[cur], 0, CW, CH, CW); }

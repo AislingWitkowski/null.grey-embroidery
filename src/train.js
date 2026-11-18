@@ -116,6 +116,10 @@ function bgeo(x0, x1, y0, y1, z0, z1, m){
   if (m) for (let f = 0; f < 6; f++) for (let i = 0; i < 4; i++) { const k = f*4 + i; uv.setXY(k, uv.getX(i + f*4)*dims[f][0]/m[0], uv.getY(i + f*4)*dims[f][1]/m[1]); }
   g.translate((x0 + x1)/2, (y0 + y1)/2, (z0 + z1)/2); return g.toNonIndexed();
 }
+/* (Nov 18) a cross-section [[z, y], ...] (closed) swept along the car's length, x 0..L */
+function sweep(pts, x0, x1){ const sh = new THREE.Shape(); pts.forEach(([z, y], i) => i ? sh.lineTo(-z, y) : sh.moveTo(-z, y)); sh.closePath();
+  const g = new THREE.ExtrudeGeometry(sh, { depth:x1 - x0, bevelEnabled:false, curveSegments:1 }); g.rotateY(Math.PI/2); g.translate(x0, 0, 0); return g.toNonIndexed(); }
+const arc = (cz, cy, r, a0, a1, n) => { const o = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0)*i/n; o.push([cz + Math.cos(a)*r, cy + Math.sin(a)*r]); } return o; };
 function rod(a, b, r, seg = 6){
   const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), d = B.clone().sub(A), len = d.length(), g = new THREE.CylinderGeometry(r, r, len, seg, 1, true);
   g.translate(0, len/2, 0); g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize())); g.translate(A.x, A.y, A.z); return g.toNonIndexed();
@@ -154,12 +158,23 @@ export function buildTrain(scene, tag, haloFn){
     add('under', bgeo(0, L, TR.BOT, TR.FL - 0.06, -HW + 0.02, HW - 0.02));
     add('floor', bgeo(0.02, L - 0.02, TR.FL - 0.06, TR.FL, -HW + inn, HW - inn, [1, 1]));
     add('cream', bgeo(0.02, L - 0.02, TR.ROOF - 0.04, TR.ROOF, -HW + inn, HW - inn, [1, 1]));   /* the ceiling */
-    { const rg = new THREE.CylinderGeometry(HW + 0.01, HW + 0.01, L, 16, 1, false, 0, Math.PI); rg.rotateZ(Math.PI/2); rg.rotateX(-Math.PI/2); rg.scale(1, 0.24, 1); rg.translate(L/2, TR.ROOF, 0); add('roof', rg.toNonIndexed()); }
+    /* (Nov 18, Aisling: "the train is a little boxy and still seam") the roof as a real carriage roof: the side carries up into
+       a rounded shoulder, then a long low arch over the top; a rain gutter along each shoulder; vent humps along the middle */
+    { const R = 0.2, H = HW + 0.006, sh = arc(H - R, TR.ROOF, R, 0, Math.PI/2, 8), top = []; for (let i = 1; i < 12; i++) { const z = (H - R)*(1 - 2*i/12); top.push([z, TR.ROOF + R + 0.06*(1 - (z/(H - R))**2)]); }
+      const prof = [[H, TR.ROOF - 0.03], ...sh, ...top, ...sh.map(([z, y]) => [-z, y]).reverse(), [-H, TR.ROOF - 0.03]];
+      add('roof', sweep(prof, 0.0, L));
+      for (const sg of [-1, 1]) add('dark', bgeo(0.0, L, TR.ROOF + 0.02, TR.ROOF + 0.05, sg*H - 0.015, sg*H + 0.015));   /* the gutters */
+      for (const vx of [1.6, 4.35, 7.1]) { const vp = arc(0, TR.ROOF + R + 0.04, 0.32, 0.25, Math.PI - 0.25, 8); add('roof', sweep([...vp, [vp[vp.length - 1][0], TR.ROOF + R], [vp[0][0], TR.ROOF + R]], vx - 0.42, vx + 0.42)); } }   /* vents */
+    /* the skirt under the body: it curves in below the floor, as real carriage sides do, ribbed */
+    for (const sg of [-1, 1]) { const c = arc(sg*(HW - 0.14), 0.0, 0.14, sg > 0 ? 0 : Math.PI, sg > 0 ? -Math.PI/2 : -Math.PI/2, 6);
+      add('rib', sweep([[sg*HW, 0.004], ...c, [sg*(HW - 0.14), TR.BOT], [sg*(HW - 0.17), TR.BOT], [sg*(HW - 0.17), 0.004]], 0.02, L - 0.02)); }
+    /* the vertical corners where the sides meet the ends: rounded, not a box edge */
+    for (const cx of [0.0, L]) for (const sg of [-1, 1]) { const cg = new THREE.CylinderGeometry(0.06, 0.06, TR.ROOF - 0.0, 8, 1, true); cg.translate(cx + (cx ? -0.05 : 0.05), TR.ROOF/2, sg*(HW - 0.05)); add('steel', cg.toNonIndexed()); }
     /* the sides: outside skin and inside skin, with the doorways and windows open */
     for (const s of [-1, 1]) {
       const zo = [s*HW - (s > 0 ? sk : 0), s*HW + (s > 0 ? 0 : sk)].sort((a, b) => a - b), zi = [s*(HW - inn), s*(HW - inn + 0.012)].sort((a, b) => a - b);
       const doors = TR.DOORS.map(d => [d - TR.DHW, d + TR.DHW]);
-      const rows = [[TR.BOT, -0.0, []], [0, 0.76, doors], [0.76, 0.79, doors], [0.79, 0.92, doors], [0.92, WY0, doors], [WY0, WY1, doors.concat(WINS)], [WY1, DY1, doors], [DY1, TR.ROOF, []]];
+      const rows = [[0, 0.76, doors], [0.76, 0.79, doors], [0.79, 0.92, doors], [0.92, WY0, doors], [WY0, WY1, doors.concat(WINS)], [WY1, DY1, doors], [DY1, TR.ROOF, []]];
       for (const [y0, y1, holes] of rows) for (const [a, b] of solidRuns(holes)) {
         const mo = y1 <= 0.0 ? 'rib' : (y0 >= 0.76 && y1 <= 0.79 ? 'verm' : (y0 >= 0.79 && y1 <= 0.92 ? 'stripe' : (y1 <= 0.76 ? 'rib' : 'steel')));
         add(mo, bgeo(a - 0.004, b + 0.004, y0 - (y0 > TR.BOT ? 0.004 : 0), y1 + (y1 < TR.ROOF ? 0.004 : 0), zo[0] - (mo === 'stripe' ? (s > 0 ? 0 : 0.006) : 0), zo[1] + (mo === 'stripe' ? (s > 0 ? 0.006 : 0) : 0), mo === 'stripe' ? [0.5, 0.13] : (mo === 'rib' ? [1, 0.5] : [1, 1])));
@@ -205,6 +220,14 @@ export function buildTrain(scene, tag, haloFn){
       if (cab) {   /* the lamps: white at whichever end leads, red at the end that follows (it runs both ways) */
         const lgs = []; for (const z of [-0.62, 0.62]) { const lg = new THREE.CircleGeometry(0.075, 14); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + 0.006 : -0.006, 0.46, z); lgs.push(lg.toNonIndexed()); }
         const lm = new THREE.Mesh(mergeGeometries(lgs), MT.head); G.add(lm); (TR.lamps = TR.lamps || {})[e ? 'east' : 'west'] = lm; TR.MT = MT;
+        /* (Nov 18) the cab face sculpted: a brow over the windscreen, a heavy bumper beam and anticlimber low down, the coupler and its hoses, the lamp hoods */
+        const fx = e ? L : 0, out = e ? 1 : -1, X = (d0, d1) => [Math.min(fx + out*d0, fx + out*d1), Math.max(fx + out*d0, fx + out*d1)];
+        { const [a, b] = X(0, 0.09); add('steel', bgeo(a, b, 1.98, 2.06, -HW + 0.04, HW - 0.04)); }   /* the brow */
+        { const [a, b] = X(0, 0.14); add('under', bgeo(a, b, 0.12, 0.3, -HW + 0.06, HW - 0.06)); }   /* the bumper beam */
+        { const [a, b] = X(0.14, 0.18); for (let i = 0; i < 4; i++) add('under', bgeo(a, b, 0.14 + i*0.04, 0.16 + i*0.04, -0.5, 0.5)); }   /* its ribs */
+        { const [a, b] = X(0, 0.32); add('wheel', bgeo(a, b, 0.0, 0.1, -0.09, 0.09)); const [c0, c1] = X(0.28, 0.4); add('wheel', bgeo(c0, c1, -0.04, 0.14, -0.13, 0.13)); }   /* the coupler */
+        for (const hz of [-0.3, 0.3]) { const hg = new THREE.TorusGeometry(0.07, 0.016, 5, 10, Math.PI); hg.rotateY(Math.PI/2); hg.rotateX(Math.PI); hg.translate(fx + out*0.05, 0.02, hz); add('under', hg.toNonIndexed()); }   /* the hoses */
+        for (const lz of [-0.62, 0.62]) { const [a, b] = X(0, 0.07); add('steel', bgeo(a, b, 0.53, 0.56, lz - 0.1, lz + 0.1)); }   /* the lamp hoods */
       }
     }
     /* (Nov 18) between this car and the next: the gangway, dark folded bellows, so the cars read as one train and no
@@ -217,7 +240,12 @@ export function buildTrain(scene, tag, haloFn){
     TR.solids.push({ car:k, lx0:0, lx1:L, y0:TR.BOT, y1:TR.FL, z0:TR.ZC - HW, z1:TR.ZC + HW, floor:true, x0:0, x1:0 });
     /* the bogies: wheels and frames under each end */
     const wg = []; for (const bx of [1.4, L - 1.4]) { for (const dx of [-0.55, 0.55]) for (const z of [-0.45, 0.45]) { const w = new THREE.CylinderGeometry(0.18, 0.18, 0.06, 12); w.rotateX(Math.PI/2); w.translate(bx + dx, -0.205, z); wg.push(w.toNonIndexed()); }
-      wg.push(bgeo(bx - 0.85, bx + 0.85, -0.3, -0.16, -0.55, 0.55)); }
+      wg.push(bgeo(bx - 0.85, bx + 0.85, -0.3, -0.16, -0.55, 0.55));
+      for (const z of [-0.52, 0.52]) { wg.push(bgeo(bx - 0.8, bx + 0.8, -0.27, -0.13, z - 0.03, z + 0.03));   /* (Nov 18) the bogie's side frames, its springs and axle boxes */
+        for (const dx of [-0.55, 0.55]) { wg.push(bgeo(bx + dx - 0.09, bx + dx + 0.09, -0.29, -0.15, z - 0.05, z + 0.05)); const sp = new THREE.CylinderGeometry(0.045, 0.045, 0.12, 8); sp.translate(bx + dx*0.5, -0.12, z); wg.push(sp.toNonIndexed()); } } }
+    /* between the bogies: the underframe's boxes and tanks, dark, hung under the floor */
+    for (const [a, b, z0, z1] of [[2.6, 3.6, -0.55, 0.1], [3.9, 4.6, 0.15, 0.6], [4.9, 6.1, -0.5, 0.25]]) wg.push(bgeo(a, b, -0.3, -0.16, z0, z1));
+    { const tk = new THREE.CylinderGeometry(0.13, 0.13, 0.9, 10); tk.rotateZ(Math.PI/2); tk.translate(6.6, -0.26, -0.3); wg.push(tk.toNonIndexed()); }
     for (const g of wg) add('wheel', g);
     for (const m in B) { const me = new THREE.Mesh(mergeGeometries(B[m]), MT[m]); me.castShadow = m !== 'tube' && m !== 'map' && m !== 'head' && m !== 'tail'; me.receiveShadow = true; me.userData.kind = m; G.add(me);
       if (m === 'map') TAG(me, hit => mapClick(hit)); if (m === 'seat') TAG(me, () => sit()); }
