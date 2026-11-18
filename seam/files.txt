@@ -1,0 +1,15 @@
+src/shared/hy2-journey.js
+src/f0-stubs.js
+src/a2-hands.js
+src/d5-pocket-art.js
+src/d5-pocket-art2.js
+src/d5-pocket.js
+src/f3-pocket-items.js
+src/f9-pocket-fixes.js
+src/shared/furu-items.js
+src/shared/art-edits.js
+src/shared/furu-pocket-art.js
+src/shared/pocket-folders.js
+src/f7-sound-data.js
+src/f7b-sound-files.js
+src/f8-sound.js

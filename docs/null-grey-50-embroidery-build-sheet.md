@@ -129,3 +129,12 @@ Aisling: *"ok go ahead"* (milestone 2 first).
 - **CC lines** for them (e.g. *[the bulbs hum]*, *[a gust: the corn rustles, the wires sing]*), short and lowercase, each at most every so often.
 - The look buttons moved to the top left (the switches took the top right, as in Seam).
 - **Still to come in milestone 2:** the pocket (the same one as Seam's, carried between pages), the close-ups (the drinks machine with its four flavours, the payphone, the missing poster), the train in and out to the Seam pages.
+
+### Nov 17, 2026 (evening) — milestone 2, part 2: the pocket
+Aisling: *"Go!"* (from bed; she'll check on her Mac later).
+- **Seam's own pocket runs in Embroidery, as it is.** Not rebuilt: at build time `tools/seam-shared.py` copies Seam's pocket files from null.grey-furusatostation (the pocket, all 142 kinds of thing and their pictures, the folders, food and drink, its sounds) into the page, with a small bridge (`seam/`) standing in for the parts of Seam's engine they expect. The masters stay in Seam; rebuilding Embroidery picks up any change.
+- **The same pocket everywhere:** it reads and writes the same saved pocket as every Seam page, so what you carry in Seam is in your pocket here. (Pages opened from the same site share it; a file opened on its own has its own.)
+- Open it with the pocket in the bottom-left corner, or **P**, as in Seam. While it's open, the world waits (nothing is drawn behind it, as in Seam), you can't walk, and the switches and look buttons step aside.
+- Its sounds (picking things up, cans, bottles, a bite, a wrapper) are Seam's own and follow Embroidery's sound switch; each gets its CC line from Seam's caption list.
+- **Checked:** opens with P, shows its things, closes, walking works after; clicks still work; no errors (`t/pocket.js`, `t/seam-probe.js`).
+- **Still to come in milestone 2:** the close-ups (the drinks machine and its four flavours, the payphone, the missing poster) and the train in and out.

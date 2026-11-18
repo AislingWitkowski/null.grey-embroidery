@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { makeLook } from './look.js';
 import { buildStation, applyLook, tickLights, L, CLICK } from './station.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
-import { UI, initUI, say, tickUI } from './ui.js';
+import { UI, initUI, say, tickUI, ccSay } from './ui.js';
 import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
 import { SOUND_FILES } from './sound-files.js';
 import { K } from './kit.js';
@@ -68,7 +68,12 @@ function start(){
   P.x = 33.2; P.z = 5.6; P.yaw = Math.PI/2 - 0.12; P.y = world.ground(P.x, P.z);   /* off the platform's east end, looking back along it, as in the Seam version */
   P.y = 0;
   initInput(cv);
-  initUI(); setSoundFiles(SOUND_FILES); UI.onChange = soundSync;
+  initUI(); setSoundFiles(SOUND_FILES);
+  /* Seam's pocket (milestone 2): its captions are ours, its sounds follow our switch, its sounds get CC */
+  const SEAM = window.EG_SEAM || null;
+  if (SEAM) { SEAM.say = (t, ms) => say(t, ms || 4200); SEAM.cc = (k, t) => ccSay(k, t, 3000); }
+  UI.onChange = () => { soundSync(); if (SEAM && SEAM.soundOn) SEAM.soundOn(UI.heard, UI.cc); };
+  ['pointerdown', 'keydown', 'touchstart'].forEach(t => addEventListener(t, () => { if (SEAM && SEAM.soundOn && (UI.heard || UI.cc)) SEAM.soundOn(UI.heard, UI.cc); }, { once:true }));
   ['pointerdown', 'keydown', 'touchstart'].forEach(t => addEventListener(t, soundWake, { once:true }));
   TAP.fn = reach;
   const q = new URLSearchParams(location.search);
@@ -114,6 +119,10 @@ function loop(now){
 }
 function frame(now){
   const dt = Math.min(0.05, (now - lastT)/1000); lastT = now; const t = (now - T0)/1000;
+  const SEAM = window.EG_SEAM;
+  if (SEAM && SEAM.step) SEAM.step(now, dt);
+  const pkOpen = !!(SEAM && SEAM.pocket && SEAM.pocket.isOpen()); if (document.body.classList.contains('pk-open') !== pkOpen) document.body.classList.toggle('pk-open', pkOpen);
+  if (pkOpen) { tickUI(now); return; }   /* the pocket is open: it's what's drawn (as in Seam); the world waits */
   if (!window.__frozen) { stepPlayer(dt); adapt(dt); }
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
   camera.rotation.set(P.pitch, P.yaw, 0);

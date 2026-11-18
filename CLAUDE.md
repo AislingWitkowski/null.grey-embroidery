@@ -53,4 +53,10 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
 - `src/inks.js` the ramps and the ink tables · `src/look.js` the ink pass (glow, film roll-off, grain, ramps, dither)
 - `src/paint.js` textures painted in code · `src/kit.js` reusable pieces (boxes in world metres, lathe, wires, grass/corn with wind)
 - `src/player.js` walking, running, crouching, jumping, collisions; keys, mouse, touch, gamepad
-- `src/station.js` F03 Missing Mile's station · `src/looks.js` the three looks · `src/main.js` the page
+- `src/station.js` F03 Missing Mile's station · `src/looks.js` the looks · `src/main.js` the page
+- `src/ui.js` captions and the sound/CC switches (Seam's look) · `src/sound.js` 3D sound and its slots (`sounds/`)
+- `src/f03-says.js` the click lines, copied word for word by `tools/copy-says.py` from the Seam version
+- **The bridge to Seam (`seam/`, `tools/seam-shared.py`):** Seam's own pocket (and its pictures, food and drink, sounds)
+  runs in the page as it is, copied at build time from `../null.grey-furusatostation` (the masters stay there; the last
+  copy is `src/seam-shared.txt`). `seam/files.txt` lists the files; `seam/shim-pre.js` / `shim-post.js` stand in for
+  Seam's engine and hand Embroidery `EG_SEAM` (pocket open/close/put, step, sound). Same saved pocket as every Seam page.
