@@ -45,10 +45,10 @@ export function makeLook(renderer){
   const blur = mk(BLUR, { uS:{ value:null }, uD:{ value:new THREE.Vector2() } });
   const inkP = mk(INK, { uS:{ value:null }, uG:{ value:null }, uLUT:{ value:lut }, uRF:{ value:rf }, uGlow:{ value:1 }, uSeed:{ value:0 }, uGrain:{ value:8 }, uExp:{ value:1 }, uCon:{ value:1 }, uVig:{ value:0.3 }, uGrime:{ value:0 }, uDith:{ value:1 }, uInk:{ value:1 }, uWarm:{ value:new THREE.Vector3(1, 1, 1) }, uOff:{ value:new THREE.Vector2() }, uFull:{ value:new THREE.Vector2(1, 1) } });
   const rts = {};
-  function rtFor(w, h){
-    const k = w + 'x' + h; if (rts[k]) return rts[k];
+  function rtFor(w, h, aa){
+    const k = w + 'x' + h + 'x' + (aa || 0); if (rts[k]) return rts[k];
     const o = { HDR:THREE.HalfFloatType };
-    const scene = new THREE.WebGLRenderTarget(w, h, { type:o.HDR, depthBuffer:true, samples:0 });
+    const scene = new THREE.WebGLRenderTarget(w, h, { type:o.HDR, depthBuffer:true, samples:aa || 0 });   /* (aa: edges smoothed, for the looks that ask) */
     scene.texture.minFilter = scene.texture.magFilter = THREE.NearestFilter;
     const dv = h > 400 ? 3 : 1, hw = Math.max(1, w >> dv), hh = Math.max(1, h >> dv);   /* the glow is worked out small and spread smooth (at the higher resolution, an eighth: no gaps between samples) */
     const a = new THREE.WebGLRenderTarget(hw, hh, { type:o.HDR, depthBuffer:false }), b = new THREE.WebGLRenderTarget(hw, hh, { type:o.HDR, depthBuffer:false });
@@ -57,7 +57,7 @@ export function makeLook(renderer){
   let seed = 0, grainT = 0;
   /* draw one view: the world through `camera`, with look settings V, into the canvas's strip [x0, x0 + w) */
   function draw(scene, camera, V, x0, w, h, fullW){
-    const R = rtFor(w, h);
+    const R = rtFor(w, h, V.aa);
     renderer.setRenderTarget(R.scene); renderer.setViewport(0, 0, w, h); renderer.render(scene, camera);
     bright.m.uniforms.uS.value = R.scene.texture; bright.m.uniforms.uPx.value.set(R.w/R.hw/w*0.5, R.h/R.hh/h*0.5); bright.m.uniforms.uThr.value = V.glowThr;
     renderer.setRenderTarget(R.a); renderer.render(bright.s, cam);

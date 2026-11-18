@@ -40,4 +40,9 @@ function mixLooks(parts){
 const MM = mixLooks([[BASE[0], 0.90], [BASE[1], 0.05], [BASE[2], 0.05]]);   /* (then "maybe like 3% more of same things": 5% grit, 5% glow, a little darker again) */
 MM.label = 'missing mile'; MM.say = 'missing mile · soft, with a little grit and glow, a little darker';
 MM.contrast *= 1.07; MM.exposure *= 0.97; MM.res = Math.round(MM.res);
-export const LOOKS = [MM, BASE[0], BASE[1], BASE[2]];
+/* (Nov 17, night) Aisling: "i think we can punp up the graphic one biut more? towards ps3.. but keeping slight 1% crunch?"
+   the same look, smoother: each drawn pixel is one screen pixel (was up to 1.25), edges smoothed (4× multisampling),
+   much less of the ink snap and dither (the crunch), a little less grain. the colours, fog and light stay the same.
+   for her to compare with the one she has (key 6). */
+const MMP = Object.assign({}, MM, { label:'missing mile · more ps3', say:'missing mile · more ps3: smoother, the same colours, only a trace of crunch', ink:0.12, dither:0.55, grain:MM.grain*0.75, px:1.0, aa:4 });
+export const LOOKS = [MM, BASE[0], BASE[1], BASE[2], MMP];

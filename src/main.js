@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { makeLook } from './look.js';
 import { buildStation, applyLook, tickLights, L, CLICK, tag, halo } from './station.js';
 import { buildTrain, trainTick, trainArrive, TR, onTrainFloor } from './train.js';
+import { MOUTH_D, TUN } from './station2.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
 import { UI, initUI, say, tickUI, ccSay, VOID_LINE } from './ui.js';
 import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
@@ -103,8 +104,8 @@ let CW = 0, CH = 0;
 function resize(){
   const V = split ? LOOKS[2] : LOOKS[cur];
   const asp = innerWidth/innerHeight, dpr = Math.min(2, devicePixelRatio || 1);
-  let h = Math.round(Math.min(V.res, innerHeight*dpr/1.25)*resK), w = Math.round(h*asp);   /* each drawn pixel is 1.25 screen pixels at most: only a hint of crunch (Nov 17, later: "turn it up close to ps3") */
-  if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/1.25)*resK); h = Math.round(w/asp); }
+  let h = Math.round(Math.min(V.res, innerHeight*dpr/(V.px || 1.25))*resK), w = Math.round(h*asp);   /* each drawn pixel is 1.25 screen pixels at most: only a hint of crunch (Nov 17, later: "turn it up close to ps3") */
+  if (asp < 1) { w = Math.round(Math.min(V.res*0.6, innerWidth*dpr/(V.px || 1.25))*resK); h = Math.round(w/asp); }
   CW = split ? Math.floor(w/3)*3 : w; CH = h;
   renderer.setSize(CW, CH, false);
   camera.aspect = CW/CH; camera.fov = asp < 1 ? Math.min(100, 2*Math.atan(Math.tan(33*Math.PI/180)/asp)*180/Math.PI*0.8) : 66;
@@ -135,6 +136,7 @@ function frame(now){
   if (!window.__frozen) { trainTick(now, dt); stepPlayer(dt); adapt(dt); }
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
   camera.rotation.set(P.pitch, P.yaw, 0);
+  MOUTH_D.value = Math.hypot(camera.position.x - TUN.x, camera.position.y - 1, camera.position.z - TUN.zc);
   K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = gust(t);
   tickLights(t); look.tick(dt); tickUI(now);
   try { soundTick(camera, P, t, K.wind.uGust.value, L.bulbs.slice(0, 5).map(b => b.intensity/(b.userData.base || 1)), surfaceAt(P.x, P.z, P.y)); } catch (e) {}
@@ -177,13 +179,14 @@ function reach(cx, cy){
 }
 function hud(){
   const b = document.getElementById('looks'); b.innerHTML = '';
-  LOOKS.forEach((V, i) => { const e = document.createElement('button'); e.textContent = (i + 1) + ' · ' + V.label; if (!split && i === cur) e.className = 'on'; e.onclick = ev => { ev.stopPropagation(); setLook(i); say(V.say, 4200); }; b.appendChild(e); });
+  LOOKS.forEach((V, i) => { const e = document.createElement('button'); e.textContent = (i < 4 ? i + 1 : i + 2) + ' · ' + V.label; if (!split && i === cur) e.className = 'on'; e.onclick = ev => { ev.stopPropagation(); setLook(i); say(V.say, 4200); }; b.appendChild(e); });
   const s = document.createElement('button'); s.textContent = '5 · side by side'; if (split) s.className = 'on'; s.onclick = ev => { ev.stopPropagation(); setSplit(); say('soft · grit · glow, left to right', 3500); }; b.appendChild(s);
   document.getElementById('names').style.display = split ? 'flex' : 'none';
 }
 addEventListener('keydown', e => {
   if (['Digit1', 'Digit2', 'Digit3', 'Digit4'].includes(e.code)) { const i = +e.code.slice(5) - 1; setLook(i); say(LOOKS[i].say, 4200); }
   if (e.code === 'Digit5') { setSplit(); say('soft · grit · glow, left to right', 3500); }
+  if (e.code === 'Digit6' && LOOKS[4]) { setLook(4); say(LOOKS[4].say, 4200); }
   if (e.code === 'KeyF') document.getElementById('fps').classList.toggle('on');
 });
 if (matchMedia('(pointer: coarse)').matches) {

@@ -251,3 +251,25 @@ Aisling: *"for safety, can you make it impossible to get on train tracks everywh
   - If you somehow stand on the track side, stepping back toward the platform is always allowed, so you can't get stuck.
 - The line is **`VOID_LINE`** (`src/ui.js`), for any other dangerous place, when she says so.
 - **Checked:** `t/walk.js` (off the edge: stopped at z 3.12); `t/train.js` (getting on, both ways, no errors); clicks unchanged.
+
+### Nov 17, 2026 (night, later still) — a "more PS3" look to compare; the tunnel readable; a report to look into
+Aisling: *"i think we can punp up the graphic one biut more? towards ps3.. but keeping slight 1% crunch?"*, then *"some buttons are broke, the seed is missing, cant see anything ont he buildin cant see the newspaper on the um smile soda machjine and the tunnel is a little dakr cant see what its made of?"* and *"the buttons like moving about and pocket and the buttons and such are like kind of broken going in and out are broke, and like when you look down in view it moves a little odd"*.
+- **A second look to compare, key 6: "missing mile · more ps3".** The same colours, fog and light.
+  - Each drawn pixel is one screen pixel (it was up to 1.25).
+  - Edges are smoothed (4× multisampling).
+  - Much less of the ink snap and dither (ink 0.12, dither 0.55), so only a trace of crunch.
+  - A little less grain.
+  - **Pending, Aisling:** which one to keep as Missing Mile's look.
+- **The tunnel, easier to see:**
+  - the face, ring, piers and coping are paler concrete and hold a little of the dusk;
+  - the inside stays dark however deep it goes. Fog used to make the far inside pale; now the inside takes its fog from how far away the mouth is;
+  - a dark floor covers the ground and track past the first metre;
+  - the earth roof no longer shows inside.
+- **Her report, checked:**
+  - In Chrome (the test browser) everything worked: walking, drag to look, the pocket icon and the P key, Escape, every close-up (the machine, the clippings, the newspaper, the poster), every click (`t/real-input.js`, `t/closeups.js`, `t/clicks.js`).
+  - **So it's probably her browser** (Safari? WebKit can't be fetched here to test). **Asked:** which browser and machine, and which buttons.
+  - **The seed (the pit on the bench):** once picked up, it stays gone for good (Seam's rule, `nullgrey.f3.pit`), so if she picked it up in an earlier test it's in her pocket. To confirm.
+- **Pending:**
+  - the browser question;
+  - the look pick;
+  - "looking down moves a little odd" (what she sees).

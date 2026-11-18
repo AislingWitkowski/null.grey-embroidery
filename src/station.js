@@ -65,7 +65,8 @@ function contact(x, z){
   let o = 0.45*sm(0.9, 0, Math.min(dB, dS)) + 0.3*sm(0.6, 0, dP);
   for (const zp of [10.58, 24.58]) { const d = Math.hypot(x - 31.98, z - zp); o += 0.35*sm(0.5, 0.05, d); }
   o += 0.35*sm(0.5, 0.05, Math.hypot(x - 32.38, z - 20.45));   /* (the cut pole never touches the ground; the newer one beside it does) */
-  return Math.min(0.6, o);
+  if (Math.abs(z - TUN.zc) < TUN.hw + 0.6) o = Math.max(o, 0.95*sm(TUN.x - 0.6, TUN.x + 1.6, x));   /* (the track bed going into the tunnel: into the dark) */
+  return Math.min(o > 0.6 ? o : 0.6, o);
 }
 function paintGround(){
   return paint(2048, 1911, TW, TD, (u, v) => {

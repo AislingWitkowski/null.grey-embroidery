@@ -28,6 +28,8 @@ const col = (r, t) => { if (r === 'hblood') return HBLOOD[Math.max(0, Math.min(1
 const pick = A => A[(Math.random()*A.length) | 0];
 
 /* where the corn must not stand (round the windmill's feet, the trees out in it); and the bank over the tunnel */
+/* how far the tunnel's mouth is from you (the frame sets it): its dark takes the fog by this */
+export const MOUTH_D = { value:10 };
 export const TUN = { x:40.0, zc:2.0, hw:1.4, spring:2.15, bank:3.4 };   /* (the arch fits the train, real size: 1.8 m wide, its roof 2.45 m over the platform) */
 export function cornClear(x, z){
   if (Math.abs(x - 47.6) < 0.9 && Math.abs(z - 20.4) < 0.9) return true;
@@ -261,23 +263,28 @@ export function buildMore(C){
     const hole = new THREE.Path(); hole.moveTo(-hw, yb - 0.1); hole.lineTo(-hw, ys); hole.absarc(0, ys, hw, Math.PI, 0, true); hole.lineTo(hw, yb - 0.1); hole.lineTo(-hw, yb - 0.1); sh.holes.push(hole);
     const fg = new THREE.ExtrudeGeometry(sh, { depth:0.5, bevelEnabled:false, curveSegments:20 });
     const uv = fg.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i)/4, uv.getY(i));
-    const faceM = mat(T.face, { color:0xa8a49a });
+    const faceM = mat(T.face, { color:0xd8d2c8, emit:0x2a2622, emitMap:T.face, emitK:1 });   /* (Nov 17, night: Aisling, "the tunnel is a little dakr cant see what its made of": paler concrete, holding a little of the dusk) */
     const lining = mat(T.face, { color:0x2a2622 });   /* (the arch's own inside: the light doesn't get in) */
     const face = new THREE.Mesh(fg, [faceM, lining]); face.rotation.y = Math.PI/2; face.position.set(X, 0, zc);   /* (turned: its depth runs east, X to X + 0.5) */ face.castShadow = face.receiveShadow = true; scene.add(face);
     tag(face, () => pick(F3_WALL.tunnel));
     /* the ring of stones round the arch, a little proud of the face */
     const rs = new THREE.Shape(); rs.absarc(0, ys, hw + 0.16, Math.PI, 0, true); rs.lineTo(hw, ys); rs.absarc(0, ys, hw, 0, Math.PI, false); rs.lineTo(-hw - 0.16, ys);
     const rg = new THREE.ExtrudeGeometry(rs, { depth:0.06, bevelEnabled:false, curveSegments:20 }); const ruv = rg.attributes.uv; for (let i = 0; i < ruv.count; i++) ruv.setXY(i, ruv.getX(i)/4, ruv.getY(i));
-    const ring = new THREE.Mesh(rg, mat(T.face, { color:0x8e8a84 })); ring.rotation.y = Math.PI/2; ring.position.set(X - 0.06, 0, zc); ring.castShadow = true; scene.add(ring);
-    for (const s of [-1, 1]) box(X - 0.06, X, yb - 0.1, ys, zc + s*(hw + 0.08) - 0.08, zc + s*(hw + 0.08) + 0.08, mat(T.face, { color:0x8e8a84 }), { solid:false });
-    box(X - 0.06, X + 0.56, top - 0.12, top, z0 - 0.05, z1 + 0.05, mat(T.face, { color:0xb8b2a8 }), { solid:false });   /* its coping */
+    const ring = new THREE.Mesh(rg, mat(T.face, { color:0xb8b2a8, emit:0x221e1a, emitMap:T.face, emitK:1 })); ring.rotation.y = Math.PI/2; ring.position.set(X - 0.06, 0, zc); ring.castShadow = true; scene.add(ring);
+    for (const s of [-1, 1]) box(X - 0.06, X, yb - 0.1, ys, zc + s*(hw + 0.08) - 0.08, zc + s*(hw + 0.08) + 0.08, mat(T.face, { color:0xb8b2a8, emit:0x221e1a, emitMap:T.face, emitK:1 }), { solid:false });
+    box(X - 0.06, X + 0.56, top - 0.12, top, z0 - 0.05, z1 + 0.05, mat(T.face, { color:0xe0dad0, emit:0x2a2622, emitMap:T.face, emitK:1 }), { solid:false });   /* its coping */
     box(X + 0.3, X + 1.2, top - 0.02, top + 0.1, z0, z1, earth, { solid:false, cast:false });   /* a lip of earth */
     K.solids.push({ x0:X - 0.05, x1:X + 0.55, y0:-1, y1:4, z0:z0, z1:z1 });   /* (you can't walk in) */
     /* inside: only dark, and the roof of earth over it (the corn stands on it) */
-    const dark = new THREE.MeshBasicMaterial({ color:0x070504, side:THREE.BackSide });
-    dark.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', '#ifdef USE_FOG\n float fogF = smoothstep(fogNear, fogFar, vFogDepth)*0.85; gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF*fogF);\n#endif'); };   /* (the dark inside takes the fog late: the mouth stays dark until you're far off) */
+    /* inside: only dark. fog brightens what's far off, so inside the tunnel the fog is taken from how far the MOUTH is,
+       not each point: deeper in, it only gets darker (and from far off, the mouth fades into the fog with the face) */
+    const darkM = side => { const m = new THREE.MeshBasicMaterial({ color:0x070504, side });
+      m.onBeforeCompile = sh => { sh.uniforms.uMouthD = MOUTH_D; sh.fragmentShader = 'uniform float uMouthD;\n' + sh.fragmentShader.replace('#include <fog_fragment>', '#ifdef USE_FOG\n gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, smoothstep(fogNear, fogFar, uMouthD));\n#endif'); };
+      m.customProgramCacheKey = () => 'tun-dark' + side; return m; };
+    const dark = darkM(THREE.BackSide);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(16, hw*2 + 0.6), darkM(THREE.FrontSide)); floor.rotation.x = -Math.PI/2; floor.scale.x = 14.6/16; floor.position.set(X + 1.4 + 7.3, -0.36, zc); scene.add(floor);   /* (over the ground and the track going in, past the first metre or so) */
     const inside = new THREE.Mesh(new THREE.BoxGeometry(16, ys + hw - yb + 0.3, hw*2 + 0.6), dark); inside.position.set(X + 0.1 + 8, (ys + hw + yb)/2, zc); scene.add(inside);
-    box(X + 0.5, 57, ys + hw + 0.12, top + 0.02, zc - hw - 0.85, zc + hw + 0.85, earth, { solid:false, cast:false });
+    box(X + 0.5, 57, ys + hw + 0.2, top + 0.02, zc - hw - 0.85, zc + hw + 0.85, earth, { solid:false, cast:false });
   })();
 
   /* ================= on the shed: FEED · SEED · BAIT, and the tobacco window (Seam's own pictures) ================= */
