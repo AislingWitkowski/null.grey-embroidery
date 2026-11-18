@@ -106,7 +106,7 @@ export function cyl(r0, r1, h, m, x, y, z, seg = 8, o = {}){
 export function seamTex(name, ppu, fallback){
   const S = window.EG_SEAM, P = S && S.pic && S.pic(name);
   const cv = document.createElement('canvas'); cv.width = 4; cv.height = 4; const t = new THREE.CanvasTexture(cv);
-  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 4;
+  t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.anisotropy = 8;   /* (Nov 18: sharper at angles) */
   if (fallback) { const g = cv.getContext('2d'); g.fillStyle = fallback; g.fillRect(0, 0, 4, 4); }
   if (!P) return t;
   const k = Math.min(1, 2048/Math.max(P.w*(ppu || 400), P.h*(ppu || 400))), W = Math.max(8, Math.round(P.w*(ppu || 400)*k)), H = Math.max(8, Math.round(P.h*(ppu || 400)*k)), img = new Image();   /* (ppu: pixels per metre of the thing) */

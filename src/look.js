@@ -13,7 +13,7 @@ const BRIGHT = 'precision highp float;\nin vec2 vT; uniform sampler2D uS; unifor
 const BLUR = 'precision highp float;\nin vec2 vT; uniform sampler2D uS; uniform vec2 uD; out vec4 o;\n' +
   'void main(){ vec3 c = texture(uS, vT).rgb*0.2270; c += (texture(uS, vT + uD).rgb + texture(uS, vT - uD).rgb)*0.1946; c += (texture(uS, vT + uD*2.0).rgb + texture(uS, vT - uD*2.0).rgb)*0.1216; c += (texture(uS, vT + uD*3.0).rgb + texture(uS, vT - uD*3.0).rgb)*0.0541; c += (texture(uS, vT + uD*4.0).rgb + texture(uS, vT - uD*4.0).rgb)*0.0162; o = vec4(c, 1.0); }';
 const INK = 'precision highp float; precision highp int;\nin vec2 vT; uniform sampler2D uS; uniform sampler2D uG; uniform sampler2D uLUT; uniform sampler2D uRF; uniform sampler2D uM;\n' +
-  'uniform float uMist; uniform float uGlow, uSeed, uGrain, uExp, uCon, uVig, uGrime, uDith, uInk; uniform vec3 uWarm; uniform vec2 uOff; uniform vec2 uFull; out vec4 o;\n' +
+  'uniform float uMist; uniform float uFine, uFineT; uniform float uGlow, uSeed, uGrain, uExp, uCon, uVig, uGrime, uDith, uInk; uniform vec3 uWarm; uniform vec2 uOff; uniform vec2 uFull; out vec4 o;\n' +
   'const float B[16] = float[16](0.0,8.0,2.0,10.0,12.0,4.0,14.0,6.0,3.0,11.0,1.0,9.0,15.0,7.0,13.0,5.0);\n' +
   'float hs(vec2 p){ vec3 q = fract(vec3(p.xyx)*0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y)*q.z); }\n' +
   'float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0 - 2.0*f); return mix(mix(hs(i), hs(i + vec2(1,0)), f.x), mix(hs(i + vec2(0,1)), hs(i + vec2(1,1)), f.x), f.y); }\n' +
@@ -35,7 +35,10 @@ const INK = 'precision highp float; precision highp int;\nin vec2 vT; uniform sa
   '  vec4 snap = texelFetch(uRF, ivec2(int(k), int(ri)), 0);\n' +
   '  float p0 = clamp(floor(pos), 0.0, n - 1.0), p1 = min(p0 + 1.0, n - 1.0);\n' +
   '  vec4 smoothInk = mix(texelFetch(uRF, ivec2(int(p0), int(ri)), 0), texelFetch(uRF, ivec2(int(p1), int(ri)), 0), clamp(pos - p0, 0.0, 1.0));\n' +
-  '  o = mix(smoothInk, snap, uInk);\n' +   /* (Nov 18: the ink amount was never applied; now each look's ink is how much of the snapped, dithered ink shows over the smooth ink grade) */
+  '  o = mix(smoothInk, snap, uInk);\n' +
+  '  { vec2 fp = floor(gl_FragCoord.xy); float ft = floor(uFineT), fk = smoothstep(0.0, 1.0, fract(uFineT));\n' +
+  '    float f0 = hs(fp*1.013 + ft*41.7), f1 = hs(fp*1.013 + (ft + 1.0)*41.7), f = mix(f0, f1, fk) - 0.5;\n' +
+  '    float l = dot(o.rgb, vec3(0.3, 0.59, 0.11)); o.rgb += f*(uFine/255.0)*(0.55 + 0.9*l)*vec3(1.0, 0.96, 0.9); }\n' +   /* (Nov 18, Aisling: "such tiny static pixel on top ... real but unreal") a static of single screen pixels, barely there, each its own: it drifts from one pattern to the next over four seconds, never flickers */   /* (Nov 18: the ink amount was never applied; now each look's ink is how much of the snapped, dithered ink shows over the smooth ink grade) */
 
   '}';
 
@@ -49,7 +52,7 @@ export function makeLook(renderer){
   const mk = (fs, u) => { const m = new THREE.RawShaderMaterial({ vertexShader:VS, fragmentShader:fs, uniforms:u, glslVersion:THREE.GLSL3, depthTest:false, depthWrite:false }); const s = new THREE.Scene(); const me = new THREE.Mesh(quadG, m); me.frustumCulled = false; s.add(me); return { s, m }; };
   const bright = mk(BRIGHT, { uS:{ value:null }, uPx:{ value:new THREE.Vector2() }, uThr:{ value:0.6 } });
   const blur = mk(BLUR, { uS:{ value:null }, uD:{ value:new THREE.Vector2() } });
-  const inkP = mk(INK, { uS:{ value:null }, uG:{ value:null }, uLUT:{ value:lut }, uRF:{ value:rf }, uGlow:{ value:1 }, uSeed:{ value:0 }, uGrain:{ value:8 }, uExp:{ value:1 }, uCon:{ value:1 }, uVig:{ value:0.3 }, uGrime:{ value:0 }, uDith:{ value:1 }, uInk:{ value:1 }, uM:{ value:null }, uMist:{ value:0 }, uWarm:{ value:new THREE.Vector3(1, 1, 1) }, uOff:{ value:new THREE.Vector2() }, uFull:{ value:new THREE.Vector2(1, 1) } });
+  const inkP = mk(INK, { uS:{ value:null }, uG:{ value:null }, uLUT:{ value:lut }, uRF:{ value:rf }, uGlow:{ value:1 }, uSeed:{ value:0 }, uGrain:{ value:8 }, uExp:{ value:1 }, uCon:{ value:1 }, uVig:{ value:0.3 }, uGrime:{ value:0 }, uDith:{ value:1 }, uInk:{ value:1 }, uM:{ value:null }, uMist:{ value:0 }, uFine:{ value:0 }, uFineT:{ value:0 }, uWarm:{ value:new THREE.Vector3(1, 1, 1) }, uOff:{ value:new THREE.Vector2() }, uFull:{ value:new THREE.Vector2(1, 1) } });
   const rts = {};
   function rtFor(w, h, aa){
     const k = w + 'x' + h + 'x' + (aa || 0); if (rts[k]) return rts[k];
@@ -61,7 +64,7 @@ export function makeLook(renderer){
     for (const t of [a, b, m]) t.texture.minFilter = t.texture.magFilter = THREE.LinearFilter;
     return (rts[k] = { scene, a, b, m, w, h, hw, hh });
   }
-  let seed = 0, grainT = 0;
+  let seed = 0, grainT = 0, fineT = 0;
   /* draw one view: the world through `camera`, with look settings V, into the canvas's strip [x0, x0 + w) */
   function draw(scene, camera, V, x0, w, h, fullW){
     const R = rtFor(w, h, V.aa);
@@ -78,7 +81,7 @@ export function makeLook(renderer){
       for (let pass = 0; pass < 3; pass++) { const d = sp*(1.5 + pass);
         blur.m.uniforms.uS.value = R.m.texture; blur.m.uniforms.uD.value.set(d/R.hw, 0); renderer.setRenderTarget(R.b); renderer.render(blur.s, cam);
         blur.m.uniforms.uS.value = R.b.texture; blur.m.uniforms.uD.value.set(0, d/R.hh); renderer.setRenderTarget(R.m); renderer.render(blur.s, cam); } }
-    const U = inkP.m.uniforms; U.uM.value = R.m.texture; U.uMist.value = V.mist || 0;
+    const U = inkP.m.uniforms; U.uM.value = R.m.texture; U.uMist.value = V.mist || 0; U.uFine.value = V.fine || 0; U.uFineT.value = fineT;
     U.uS.value = R.scene.texture; U.uG.value = R.a.texture; U.uGlow.value = V.glow; U.uSeed.value = seed; U.uGrain.value = V.grain;
     U.uExp.value = V.exposure; U.uCon.value = V.contrast; U.uVig.value = V.vignette; U.uGrime.value = V.grime || 0; U.uDith.value = V.dither == null ? 1 : V.dither; U.uInk.value = V.ink == null ? 1 : V.ink;
     U.uWarm.value.set(V.warm[0], V.warm[1], V.warm[2]); U.uOff.value.set(x0, 0); U.uFull.value.set(fullW, h);
@@ -86,6 +89,6 @@ export function makeLook(renderer){
     renderer.render(inkP.s, cam); renderer.setScissorTest(false);
   }
   /* the grain moves at 12 frames a second, the speed of old film (and calmer than every frame) */
-  function tick(dt){ grainT += dt; if (grainT > 1/12) { grainT = 0; seed = (seed + 37.13) % 997; } }
+  function tick(dt){ fineT += dt/4; grainT += dt; if (grainT > 1/12) { grainT = 0; seed = (seed + 37.13) % 997; } }
   return { draw, tick };
 }

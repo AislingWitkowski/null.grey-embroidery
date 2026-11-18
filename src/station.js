@@ -268,7 +268,7 @@ export function buildStation(scene){
     tag(lathe([[0.012, 0.13], [0.04, 0.12], [0.08, 0.08], [0.15, 0.01], [0.16, 0]], shadeM, x, 2.66, 5.9, 12, { cast:false }), 'bulb', i === 1 || i === 3 ? 1 : 0);
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.038, 8, 6), M.glass); b.position.set(x, 2.69, 5.9); scene.add(b); tag(b, 'bulb', i === 1 || i === 3 ? 1 : 0); SRC.bulbs.push({ x, y:2.66, z:5.9 });
     box(x - 0.006, x + 0.006, 2.79, C, 5.894, 5.906, M.wire, { solid:false, cast:false });
-    const s = spot(x, 2.66, 5.9, 1.25, 9, 0xffb878, 1024); s.userData = { x, weak:i === 1 || i === 3, ph:i*1.7 };
+    const s = spot(x, 2.66, 5.9, 1.25, 9, 0xffb878, 2048); s.userData = { x, weak:i === 1 || i === 3, ph:i*1.7 };
     L.bulbs.push(s); halo(x, 2.67, 5.9, 0.42, 0xffc890);
   });
   /* the hanging sign, lit from inside, on two rods */
@@ -302,7 +302,7 @@ export function buildStation(scene){
   vmF.userData.m = [1.02, 1.86]; vmS.userData.m = [0.75, 1.86]; vmC.userData.m = [0.75, 1.86];   /* (one picture per face, not tiled) */
   tag(box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vmC, vmS, vs, vs, vmS, vmF]), 'vending'); SRC.vend = { x:27.43, y:1.2, z:7.15 };
   L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.9); scene.add(L.vend);
-  const ab = spot(26.6, 2.42, 7.4, 1.2, 6, 0xffb070, 512); ab.userData = { weak:false, ph:4 }; L.bulbs.push(ab);
+  const ab = spot(26.6, 2.42, 7.4, 1.2, 6, 0xffb070, 1024); ab.userData = { weak:false, ph:4 }; L.bulbs.push(ab);
   lathe([[0.01, 0.1], [0.06, 0.07], [0.12, 0.0]], shadeM, 26.6, 2.42, 7.4, 10, { cast:false });
   const ab2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), M.glass); ab2.position.set(26.6, 2.44, 7.4); scene.add(ab2); halo(26.6, 2.44, 7.4, 0.45, 0xffc890);
 
@@ -406,7 +406,7 @@ export function buildStation(scene){
      sliver to a flake and back (a slow turn, never a flash); a little warmer near the lamps. they live in a box that
      travels with you, so some are always close and the far ones fade into the fog ---- */
   (function flakes(){
-    const MR = rnd(99), N = 520, pos = new Float32Array(N*3), ph = new Float32Array(N*3);
+    const MR = rnd(99), N = 580,   /* (Nov 18: "a teeny bit more ash like 1%") */ pos = new Float32Array(N*3), ph = new Float32Array(N*3);
     for (let i = 0; i < N; i++) { pos[i*3] = MR()*24; pos[i*3 + 1] = MR()*8; pos[i*3 + 2] = MR()*24; ph[i*3] = MR()*100; ph[i*3 + 1] = 0.007 + MR()*MR()*0.022; ph[i*3 + 2] = MR(); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aPh', new THREE.BufferAttribute(ph, 3));
     const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, fog:false,

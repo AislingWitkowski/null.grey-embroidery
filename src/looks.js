@@ -40,10 +40,16 @@ function mixLooks(parts){
 const MM = mixLooks([[BASE[0], 0.90], [BASE[1], 0.05], [BASE[2], 0.05]]);   /* (then "maybe like 3% more of same things": 5% grit, 5% glow, a little darker again) */
 MM.label = 'missing mile'; MM.say = 'missing mile · soft, with a little grit and glow, a little darker';
 MM.contrast *= 1.07; MM.exposure *= 0.97; MM.res = Math.round(MM.res);
-MM.mist = 0.2;   /* (Nov 18, Aisling: "a little more dreamy...but not blurry") a mist filter, as on a camera lens */
+MM.mist = 0.2;
+MM.fine = 9; MM.ink = MM.ink + 0.06;
+/* (Nov 18, Aisling: "up the quality of everytihng? go even more into the real … like its a real place … go even moodier on
+   lighting slightly and fod") sharper and smoother: one drawn pixel per screen pixel, edges smoothed (2×), up to 1200 rows;
+   a little darker, a little more contrast and glow so the lamps' pools stand out more; the fog a little closer and thicker.
+   (Not Silent Hill: Aisling, "we DO NOT want to copy silent hill". Our own fog colour, inks and ash.) */
+MM.px = 1.0; MM.aa = 2; MM.res = 1200; MM.exposure *= 0.94; MM.contrast *= 1.03; MM.glow *= 1.12; MM.fogNear *= 0.88; MM.fogFar *= 0.9;   /* (Nov 18, Aisling: "add a little crunch back in … such tiny static pixel on top that its weird … hyper real, but barely noticeable … real but unreal") the fine static, and a touch more of the station's ink */   /* (Nov 18, Aisling: "a little more dreamy...but not blurry") a mist filter, as on a camera lens */
 /* (Nov 17, night) Aisling: "i think we can punp up the graphic one biut more? towards ps3.. but keeping slight 1% crunch?"
    the same look, smoother: each drawn pixel is one screen pixel (was up to 1.25), edges smoothed (4× multisampling),
    much less of the ink snap and dither (the crunch), a little less grain. the colours, fog and light stay the same.
    for her to compare with the one she has (key 6). */
-const MMP = Object.assign({}, MM, { label:'missing mile · more ps3', say:'missing mile · more ps3: smoother, the same colours, only a trace of crunch', ink:0.12, dither:0.55, grain:MM.grain*0.75, px:1.0, aa:4 });
+const MMP = Object.assign({}, MM, { label:'missing mile · more ps3', say:'missing mile · more ps3: smoother, the same colours, only a trace of crunch', ink:0.12, dither:0.55, grain:MM.grain*0.75, px:1.0, aa:4, fine:9 });
 export const LOOKS = [MM, BASE[0], BASE[1], BASE[2], MMP];

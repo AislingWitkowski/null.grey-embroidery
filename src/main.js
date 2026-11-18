@@ -52,7 +52,7 @@ function addDetail(sh){
 const cv = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas:cv, antialias:false, alpha:false, powerPreference:'high-performance', preserveDrawingBuffer:true });
 renderer.setPixelRatio(1);
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap; renderer.shadowMap.autoUpdate = false;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;   /* (Nov 18: softer, more real shadow edges; drawn once, so no cost per frame) */ renderer.shadowMap.autoUpdate = false;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(66, 16/9, 0.05, 80);
 THREE.Texture.DEFAULT_ANISOTROPY = 4;

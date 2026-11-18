@@ -51,7 +51,7 @@ export function tex(cv, opts = {}){
   t.magFilter = THREE.LinearFilter;   /* (Nov 17, later) smooth up close now; the crunch comes from the 2-pixel drawing */
   t.minFilter = THREE.LinearMipmapLinearFilter;   /* and no shimmer far away */
   t.wrapS = t.wrapT = opts.clampEdge ? THREE.ClampToEdgeWrapping : THREE.RepeatWrapping;
-  t.anisotropy = 4;
+  t.anisotropy = 8;   /* (Nov 18: sharper at angles) */
   return t;
 }
 
