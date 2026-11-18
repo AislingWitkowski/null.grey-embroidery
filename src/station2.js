@@ -151,41 +151,54 @@ export function buildMore(C){
     const Rt = rnd(seed*97 + 5), Lf = LEAF[ph], gy = groundAt(tx, tz) - 0.05, H1 = 1.3 + Rt()*0.5, tl = (Rt() - 0.5)*0.16, tlx = tl*Math.cos(seed), tlz = tl*Math.sin(seed);
     const geos = [], sites = [], m = leafMat(leafAtlas(Lf));
     const trunkTop = [tx + tlx*H1, gy + H1, tz + tlz*H1];
-    geos.push(rodGeo([tx, gy - 0.1, tz], [tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], 0.36, 0.27, 12), rodGeo([tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], trunkTop, 0.27, 0.2, 12));   /* (Nov 18: thicker, like the trees on her block) */
+    
     const site = (A, B, f) => sites.push([A[0] + (B[0] - A[0])*f, A[1] + (B[1] - A[1])*f, A[2] + (B[2] - A[2])*f]);
     /* (Nov 18, Aisling: the limbs looked "sliced choppy … the disconnection is a little odd"; keep them "a little janky
        weird tim burton distortion..spikey") each limb is now one curving, tapering branch in a few segments: it starts
        inside its parent (so it grows out of it), bends as it goes (outward first, then up or sagging), each joint rounded
        with a knuckle, and the tip closed to a spike. */
     const knuckle = (P, r) => { const g = new THREE.SphereGeometry(r, 8, 6); g.translate(P[0], P[1], P[2]); geos.push(g); };
-    const limb = (A, len, lx, lz, r0, r1) => {
+    /* (Nov 18, later; Aisling: "trees a little too bumpy still") each limb is one smooth tube now: its path bends as before,
+       smoothed into a curve, and its thickness tapers all along it to a spike. no balls at the joints. */
+    const tube = (pts, r0, r1, rs, capStart) => { const n = pts.length, pos = [], idx = [], uv = []; let N = null, run = 0;
+      const V = pts.map(p => new THREE.Vector3(...p)), acc = [0]; for (let i = 1; i < n; i++) acc.push(acc[i - 1] + V[i].distanceTo(V[i - 1])); const tot = acc[n - 1] || 1;
+      for (let i = 0; i < n; i++) { const T = (i < n - 1 ? V[i + 1].clone().sub(V[i]) : V[i].clone().sub(V[i - 1])).normalize();
+        if (!N) { N = new THREE.Vector3(0, 1, 0).cross(T); if (N.lengthSq() < 1e-6) N.set(1, 0, 0); N.normalize(); } else { N.sub(T.clone().multiplyScalar(N.dot(T))).normalize(); }
+        const Bn = new THREE.Vector3().crossVectors(T, N), f = acc[i]/tot, r = (r0 + (r1 - r0)*Math.pow(f, 0.85))*(i === 0 && capStart ? 0.35 : 1);
+        if (i) run += V[i].distanceTo(V[i - 1]); for (let k = 0; k < rs; k++) { const a = k/rs*Math.PI*2, w = 1 + 0.06*Math.sin(a*3 + i*0.7); uv.push(k/rs, run*1.2); pos.push(V[i].x + (N.x*Math.cos(a) + Bn.x*Math.sin(a))*r*w, V[i].y + (N.y*Math.cos(a) + Bn.y*Math.sin(a))*r*w, V[i].z + (N.z*Math.cos(a) + Bn.z*Math.sin(a))*r*w); } }
+      for (let i = 0; i < n - 1; i++) for (let k = 0; k < rs; k++) { const a = i*rs + k, b = i*rs + (k + 1)%rs, c = a + rs, d = b + rs; idx.push(a, c, b, b, c, d); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return g; };
+    let lastDir = null;
+    const limb = (A, len, lx, lz, r0, r1, into) => {
       const seg = len > 0.7 ? 4 : 3, bend = (Rt() - 0.35)*0.9, twist = (Rt() - 0.5)*0.8;
-      let P = [A[0] - lx*0.06, A[1] - 0.06, A[2] - lz*0.06], dx = lx, dy = 1, dz = lz;   /* (start a little inside the parent) */
-      for (let k = 0; k < seg; k++) { const f0 = k/seg, f1 = (k + 1)/seg, ra = r0 + (r1 - r0)*f0, rb = r0 + (r1 - r0)*f1;
-        const L = len/seg*(k === 0 ? 1.06 : 1); const n = Math.hypot(dx, dy, dz);
-        const Q = [P[0] + dx*L, P[1] + dy*L, P[2] + dz*L];
-        geos.push(rodGeo(P, Q, ra, rb, ra > 0.05 ? 9 : 6)); if (k > 0) knuckle(P, ra*0.99);
-        P = Q; const c = Math.cos(twist*0.4), sn = Math.sin(twist*0.4); [dx, dz] = [dx*c - dz*sn, dx*sn + dz*c];
-        dy += bend*0.35 - 0.06*k; dx *= 1.04; dz *= 1.04; }
-      knuckle(P, r1*1.02);
-      { const tip = [P[0] + dx*0.06, P[1] + dy*0.06, P[2] + dz*0.06]; const g = rodGeo(P, tip, r1, 0.001, 5); geos.push(g); }   /* the spike at its end */
+      let P = [A[0], A[1], A[2]], dx = lx, dy = 1, dz = lz; const bd = into || [lx, 1, lz], bl = Math.hypot(...bd) || 1, back = r0*3; const pts = [[P[0] - bd[0]/bl*back, P[1] - bd[1]/bl*back, P[2] - bd[2]/bl*back], P];   /* (starting buried in its parent, along the parent's own line, so it can't poke out the far side) */
+      for (let k = 0; k < seg; k++) { const L = len/seg*(k === 0 ? 1.08 : 1); P = [P[0] + dx*L, P[1] + dy*L, P[2] + dz*L]; pts.push(P);
+        const c = Math.cos(twist*0.4), sn = Math.sin(twist*0.4); [dx, dz] = [dx*c - dz*sn, dx*sn + dz*c]; dy += bend*0.35 - 0.06*k; dx *= 1.04; dz *= 1.04; }
+      const tip = [P[0] + dx*0.08, P[1] + dy*0.08, P[2] + dz*0.08]; pts.push(tip);
+      /* smooth the bends into a curve */
+      const cv = new THREE.CatmullRomCurve3(pts.map(p => new THREE.Vector3(...p))), sm = cv.getPoints(seg*5).map(v => [v.x, v.y, v.z]);
+      if (r1 >= 0.015) { const a = sm[sm.length - 2], b = sm[sm.length - 1], d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], dl = Math.hypot(...d) || 1, k = Math.max(r1*6, 0.3)/dl;   /* (the limb carries on past its fork as a leader, thinning to a spike) */ sm.push([b[0] + d[0]*k, b[1] + d[1]*k, b[2] + d[2]*k]); }   /* (a short taper closes the end, so no flat cut shows where the next limb bends away) */
+      geos.push(tube(sm, r0, 0.002, r0 > 0.05 ? 10 : 6, true)); { const a = pts[pts.length - 2], b = pts[pts.length - 1]; lastDir = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]; }   /* (only the twigs end in a point; a limb ends as thick as what grows from it) */
       return P; };
-    knuckle(trunkTop, 0.205); knuckle([tx + tlx*0.2, gy + 0.18, tz + tlz*0.2], 0.27);   /* (the fork: round, so the limbs grow out of the trunk) */
+    { const tp = []; for (let i = 0; i <= 10; i++) { const f = i/10; tp.push([tx + tlx*H1*f + Math.sin(f*3 + seed)*0.03, gy - 0.1 + (H1 + 0.32)*f, tz + tlz*H1*f + Math.cos(f*2.6 + seed)*0.03]); }
+      const tg = tube(tp, 0.34, 0.17, 14), q = tg.attributes.position;   /* (Nov 18: thicker, like the trees on her block; one smooth trunk, flaring at its foot, running up into the fork) */
+      for (let i = 0; i < q.count; i++) { const y = q.getY(i) - gy, fl = 1 + 0.45*Math.max(0, 1 - y/0.5)**2; q.setX(i, tx + (q.getX(i) - tx)*fl); q.setZ(i, tz + (q.getZ(i) - tz)*fl); }
+      tg.computeVertexNormals(); geos.push(tg); }
     const nL = ph >= 2 ? 4 : 3, a0 = Rt()*6.283;
     for (let i = 0; i < nL; i++) { const ang = a0 + i*6.283/nL + (Rt() - 0.5)*0.6, mm = 0.45 + Rt()*0.3, P0 = [trunkTop[0], trunkTop[1] - 0.15, trunkTop[2]];
-      const E = limb(P0, 1.3 + Rt()*0.7, Math.cos(ang)*mm, Math.sin(ang)*mm, 0.15, 0.065);
+      const E = limb(P0, 1.3 + Rt()*0.7, Math.cos(ang)*mm, Math.sin(ang)*mm, 0.15, 0.065, [0, 1, 0]); const dE = lastDir;
       if (ph < 2) { site(P0, E, 0.55); site(P0, E, 0.85); }
       const nb = ph >= 2 ? 3 : 2;
       for (let j = 0; j < nb; j++) { const a2 = ang + (j - (nb - 1)/2)*0.9 + (Rt() - 0.5)*0.4, m2 = 0.55 + Rt()*0.45, P1 = [E[0], E[1] - 0.05, E[2]];
-        const E2 = limb(P1, 0.8 + Rt()*0.5, Math.cos(a2)*m2, Math.sin(a2)*m2, 0.055, 0.02);
+        const E2 = limb(P1, 0.8 + Rt()*0.5, Math.cos(a2)*m2, Math.sin(a2)*m2, 0.038, 0.016, dE); const dE2 = lastDir;   /* (thinner than the limb it grows from, so the joint is a fork, not an elbow) */
         for (const f of [0.3, 0.55, 0.8, 0.98]) site(P1, E2, f);
         for (let w = 0; w < (ph === 2 ? 1 : 2); w++) { const a3 = a2 + (w - 0.5)*1.1 + (Rt() - 0.5)*0.5, m3 = 0.7 + Rt()*0.6, P2 = [E2[0], E2[1] - 0.03, E2[2]];
-          const E3 = limb(P2, 0.45 + Rt()*0.4, Math.cos(a3)*m3, Math.sin(a3)*m3, 0.024, 0.008);   /* its twigs */
+          const E3 = limb(P2, 0.45 + Rt()*0.4, Math.cos(a3)*m3, Math.sin(a3)*m3, 0.013, 0.005, dE2);   /* its twigs */
           for (const f of [0.35, 0.65, 0.9, 1.02]) site(P2, E3, f); }   /* (Nov 18: on the twig, not past its end: Aisling, "they float a little too much") */
       } }
     ROOTS.add(tx, tz, 0.3, 'earth');   /* (its foot in the earth: roots.js) */
     for (let k = 0; k < 5; k++) { const a = Rt()*6.283 + k*1.25, L = 0.75 + Rt()*0.4;   /* (Nov 18) its roots flaring into the ground, so it doesn't stand like a pipe */
-      geos.push(rodGeo([tx + Math.cos(a)*0.16, gy + 0.38, tz + Math.sin(a)*0.16], [tx + Math.cos(a)*L, gy - 0.02, tz + Math.sin(a)*L], 0.13, 0.03, 6)); }
+      geos.push(rodGeo([tx + Math.cos(a)*0.12, gy + 0.14, tz + Math.sin(a)*0.12], [tx + Math.cos(a)*L, gy - 0.04, tz + Math.sin(a)*L], 0.11, 0.03, 8)); }
     tag(meshOf(geos, bark), say); K.solids.push({ x0:tx - 0.28, x1:tx + 0.28, y0:gy - 1, y1:gy + H1, z0:tz - 0.28, z1:tz + 0.28 });
     for (let k = sites.length - 1; k > 0; k--) { const s = Math.floor(Rt()*(k + 1)); [sites[k], sites[s]] = [sites[s], sites[k]]; }   /* (which sites get leaves: at random, so no two trees match) */
     /* (Nov 18) the leaves grow on twiglets: from each site a few thin shoots, and the leaves hang off them in fans,
@@ -197,9 +210,9 @@ export function buildMore(C){
       lv.push([N[0], N[1], N[2], sz, 0, 0, 0, Math.floor(Rt()*16), qq]); };
     const nUse = Math.min(sites.length, Math.round(sites.length*Math.min(1, Lf.n/86)));
     for (let t = 0; t < nUse; t++) { const S = sites[t], nt = ph >= 3 ? 1 : (ph === 2 ? 3 : 5 + Math.floor(Rt()*3));
-      for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = 0.25 + Rt()*0.4, d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
+      for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = (ph >= 2 ? 0.4 : 0.25) + Rt()*0.4, d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
         const B = [S[0] + d.x*len, S[1] + d.y*len, S[2] + d.z*len]; tw.push(rodGeo(S, B, 0.009, 0.004, 3));
-        for (const f of [0.35, 0.68, 1.0]) { const N = [S[0] + d.x*len*f, S[1] + d.y*len*f, S[2] + d.z*len*f], nl = f === 1 ? 4 + Math.floor(Rt()*3) : 2 + Math.floor(Rt()*2);
+        for (const f of (ph >= 2 ? [1.0] : [0.35, 0.68, 1.0])) {   /* (the barer trees keep their last leaves out at the twig ends, not clinging at the joints) */ const N = [S[0] + d.x*len*f, S[1] + d.y*len*f, S[2] + d.z*len*f], nl = f === 1 ? 4 + Math.floor(Rt()*3) : 2 + Math.floor(Rt()*2);
           for (let l = 0; l < nl; l++) { const sp = (l - (nl - 1)/2)*0.75 + (Rt() - 0.5)*0.4, ca = Math.cos(sp), sa = Math.sin(sp);
             const dir = new THREE.Vector3(d.x*ca - d.z*sa, d.y*0.4 - 0.25 + Rt()*0.35, d.x*sa + d.z*ca);   /* fanning out from the shoot, drooping a little */
             if (Rt() < (ph >= 2 ? 0.25 : 0.06)) continue;   /* (gaps: some already fallen) */

@@ -66,7 +66,7 @@ function stripe(){   /* the line's gold, a seigaiha wave pressed into it */
 }
 function crest(){   /* the line's crest: ふ in a ring */
   return tex(cv(128, 128, (c, w, h) => { c.clearRect(0, 0, w, h); c.strokeStyle = '#c9a067'; c.lineWidth = 9; c.beginPath(); c.arc(64, 64, 52, 0, Math.PI*2); c.stroke();
-    c.fillStyle = '#c9a067'; c.font = '900 70px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('ふ', 64, 68); }), { clampEdge:true });
+    c.fillStyle = '#c9a067'; c.font = '800 70px "Hiragino Sans","Noto Sans CJK JP",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('ふ', 64, 68); }), { clampEdge:true });
 }
 function cream(){ return tex(cv(64, 64, (c, w, h) => { c.fillStyle = '#e6ddc9'; c.fillRect(0, 0, w, h); for (let i = 0; i < 40; i++) { c.fillStyle = 'rgba(120,100,80,0.04)'; c.fillRect(Math.random()*w, Math.random()*h, 6, 6); } })); }
 function slats(){   /* the old japanese trains' wooden slatted floor */
@@ -93,12 +93,20 @@ function cabPic(tail){   /* the flat cab face: the black mask round the windscre
     c.fillStyle = '#231c18'; c.fillRect(34, y(1.86), w - 68, y(1.12) - y(1.86));   /* the windscreen, dark */
     c.fillStyle = 'rgba(255,240,220,0.06)'; c.beginPath(); c.moveTo(40, y(1.84)); c.lineTo(120, y(1.84)); c.lineTo(60, y(1.14)); c.lineTo(40, y(1.14)); c.fill();
     c.fillStyle = '#0c0a09'; c.fillRect(60, y(2.08), w - 120, y(1.9) - y(2.08));   /* the destination board, amber dots */
-    c.fillStyle = '#e8a43c'; c.font = '900 24px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('各停 ・ ？？', w/2, y(1.99) - 2);
-    c.font = '700 11px sans-serif'; c.fillText('LOCAL ??', w/2, y(1.92));
+    /* (Nov 18, Aisling: "is there like a better font we could use on the train signs? … still want readable") the destination
+       board as a real local train of the time had it: amber LED dots, the words written in the rail sign font (Hiragino Sans,
+       the face of JR's signs; Avenir/Helvetica for the English), then sampled into dots, big enough to read */
+    { const bx = 60, by = y(2.08), bw = w - 120, bh = y(1.9) - y(2.08); TR.ledBox = [bx/w, by/h, bw/w, bh/h]; const m = document.createElement('canvas'); m.width = bw; m.height = bh; const g = m.getContext('2d');
+      g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '800 ' + Math.round(bh*0.52) + 'px "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans CJK JP","Yu Gothic",sans-serif'; g.fillText('各停  ？？', bw/2, bh*0.38);
+      g.font = '700 ' + Math.round(bh*0.26) + 'px "Avenir Next","Helvetica Neue",Arial,sans-serif'; g.fillText('LOCAL  ??', bw/2, bh*0.8);
+      const d = g.getImageData(0, 0, bw, bh).data, P = 3;
+      for (let yy = 1; yy < bh; yy += P) for (let xx = 1; xx < bw; xx += P) { const on = d[(yy*bw + xx)*4 + 3] > 90;
+        c.fillStyle = on ? '#ffb24a' : '#2a1a0e'; c.beginPath(); c.arc(bx + xx, by + yy, on ? 1.25 : 0.8, 0, Math.PI*2); c.fill(); } }
     c.fillStyle = '#a63a26'; c.fillRect(0, y(0.86), w, y(0.7) - y(0.86));   /* the vermilion lacquer band, like an old shrine car */
     c.fillStyle = '#c9a067'; c.fillRect(0, y(0.92), w, y(0.87) - y(0.92));
     c.fillStyle = '#2a211c'; c.beginPath(); c.arc(w/2, y(0.48), 21, 0, Math.PI*2); c.fill();   /* (Nov 18, the text check: a dark roundel under the crest, so the gold ふ reads on the cab face) */
-    c.strokeStyle = '#c9a067'; c.lineWidth = 5; c.beginPath(); c.arc(w/2, y(0.48), 22, 0, Math.PI*2); c.stroke(); c.fillStyle = '#c9a067'; c.font = '900 26px sans-serif'; c.fillText('ふ', w/2, y(0.48) + 2);
+    c.strokeStyle = '#c9a067'; c.lineWidth = 5; c.beginPath(); c.arc(w/2, y(0.48), 22, 0, Math.PI*2); c.stroke(); c.fillStyle = '#c9a067'; c.font = '800 26px "Hiragino Sans","Noto Sans CJK JP",sans-serif'; c.fillText('ふ', w/2, y(0.48) + 2);
     c.fillStyle = '#1a1512'; c.fillRect(30, y(0.56), 80, y(0.36) - y(0.56)); c.fillRect(w - 110, y(0.56), 80, y(0.36) - y(0.56));   /* the lamps' band */
     c.fillStyle = 'rgba(40,30,24,0.4)'; c.fillRect(0, y(0.05), w, h - y(0.05)); }), { clampEdge:true });
 }
@@ -220,9 +228,18 @@ export function buildTrain(scene, tag, haloFn){
       if (cab) {   /* the lamps: white at whichever end leads, red at the end that follows (it runs both ways) */
         const lgs = []; for (const z of [-0.62, 0.62]) { const lg = new THREE.CircleGeometry(0.075, 14); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + 0.006 : -0.006, 0.46, z); lgs.push(lg.toNonIndexed()); }
         const lm = new THREE.Mesh(mergeGeometries(lgs), MT.head); G.add(lm); (TR.lamps = TR.lamps || {})[e ? 'east' : 'west'] = lm; TR.MT = MT;
+        /* (Nov 18) the destination board lit from inside: its LED dots glow on their own panel */
+        if (!TR.ledMat) { const c2 = document.createElement('canvas'); c2.width = 720; c2.height = 130; const g = c2.getContext('2d'), m = document.createElement('canvas'); m.width = 240; m.height = 44; const q = m.getContext('2d');
+          q.fillStyle = '#fff'; q.textAlign = 'center'; q.textBaseline = 'middle'; q.font = '800 24px "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans CJK JP","Yu Gothic",sans-serif'; q.fillText('各停  ？？', 120, 16);
+          q.font = '700 12px "Avenir Next","Helvetica Neue",Arial,sans-serif'; q.fillText('LOCAL  ??', 120, 36);
+          const d = q.getImageData(0, 0, 240, 44).data; g.fillStyle = '#0c0806'; g.fillRect(0, 0, 720, 130);
+          for (let yy = 0; yy < 44; yy++) for (let xx = 0; xx < 240; xx++) { const on = d[(yy*240 + xx)*4 + 3] > 90; g.fillStyle = on ? '#ffb24a' : '#24160c'; g.beginPath(); g.arc(xx*3 + 1.5, yy*3 + 1.5, on ? 1.35 : 0.7, 0, Math.PI*2); g.fill(); }
+          const t = new THREE.CanvasTexture(c2); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+          TR.ledMat = new THREE.MeshStandardMaterial({ map:t, emissiveMap:t, emissive:new THREE.Color(1, 0.8, 0.55), emissiveIntensity:1.6, roughness:0.5 }); }
+        { const lg = new THREE.PlaneGeometry(1.16, 0.2); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + 0.004 : -0.004, 1.985, 0); const lm2 = new THREE.Mesh(lg, TR.ledMat); G.add(lm2); }
         /* (Nov 18) the cab face sculpted: a brow over the windscreen, a heavy bumper beam and anticlimber low down, the coupler and its hoses, the lamp hoods */
         const fx = e ? L : 0, out = e ? 1 : -1, X = (d0, d1) => [Math.min(fx + out*d0, fx + out*d1), Math.max(fx + out*d0, fx + out*d1)];
-        { const [a, b] = X(0, 0.09); add('steel', bgeo(a, b, 1.98, 2.06, -HW + 0.04, HW - 0.04)); }   /* the brow */
+        { const [a, b] = X(0, 0.09); add('steel', bgeo(a, b, 2.1, 2.16, -HW + 0.04, HW - 0.04)); }   /* the brow (above the destination board) */
         { const [a, b] = X(0, 0.14); add('under', bgeo(a, b, 0.12, 0.3, -HW + 0.06, HW - 0.06)); }   /* the bumper beam */
         { const [a, b] = X(0.14, 0.18); for (let i = 0; i < 4; i++) add('under', bgeo(a, b, 0.14 + i*0.04, 0.16 + i*0.04, -0.5, 0.5)); }   /* its ribs */
         { const [a, b] = X(0, 0.32); add('wheel', bgeo(a, b, 0.0, 0.1, -0.09, 0.09)); const [c0, c1] = X(0.28, 0.4); add('wheel', bgeo(c0, c1, -0.04, 0.14, -0.13, 0.13)); }   /* the coupler */

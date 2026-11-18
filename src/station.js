@@ -298,9 +298,54 @@ export function buildStation(scene){
   box(24.95, 29.05, 2.62, 2.7, 7, 9.7, [M.tinG, M.tinG, M.tin, M.tinG, M.tinG, M.tinG], { solid:false });
   box(25, 29, 2.48, 2.62, 6.98, 7.02, M.tin, { solid:false });
   for (const x of [25.05, 28.9]) box(x, x + 0.05, 0, 2.62, 7.0, 7.05, M.iron);
-  { const pf = new THREE.MeshStandardMaterial({ map:seamTex('f3phone', 300, '#5a504a'), roughness:0.5 }), ps = new THREE.MeshStandardMaterial({ map:seamTex('f3phoneSide', 200, '#8b8a87'), roughness:0.6 }), pk = mat(null, { color:0x5a504a });
-    pf.userData.m = [0.6, 2.05]; ps.userData.m = [0.65, 2.05];
-    tag(box(8.32, 8.97, -0.3, 1.75, 9.55, 10.15, [pk, pf, pk, pk, ps, ps]), 'phone'); }   /* the payphone, at the station's west end (Seam's second pass moved it there: it hid the tobacco window) */   /* the payphone (its close-up: milestone 2) */
+  /* (Nov 18, Aisling: "we need a pay phone … i dont think its a booth this time … i think its more the little box … we didnt
+     have boxes in ohio … obviously not blue so maybe like silver is better choice? i like havign graffitit but not a crzy
+     amount") an Ohio payphone of the 90s: a brushed steel shroud on the station's west gable, open at the front, its lit
+     header (電話 · PHONE, warm, no blue), inside the black phone with its chrome face (keypad, coin slot, coin return, the
+     card of instructions), the handset on its hook, the armoured cord hanging; a little marker and a sticker on the steel */
+  { const cvT = (w, h, f) => { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+    const RR = rnd(712), brushed = (g, w, h, base) => { g.fillStyle = base; g.fillRect(0, 0, w, h); for (let i = 0; i < 900; i++) { const y = RR()*h, l = 0.08 + RR()*0.25; g.fillStyle = RR() < 0.5 ? 'rgba(255,250,240,0.06)' : 'rgba(30,25,22,0.07)'; g.fillRect(RR()*w, y, w*l, 1); }
+      for (let i = 0; i < 26; i++) { g.strokeStyle = 'rgba(40,34,30,0.18)'; g.lineWidth = 0.8; g.beginPath(); const x = RR()*w, y = RR()*h; g.moveTo(x, y); g.lineTo(x + (RR() - 0.5)*40, y + (RR() - 0.5)*14); g.stroke(); }   /* scratches */
+      const gr = g.createLinearGradient(0, h*0.7, 0, h); gr.addColorStop(0, 'rgba(60,40,30,0)'); gr.addColorStop(1, 'rgba(60,40,30,0.35)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); };   /* grime gathering low */
+    const side = cvT(256, 512, (g, w, h) => { brushed(g, w, h, '#a19d96');
+      g.strokeStyle = 'rgba(26,20,18,0.8)'; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(60, 300); g.bezierCurveTo(90, 250, 120, 330, 150, 280); g.lineTo(170, 320); g.moveTo(130, 270); g.lineTo(140, 340); g.stroke();   /* a marker tag, not anyone's in particular */
+      g.strokeStyle = 'rgba(232,226,214,0.7)'; g.lineWidth = 2; g.beginPath(); g.moveTo(80, 380); g.lineTo(110, 372); g.lineTo(104, 392); g.lineTo(140, 384); g.stroke();   /* a white scratch-tag */
+      g.save(); g.translate(170, 150); g.rotate(-0.12); g.fillStyle = '#e8dcc0'; g.fillRect(-28, -14, 56, 28); g.fillStyle = '#9a2a22'; g.font = '700 11px sans-serif'; g.textAlign = 'center'; g.fillText('迷子', 0, -1); g.font = '700 7px sans-serif'; g.fillText('lost cat', 0, 9); g.restore(); });   /* a sticker */
+    const head = cvT(512, 96, (g, w, h) => { g.fillStyle = '#efe6d2'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a2a1c'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '800 40px "Hiragino Sans","Noto Sans CJK JP","Yu Gothic",sans-serif'; g.fillText('電話', w*0.3, h/2 + 2); g.font = '800 44px "Helvetica Neue",Arial,sans-serif'; g.fillText('PHONE', w*0.66, h/2 + 3);
+      g.fillStyle = 'rgba(90,60,40,0.25)'; g.fillRect(0, h - 10, w, 10); g.fillRect(380, 0, 40, h); });   /* (warm cream, never blue; a dead patch where the tube behind it is going) */
+    const face = cvT(256, 512, (g, w, h) => { g.fillStyle = '#1a1716'; g.fillRect(0, 0, w, h);
+      const cg = g.createLinearGradient(0, 0, w, 0); cg.addColorStop(0, '#8e8b86'); cg.addColorStop(0.5, '#d6d3cc'); cg.addColorStop(1, '#8e8b86'); g.fillStyle = cg; g.fillRect(18, 16, w - 36, 300);   /* the chrome face */
+      g.fillStyle = '#9a3826'; g.fillRect(28, 26, 64, 34); g.fillStyle = '#efe6d2'; g.font = '800 9px Arial,sans-serif'; g.textAlign = 'left'; g.fillText('1 LIFT', 32, 38); g.fillText('2 LISTEN', 32, 48); g.fillText('3 COINS', 32, 58);   /* the steps, in an old orange-red */
+      g.fillStyle = '#2a2624'; g.fillRect(150, 28, 8, 30); g.fillStyle = '#bab6ae'; g.fillRect(186, 32, 40, 14);   /* the coin slot, the coin release */
+      g.fillStyle = '#efe6d2'; g.fillRect(28, 72, w - 56, 52); g.fillStyle = '#3a2a1c'; g.font = '700 10px Arial,sans-serif'; g.fillText('LOCAL CALLS  25¢', 36, 88); g.fillText('市内通話  ·  dial 0 for operator', 36, 104); g.fillStyle = '#9a3826'; g.fillRect(28, 112, w - 56, 4);   /* the instruction card */
+      for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) { const x = 80 + c*36, y = 150 + r*36; const kg = g.createRadialGradient(x + 12, y + 10, 2, x + 14, y + 14, 18); kg.addColorStop(0, '#f2f0ea'); kg.addColorStop(1, '#8e8b86'); g.fillStyle = kg; g.fillRect(x, y, 28, 28);
+        g.fillStyle = '#2a2624'; g.font = '800 14px Arial,sans-serif'; g.textAlign = 'center'; g.fillText('123456789*0#'[r*3 + c], x + 14, y + 19); }   /* the keypad */
+      g.textAlign = 'left'; g.fillStyle = '#101010'; g.fillRect(18, 330, w - 36, 160); const bg = g.createLinearGradient(0, 350, 0, 470); bg.addColorStop(0, '#cfccc6'); bg.addColorStop(1, '#7e7b76'); g.fillStyle = bg; g.fillRect(40, 350, 130, 110);   /* the coin box, its chrome door */
+      g.fillStyle = '#2a2624'; g.fillRect(100, 400, 10, 14); g.fillStyle = '#bab6ae'; g.fillRect(188, 360, 34, 90); g.fillStyle = '#1a1716'; g.fillRect(194, 380, 22, 50);   /* the lock, the coin return */
+      g.fillStyle = 'rgba(232,226,214,0.75)'; g.font = 'italic 700 13px "Marker Felt","Comic Sans MS",cursive'; g.fillText('hello?', 60, 440); });   /* (someone wrote on the coin box: a little graffiti) */
+    const st = new THREE.MeshStandardMaterial({ map:side, roughness:0.42, metalness:0.22, emissive:new THREE.Color(0.04, 0.037, 0.034) }), stIn = new THREE.MeshStandardMaterial({ color:0xb4b0a8, roughness:0.45, metalness:0.2, emissive:new THREE.Color(0.05, 0.045, 0.04) });   /* (brushed steel in shade: little to reflect out here, so it carries its own pale grey) */
+    const hd = new THREE.MeshStandardMaterial({ map:head, emissiveMap:head, emissive:new THREE.Color(1, 0.88, 0.7), emissiveIntensity:0.55, roughness:0.4 });
+    const fc = new THREE.MeshStandardMaterial({ map:face, roughness:0.35, metalness:0.45 }), blk = mat(null, { color:0x141211, rough:0.35 });
+    const W = 9.0, B0 = 0.62, B1 = 1.62, D = 0.34, Z0 = 9.52, Z1 = 10.18;   /* on the west gable (x 9), facing west */
+    st.userData.m = [D, B1 - B0]; side.wrapS = side.wrapT = THREE.ClampToEdgeWrapping;
+    tag(box(W - 0.02, W, B0, B1, Z0, Z1, stIn, { solid:false }), 'phone');   /* its back plate */
+    for (const z of [Z0, Z1 - 0.012]) tag(box(W - D, W, B0, B1, z, z + 0.012, [stIn, stIn, stIn, stIn, st, st], { solid:false }), 'phone');   /* the sides, brushed steel */
+    for (const z of [Z0, Z1]) { const rg = new THREE.CylinderGeometry(0.012, 0.012, B1 - B0, 8); const r = new THREE.Mesh(rg, stIn); r.position.set(W - D, (B0 + B1)/2, z + (z === Z0 ? 0.006 : -0.006)); scene.add(r); }   /* their rolled front edges */
+    tag(box(W - D, W, B1 - 0.15, B1, Z0, Z1, [hd, stIn, stIn, stIn, stIn, stIn], { solid:false }), 'phone');   /* the canopy with its lit header */
+    { const hp = new THREE.Mesh(new THREE.PlaneGeometry(Z1 - Z0 - 0.04, 0.12), hd); hp.rotation.y = -Math.PI/2; hp.position.set(W - D - 0.002, B1 - 0.075, (Z0 + Z1)/2); scene.add(hp); tag(hp, 'phone'); }
+    tag(box(W - D, W, B0, B0 + 0.03, Z0, Z1, stIn, { solid:false }), 'phone');   /* the shelf at the bottom */
+    { const pm = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.66, 0.24), [blk, fc, blk, blk, blk, blk]); pm.position.set(W - 0.075, B0 + 0.4, (Z0 + Z1)/2); pm.castShadow = pm.receiveShadow = true; scene.add(pm); tag(pm, 'phone'); }   /* the phone */
+    /* the handset on its hook, and its armoured cord hanging in a loop */
+    const hz = (Z0 + Z1)/2 - 0.07, hx = W - 0.15;
+    { const hs = new THREE.Group(); const bar = new THREE.Mesh(new THREE.CapsuleGeometry(0.022, 0.15, 4, 8), blk); hs.add(bar);
+      for (const e of [-1, 1]) { const cup = new THREE.Mesh(new THREE.SphereGeometry(0.038, 12, 8), blk); cup.scale.set(0.8, 0.75, 1); cup.position.y = e*0.1; cup.position.x = -0.012; hs.add(cup); }
+      hs.position.set(hx, B0 + 0.42, hz); hs.traverse(o => { if (o.isMesh) { o.castShadow = true; tag(o, 'phone'); } }); scene.add(hs);
+      box(hx - 0.02, hx + 0.05, B0 + 0.52, B0 + 0.56, hz - 0.04, hz + 0.04, new THREE.MeshStandardMaterial({ color:0xd0ccc4, roughness:0.2, metalness:0.9 }), { solid:false }); }   /* the hook */
+    { const pts = [[hx, B0 + 0.3, hz], [hx - 0.05, B0 + 0.12, hz - 0.02], [hx - 0.06, B0 - 0.08, hz + 0.03], [hx - 0.02, B0 + 0.05, hz + 0.08], [W - 0.06, B0 + 0.22, hz + 0.1]].map(p => new THREE.Vector3(...p));
+      const cord = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.008, 6), new THREE.MeshStandardMaterial({ color:0xb8b4ac, roughness:0.3, metalness:0.85 })); cord.castShadow = true; scene.add(cord); tag(cord, 'phone'); }
+    K.solids.push({ x0:W - D, x1:W, y0:-1, y1:B1, z0:Z0, z1:Z1 });
+    ROOTS.add(W - 0.2, (Z0 + Z1)/2, 0.01, 'earth'); }
   { const bb = new THREE.MeshStandardMaterial({ map:seamTex('f3binBody', 400, '#7e7b74'), roughness:0.95 }), hf = new THREE.MeshStandardMaterial({ map:seamTex('f3binHoodF', 500, '#86837c'), roughness:0.95 }), hs = new THREE.MeshStandardMaterial({ map:seamTex('f3binHoodS', 300, '#86837c'), roughness:0.95 }), bt = mat(T.conc, { color:0x9a968e });
     bb.userData.m = [0.36, 0.6]; hf.userData.m = [0.42, 0.26]; hs.userData.m = [0.4, 0.26];   /* (Seam's bin with eyes: grey concrete gone grimy, a hood over it, its two eyes) */
     tag(box(26.02, 26.38, 0, 0.6, 7.59, 7.95, [bb, bb, bt, bt, bb, bb]), 'bin'); tag(box(25.99, 26.41, 0.6, 0.86, 7.55, 7.95, [hs, hs, bt, bt, hs, hf], { solid:false }), 'bin'); }
@@ -318,6 +363,25 @@ export function buildStation(scene){
   const vcT = seamTex('f3vmClip2', 420, '#8e2a22'), vmC = new THREE.MeshStandardMaterial({ map:vcT, roughness:0.75 });   /* (Nov 17: the east side carries the clippings, as in Seam) */
   vmF.userData.m = [1.02, 1.86]; vmS.userData.m = [0.75, 1.86]; vmC.userData.m = [0.75, 1.86];   /* (one picture per face, not tiled) */
   tag(box(26.92, 27.94, 0, 1.86, 7.2, 7.95, [vmC, vmS, vs, vs, vmS, vmF]), 'vending'); SRC.vend = { x:27.43, y:1.2, z:7.15 };
+  /* (Nov 18, Aisling: "i feel we could do better on machine", with an old red machine for reference) the machine in the round over
+     its picture: chrome trim round its edges, a bezel and glass over the lit header and over the label strip, real buttons,
+     the coin insert and the change slot standing out, the chrome delivery bay with its flap, a kick plate. the picture
+     (Seam's, with every word on it) stays under all of it. px, py are the picture's own coordinates (85 × 182). */
+  { const X = px => 27.94 - px/85*1.02, Y = py => 1.86*(1 - py/182), Z0 = 7.2;
+    const chrome = new THREE.MeshStandardMaterial({ color:0xc9c6c0, roughness:0.22, metalness:0.85, envMapIntensity:1 }), dark = mat(null, { color:0x1c1614 });
+    const glass = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.05, metalness:0.1, transparent:true, opacity:0.12, depthWrite:false });
+    const P = (px0, py0, px1, py1, d, m, z = 0) => box(X(px1), X(px0), Y(py1), Y(py0), Z0 - d - z, Z0 - z, m, { solid:false });
+    const frame = (px0, py0, px1, py1, w, d) => { P(px0 - w, py0 - w, px1 + w, py0, d, chrome); P(px0 - w, py1, px1 + w, py1 + w, d, chrome); P(px0 - w, py0, px0, py1, d, chrome); P(px1, py0, px1 + w, py1, d, chrome); };
+    frame(0.5, 0.5, 84.5, 181.5, 0.9, 0.025);   /* the chrome edging all round */
+    frame(5, 6, 80, 33, 1.1, 0.035); P(5, 6, 80, 33, 0.002, glass, 0.03);   /* the header's bezel and its glass */
+    frame(5, 34, 80, 63, 1.0, 0.05); P(5, 34, 80, 63, 0.002, glass, 0.045);   /* the label strip */
+    for (let k = 0; k < 4; k++) { const cx = 17 + k*17; P(cx - 3.5, 66, cx + 3.5, 72, 0.022, chrome); }   /* the buttons */
+    P(72, 82, 77, 90, 0.03, chrome); P(73.6, 83, 75.4, 88, 0.004, dark, 0.03);   /* the coin insert, its slot */
+    P(63.5, 83.5, 72, 87.5, 0.018, chrome);   /* the change return */
+    frame(10, 142, 75, 158, 1.2, 0.06); P(33, 145, 52, 155, 0.025, chrome);   /* the delivery bay and its flap */
+    P(0.5, 159, 84.5, 160.4, 0.03, chrome);   /* the line over the kick plate */
+    box(26.9, 27.96, 1.86, 1.9, 7.18, 7.97, chrome, { solid:false });   /* its top */
+  }
   L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.9); scene.add(L.vend);
   const ab = spot(26.6, 2.42, 7.4, 1.2, 6, 0xffb070, 1024); ab.userData = { weak:false, ph:4 }; L.bulbs.push(ab);
   lathe([[0.01, 0.1], [0.06, 0.07], [0.12, 0.0]], shadeM, 26.6, 2.42, 7.4, 10, { cast:false });
@@ -336,7 +400,13 @@ export function buildStation(scene){
   tag(box(12.0, 12.55, 0.43, 0.445, 7.6, 7.92, [mat(null, { color:0xd8ccb0 }), mat(null, { color:0xd8ccb0 }), nwM, mat(null, { color:0xd8ccb0 }), mat(null, { color:0xd8ccb0 }), mat(null, { color:0xd8ccb0 })], { solid:false, cast:false }), 'news');
   let pitGot = false; try { pitGot = localStorage.getItem('nullgrey.f3.pit') === '1'; } catch (e) {}
   if (!pitGot) { const pt = seamTex('f3pit', 1400, '#8a5a36'); const pm = new THREE.MeshStandardMaterial({ map:pt, transparent:true, alphaTest:0.4, roughness:0.8 });
-    const pit = new THREE.Mesh(new THREE.PlaneGeometry(0.07, 0.09), pm); pit.rotation.x = -Math.PI/2; pit.position.set(12.665, 0.432, 7.735); scene.add(pit); tag(pit, 'pit'); L.pit = pit; }
+    /* (Nov 18, Aisling: "the pit or seed missing again") it was a flat picture lying on the seat, seen edge-on from standing: now a
+       small stone in the round, her scan wrapped over it, grooved, sitting up on the boards with a little shadow */
+    const pg = new THREE.SphereGeometry(1, 20, 14), pp = pg.attributes.position;
+    for (let i = 0; i < pp.count; i++) { const x = pp.getX(i), y = pp.getY(i), z = pp.getZ(i), gr = 1 + 0.07*Math.sin(Math.atan2(z, x)*9 + y*6)*Math.sqrt(Math.max(0, 1 - y*y)) + 0.05*Math.sin(x*13 + z*11); pp.setXYZ(i, x*gr, y*(y > 0 ? 1.15 : 1)*gr, z*gr); }
+    pg.computeVertexNormals(); pg.scale(0.042, 0.026, 0.033);
+    pm.transparent = false; pm.alphaTest = 0; pm.color.set(0xd8c0a8);
+    const pit = new THREE.Mesh(pg, pm); pit.position.set(12.66, 0.448, 7.73); pit.rotation.set(0.15, 0.6, 0.1); pit.castShadow = true; pit.receiveShadow = true; scene.add(pit); tag(pit, 'pit'); L.pit = pit; }
   const dF = seamTex('f3dumpF', 260, '#30261d'), dS = seamTex('f3dumpS', 260, '#30261d');
   const dmF = new THREE.MeshStandardMaterial({ map:dF, roughness:0.8 }), dmS = new THREE.MeshStandardMaterial({ map:dS, roughness:0.8 }); dmF.userData.m = [1.9, 1.6]; dmS.userData.m = [1.1, 1.6];
   tag(box(14.1, 16.0, -0.3, 1.3, 13.12, 14.22, [dmS, dmS, mat(T.iron, { color:0x6a5040 }), dmS, dmF, dmS]), 'dump');
@@ -488,7 +558,7 @@ export function buildStation(scene){
   for (let x = -8; x < 48; x += 0.42) for (let z = 24.4; z < 37; z += 0.5) if (x < ROAD[0] - 0.6 || x > ROAD[1] + 1.6) cornAt(x, z);   /* (clear round the pole with the missing poster) */   /* the corn the road runs into */
   for (let x = -8; x < 0.6; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* west */
   for (let x = 41.4; x < 48; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* east */
-  clumps(corn, paintCornAtlas(), 2, 1, 0.55, 8);
+  clumps(corn, paintCornAtlas(), 2, 1, 1.1, 8);   /* (Nov 18: less stiff) */
 
   return { bounds:{ x0:1.2, x1:40.8, z0:0.95, z1:24.0 }, solids:K.solids, ground:groundAt, surfaceAt };
 }

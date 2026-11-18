@@ -82,8 +82,12 @@ function windMat(map, stiff){
         '   float push = (0.012 + uGust*0.11)*' + stiff.toFixed(3) + '*hk;\n' +
         '   vec3 wd = inverse(mat3(instanceMatrix))*vec3(0.85, 0.0, 0.5);\n' +
         '   transformed += wd*(push*(0.6 + sway));\n' +
+        /* (Nov 18, Aisling: "the corn seems stiff") always a little alive: each plant rocks on its own, slowly, and its leaves flutter a little higher up; more in a gust */
+        '   float rk = sin(uTime*0.9 + aVar*1.7 + ip.x*2.1 + ip.z*1.3)*0.6 + sin(uTime*1.7 + ip.z*2.9)*0.4;\n' +
+        '   float fl = sin(uTime*2.4 + position.x*9.0 + position.y*7.0 + ip.x*5.0)*(0.25 + uGust*0.8);\n' +
+        '   transformed += vec3(1.0, 0.0, 0.6)*(rk*0.035 + fl*0.012)*hk*' + stiff.toFixed(3) + ';\n' +
         /* (Nov 18, Aisling: "corn needs to bend sort of naturally too") as you walk through, the stalks near you are pushed aside and come back slowly behind you */
-        '   vec2 aw = ip.xz - uYou.xz; float dd = length(aw); if (dd < 1.15 && dd > 0.001) { float k = pow(1.0 - dd/1.15, 1.6)*0.55*hk*' + (1/Math.max(stiff, 0.3)).toFixed(3) + '*0.4;\n' +
+        '   vec2 aw = ip.xz - uYou.xz; float dd = length(aw); if (dd < 0.85 && dd > 0.001) { float k = pow(1.0 - dd/0.85, 1.6)*0.55*hk*' + (1/Math.max(stiff, 0.3)).toFixed(3) + '*0.4;\n' +
         '     vec3 ad = inverse(mat3(instanceMatrix))*vec3(aw.x/dd, -0.25, aw.y/dd); transformed += ad*k; } }');
   };
   return m;

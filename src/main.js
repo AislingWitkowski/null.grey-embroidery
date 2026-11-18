@@ -2,6 +2,9 @@
    EMBROIDERY · the page. one place, three looks to choose between (milestone 1), or all three side by side.
    ================================================================ */
 import * as THREE from 'three';
+/* (Nov 18, Aisling saw the console fill with "toNonIndexed(): BufferGeometry is already non-indexed" warnings) a piece that's
+   already in the form asked for is just handed back, quietly */
+{ const tni = THREE.BufferGeometry.prototype.toNonIndexed; THREE.BufferGeometry.prototype.toNonIndexed = function(){ return this.index === null ? this : tni.call(this); }; }
 import { makeLook } from './look.js';
 import { buildStation, applyLook, tickLights, L, CLICK, tag, halo } from './station.js';
 import { buildTrain, trainTick, trainArrive, TR, onTrainFloor } from './train.js';
@@ -61,11 +64,14 @@ camera.rotation.order = 'YXZ';
 function setWait(t){ const w = document.getElementById('wait'); if (w) w.querySelector('span').textContent = t; }
 
 const FIXED = new URLSearchParams(location.search).has('fixed');   /* (tests: no resolution stepping) */
-let look, world, cur = 0, split = false, resK = 1, frames = [], lastT = performance.now(), T0 = performance.now();
+let YOU = null, look, world, cur = 0, split = false, resK = 1, frames = [], lastT = performance.now(), T0 = performance.now();
 function start(){
   look = makeLook(renderer);
   DETAIL.value = paintDetail();
   world = buildStation(scene);
+  { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(0.6, 'rgba(0,0,0,0.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    const m = new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-4, fog:true });
+    YOU = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.75).rotateX(-Math.PI/2), m); YOU.renderOrder = 2; scene.add(YOU); }   /* (your shadow) */
   { const R = rootAll(scene, world.surfaceAt); window.__roots = R; }   /* (every pole, post and trunk gets its footing) */
   buildTrain(scene, tag, halo); world.rideSolids = TR.solids;   /* (the train: milestone 2's last part) */
   /* (Nov 17) nobody gets onto the track, anywhere: the platform's edge (z 3) and the gravel past its ends stop you; only
@@ -138,8 +144,13 @@ function frame(now){
   const pkOpen = !!(SEAM && ((SEAM.pocket && SEAM.pocket.isOpen()) || (SEAM.closeUpOpen && SEAM.closeUpOpen())));   /* (the pocket or a close-up: the world waits behind it) */ if (document.body.classList.contains('pk-open') !== pkOpen) document.body.classList.toggle('pk-open', pkOpen);
   if (pkOpen) { tickUI(now); return; }   /* the pocket is open: it's what's drawn (as in Seam); the world waits */
   if (!window.__frozen) { trainTick(now, dt); stepPlayer(dt); adapt(dt); }
-  camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
+  /* (Nov 18, Aisling: "it gets weird when you walk forward and look downwards..its like you float upwards") the eyes turn on a
+     neck, not on the spot: looking down tips the head forward and a little lower, as yours does; and a soft shadow under
+     you follows the ground, so you stand on it */
+  { const nk = 0.16, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), dn = Math.max(0, -P.pitch);
+    camera.position.set(P.x + fx*nk*Math.sin(dn), P.y + P.eye - nk*(1 - Math.cos(dn)) + (P.onGround ? Math.sin(t*7)*0.008*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z + fz*nk*Math.sin(dn)); }
   camera.rotation.set(P.pitch, P.yaw, 0);
+  if (YOU) { YOU.visible = !P.riding; YOU.position.set(P.x, P.y + 0.012, P.z); }
   MOUTH_D.value = Math.hypot(camera.position.x - TUN.x, camera.position.y - 1, camera.position.z - TUN.zc);
   K.wind.uYou.value.set(P.x, P.y, P.z); K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = window.__gust != null ? window.__gust : gust(t);   /* (__gust: tests only) */
   tickLights(t); look.tick(dt); tickUI(now);

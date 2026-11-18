@@ -1,7 +1,7 @@
 // close-ups and Seam's click actions inside Embroidery: stand there, face it, click, picture
 const { chromium } = require('playwright'); const path = require('path');
 const C = [['the drinks machine', [27.43, 6.2, 180, -0.05], 'vend'], ['the clippings (its side)', [28.7, 7.6, 90, -0.05], 'clip'], ['the newspaper', [12.3, 6.9, 180, -0.95], 'news'],
-           ['the missing poster', [31.0, 23.5, 218, 0.0], 'miss'], ['the dumpster', [15.0, 15.0, 0, -0.2], 'dump'], ['the dumpster again', [15.0, 15.0, 0, -0.2], 'dump2'], ['the pit', [12.665, 6.95, 180, -0.96], 'pit']];
+           ['the missing poster', [31.0, 23.5, 218, 0.0], 'miss'], ['the dumpster', [15.0, 15.0, 0, -0.2], 'dump'], ['the dumpster again', [15.0, 15.0, 0, -0.2], 'dump2'], ['the pit', [12.66, 6.95, 180, -1.01], 'pit']];
 (async () => { const b = await chromium.launch({ args:['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport:{ width:960, height:540 } }); let errs = 0;
   p.on('pageerror', e => { errs++; console.log('ERR', String(e.stack).slice(0, 300)); });
