@@ -157,7 +157,7 @@ function reach(cx, cy){
   RAY.setFromCamera(V2, camera); RAY.far = 6;
   const hit = RAY.intersectObjects(CLICK, false)[0]; if (!hit) return;
   const o = hit.object, k = o.userData.say, near = k === 'bench' ? 2.6 : 3.6; if (hit.distance > near) return;
-  if (typeof k === 'function') { say(k(hit), 4600); return; }
+  if (typeof k === 'function') { const w = k(hit); if (w) say(w, 4600); return; }
   /* Seam's own click actions first (the close-ups, the dumpster, the pit...), as Missing Mile's Seam version does */
   const SEAM = window.EG_SEAM;
   if (SEAM && SEAM.click) { SEAM.where(P.x, P.z, P.yaw); if (SEAM.click(k)) { if (k === 'pit' && L.pit) { L.pit.visible = false; } return; } }

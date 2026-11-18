@@ -155,3 +155,25 @@ Aisling: *"Ok go to next?"*
 - **Checked:** every close-up opens and closes; the dumpster's search; the pit goes to the pocket; all clicks still answer (`t/closeups.js`, `t/clicks.js`, `t/seam-closeups.js`); the pocket; no errors.
 - **Still not carried over from the Seam version** (for the kit / the rest of Missing Mile): the four trees, the windmill and its words, the crossing and crossbuck, the mileage signs, the mailbox, the cut pole, the tunnel and its lights, the shed's sign and tobacco window, the station's other pictures (the name board and hanging sign are redrawn, not Seam's), and the train.
 - **Next in milestone 2:** the train in and out.
+
+### Nov 17, 2026 (evening, later) — the sweep: everything else from the Seam version, moved over
+Aisling: *"Ok we will move all those over then we will update them all to embroodygraphics :)"*, then *"Oh aww nd all the little things too like the seed in the bench please do a sweep and make sure we don't miss anything!"*
+- **How the sweep was done:** every clickable thing in the Seam version (every `say` in `src/f03/`) and every Seam picture (`fpic`) was listed and checked against Embroidery. What was missing is now in `src/station2.js`, each in its Seam place, built the way Seam's last pass built it. This is the **moving-over** pass; the **Embroidery-graphics** pass on each of them comes next.
+- **New in the world:**
+  - **the four trees**, four times of autumn: the gold one by the crossbuck, the rust-and-red one off the platform's west end, the half-bare one out in the east field, the nearly bare one behind the station. Each has a leaning, forking trunk, limbs and twigs, leaves in loose bunches (maple, oval, long, wavy-edged; each its own colour, a darker rib, a dried edge), and its fallen leaves on the ground round it, more under the barer trees.
+  - **the windmill** far out in the corn, much too tall: the lattice tower, the tank partway up, the still wheel, MAPLES & SONS on its vane. The corn is cleared round its feet.
+  - **the crossbuck**: two real boards, RAILROAD and CROSSING, lettered both sides, on a taller post, with the 踏切 plate under them.
+  - **the mileage sign**, MISSING MILE 1, and the same sign again further down the road (Seam's own picture, bullet holes and all).
+  - **the mailbox** with no house, R.R. 2, its red flag up.
+  - **the cut pole** hanging from its own wires, its foot well off the ground: the long crossarm, the braces, the insulators, the short bar at the top, the broken wire curling off the end. It sways a little. The **newer pole** stands beside it, with the transformer can.
+  - **old street lamps on three of the road's poles**: one lit, dim and orange; one burnt out; one weak. (They glow but don't light the road yet: a real light costs every surface. A light pool was tried, but the ink grade turned it into a dark patch. This is for the lighting pass.)
+  - **the tunnel mouth** east of the platform, where the line goes into the ground: the concrete face, the ring of stones round the arch, the coping, a lip of earth, the corn standing on top. Inside, only dark. **Made big enough for the train to go in** (Seam's is low, about 2 m; this one is about 2.6 m over the track bed). Aisling can say if it should be lower.
+  - **on the shed**: FEED · SEED · BAIT, and the tobacco window (its sign, the shut window, the hand-written card behind the glass).
+  - **the poles' little tags**, and climbing steps on some.
+  - The **guy wire** is on the first road pole now, where Seam has it (it was on the pole that's now the cut one).
+  - The ground goes further south (to z 42) and the corn to z 37, so the second mileage sign and the poles going off have something under them.
+- **Seam's own pictures on things that were plain:** the poster, the line map and the timetable on the wall; the payphone (PUBLIC TELEPHONE · 公衆電話, the green phone); the bin with eyes (body and hood); the pink jerry can.
+- **Clicks, as in Seam's last pass:** the doors, the windows and the station walls use the newer lines (the boards and the chain; the newspaper over the glass); the lamp where the road begins says its own line again (`lamp`, not `streetlamp`). Clicking the ground says the road, the grass or the corn. `tools/copy-says.py` now also copies f03-3d2's lines and the tunnel, windmill and fields lines.
+- **Checked:** pictures from ten spots; every new thing clicks and says its Seam line (`t/clicks.js`); walking and collisions (`t/walk.js`); close-ups and the pocket (`t/closeups.js`); no errors; no blue. How heavy it is (`t/info.js`): about +30k triangles and up to +50 draw calls from the busiest spots. That should be fine, but Aisling should check smoothness on the Mac.
+- **For the Embroidery-graphics pass (next):** the trees don't move in the wind yet; their leaves are flat cards, not yet lit through. The windmill's wheel and vane are cut-out pictures. The tunnel's inside shows its box shape faintly. The road lamps' light. The name board and hanging sign are still Embroidery's redraws (same words as Seam's).
+- **Still pending from Aisling:** her sound files.

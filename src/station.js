@@ -11,6 +11,7 @@ import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTi
 import { inkRGB } from './inks.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
 import { SRC } from './sound.js';
+import { buildMore, cornClear, onTunnelRoof, groundSay, tickMore, TUN } from './station2.js';
 
 /* (milestone 2) what you can click: a mesh carries the key of its lines in F3_SAYS (the Seam version's, word for word),
    or a function that picks a line from where you clicked it */
@@ -22,18 +23,25 @@ function wallSay(hit){
   if (z > 12.9) return F3_WALL.back[0];
   if (z < 8.1) {
     const bay = ((x - 9) % 3 + 3) % 3, door = bay > 0.95 && bay < 2.05 && Math.floor((x - 9)/3) % 2 === 0 && y < 2.45, win = !door && bay > 1.05 && bay < 1.95 && y > 0.95 && y < 2.25;
-    if (door) return F3_WALL.doors[(Math.random()*2) | 0];
-    if (win) return F3_WALL.window[0];
     if (x > 9.3 && x < 9.85 && y > 1.5 && y < 1.8) return F3_WALL.plaque[0];
-    return F3_WALL.stucco[0];
+    if (door) return (F3_SAYS.door || F3_WALL.doors)[(Math.random()*2) | 0];   /* (Seam's last pass: the boards, the chain, the padlock) */
+    if (win) return (F3_SAYS.window || F3_WALL.window)[0];
+    return (F3_SAYS.station || F3_WALL.stucco)[0];
   }
-  return F3_WALL.stucco[0];
+  return (F3_SAYS.station || F3_WALL.stucco)[0];
 }
 
 /* ---------------- the ground ---------------- */
-const TX0 = -10, TZ0 = -14, TW = 60, TD = 48;
+const TX0 = -10, TZ0 = -14, TW = 60, TD = 56;   /* (Nov 17, evening: on to z 42, for the second mileage sign and the poles going off) */
 const ROAD = [29, 31];
 export function groundAt(x, z){
+  const g = groundAt0(x, z);
+  if (x > TUN.x - 0.1 && Math.abs(z - TUN.zc) < TUN.hw + 0.6) return -0.62;   /* (the track bed, on into the tunnel) */
+  if (x > TUN.x + 0.2 && z > -2.8 && z < 6.8 && !(Math.abs(z - TUN.zc) < TUN.hw + 0.6)) {   /* the bank the line goes into, east of the platform */
+    const k = sm(TUN.x + 0.22, TUN.x + 0.55, x)*sm(-2.8, -1.2, z)*sm(6.8, 5.2, z); return g + (TUN.bank + 0.02 - g)*k; }
+  return g;
+}
+function groundAt0(x, z){
   if (z < 0.9) return -0.62 + 0.42*sm(0.95, 0.35, z) + 0.1*sm(0.3, -2, z);   /* the bank north of the track, into the corn */
   if (z < 3.05) return -0.62;   /* the track bed */
   if (z < 8) return -0.12;      /* gravel past the platform's ends (the platform is its own box) */
@@ -55,11 +63,12 @@ function contact(x, z){
   const dB = Math.max(Math.max(9 - x, x - 25, 0), Math.max(8 - z, z - 13, 0)), dS = Math.max(Math.max(25 - x, x - 28.9, 0), Math.max(8 - z, z - 9.6, 0));
   const dP = z > 8 && x > 9 && x < 32 ? z - 8 : 9;
   let o = 0.45*sm(0.9, 0, Math.min(dB, dS)) + 0.3*sm(0.6, 0, dP);
-  for (const zp of [10.58, 17.58, 24.58]) { const d = Math.hypot(x - 31.98, z - zp); o += 0.35*sm(0.5, 0.05, d); }
+  for (const zp of [10.58, 24.58]) { const d = Math.hypot(x - 31.98, z - zp); o += 0.35*sm(0.5, 0.05, d); }
+  o += 0.35*sm(0.5, 0.05, Math.hypot(x - 32.38, z - 20.45));   /* (the cut pole never touches the ground; the newer one beside it does) */
   return Math.min(0.6, o);
 }
 function paintGround(){
-  return paint(2048, 1638, TW, TD, (u, v) => {
+  return paint(2048, 1911, TW, TD, (u, v) => {
     const x = TX0 + u, z = TZ0 + (TD - v);
     const n = vn(x*3, z*3), f = fbm(x*0.5, z*0.5), g = vn(x*14, z*14), fine = vn(x*60, z*60), c = contact(x, z);
     const r = (ramp, t, ht, ro) => [ramp, clamp(t*(1 - c), 0, 1), 1, ht, ro];
@@ -97,7 +106,7 @@ function groundMesh(){
   for (let i = 0; i < p.count; i++) { const x = p.getX(i) + TX0 + TW/2, z = p.getZ(i) + TZ0 + TD/2; p.setXYZ(i, x, groundAt(x, z), z); }
   g.computeVertexNormals();
   const t = paintGround(); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
-  const me = new THREE.Mesh(g, mat(t)); me.receiveShadow = true; K.scene.add(me);
+  const me = new THREE.Mesh(g, mat(t)); me.receiveShadow = true; K.scene.add(me); tag(me, hit => groundSay(hit, ROAD));
 }
 
 /* ---------------- the sky: dusk, overcast. plum overhead, the last warm light low in the west. its horizon is the
@@ -179,7 +188,7 @@ export function buildStation(scene){
     const ridgeY = 5.05, eaveY = 3.32, z0 = 7.78, z1 = 13.22, zr = 10.5, run = zr - z0, rise = ridgeY - eaveY, ln = Math.hypot(run, rise), ang = Math.atan2(rise, run);
     for (const s of [-1, 1]) {
       const g = new THREE.BoxGeometry(16.6, 0.06, ln); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i)*16.6, uv.getY(i)*ln/2);
-      const me = new THREE.Mesh(g, M.tin); me.position.set(17, (ridgeY + eaveY)/2, zr + s*run/2); me.rotation.x = s*ang; me.castShadow = me.receiveShadow = true; scene.add(me);
+      const me = new THREE.Mesh(g, M.tin); me.position.set(17, (ridgeY + eaveY)/2, zr + s*run/2); me.rotation.x = s*ang; me.castShadow = me.receiveShadow = true; scene.add(me); tag(me, 'station');
     }
     for (const x of [9, 25]) {   /* the gables */
       const sh = new THREE.Shape(); sh.moveTo(-2.5, 0); sh.lineTo(2.5, 0); sh.lineTo(0, rise + 0.08); sh.lineTo(-2.5, 0);
@@ -224,8 +233,8 @@ export function buildStation(scene){
      for now plain aged paper, nothing written) */
   tag(box(11.4, 12.76, 0.38, 0.43, 7.57, 7.95, M.wood), 'bench'); box(11.45, 11.55, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false }); box(12.61, 12.71, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false });
   tag(box(11.4, 12.76, 0.5, 0.81, 7.9, 7.95, M.wood, { solid:false }), 'bench');
-  const paperT = sized(paint(48, 64, 0.7, 0.95, (x, y) => ['paper', clamp(0.55 - 0.25*fbm(x*5, y*4) - (frac(y*14) < 0.3 && x > 0.08 && x < 0.62 && y > 0.12 && y < 0.8 ? 0.12 : 0), 0, 1)]), 0.7, 0.95);
-  [[14.6, 1.48, 0.7, 0.95, 'poster'], [18, 1.65, 1.6, 0.6, 'linemap'], [20.7, 1.48, 0.8, 0.95, 'time']].forEach(p => tag(plane(p[2], p[3], mat(paperT), p[0], p[1], 7.985, Math.PI, { cast:false }), p[4]));
+  [[14.6, 1.48, 0.7, 0.95, 'poster', 'f3poster'], [18, 1.65, 1.6, 0.6, 'linemap', 'f3linemap'], [20.7, 1.48, 0.8, 0.95, 'time', 'f3time']].forEach(p => {   /* (Nov 17, evening: Seam's own pictures of them, word for word) */
+    const pm = new THREE.MeshStandardMaterial({ map:seamTex(p[5], 520, '#d8ccb0'), roughness:0.95 }); pm.userData.m = [1, 1]; tag(plane(p[2], p[3], pm, p[0], p[1], 7.985, Math.PI, { cast:false }), p[4]); });
 
   /* ---- the canopy: five rust-red iron columns, curved wooden brackets, the beam, the scalloped fascia, the roof ---- */
   const C = 3.15;
@@ -262,9 +271,15 @@ export function buildStation(scene){
   box(24.95, 29.05, 2.62, 2.7, 7, 9.7, [M.tinG, M.tinG, M.tin, M.tinG, M.tinG, M.tinG], { solid:false });
   box(25, 29, 2.48, 2.62, 6.98, 7.02, M.tin, { solid:false });
   for (const x of [25.05, 28.9]) box(x, x + 0.05, 0, 2.62, 7.0, 7.05, M.iron);
-  tag(box(8.32, 8.97, -0.3, 1.75, 9.55, 10.15, mat(null, { color:0x5a504a })), 'phone');   /* the payphone, at the station's west end (Seam's second pass moved it there: it hid the tobacco window) */   /* the payphone (its close-up: milestone 2) */
-  tag(box(26.0, 26.4, 0, 0.85, 7.55, 7.95, mat(T.tinG, { color:0x8a8078 })), 'bin');   /* the bin */
-  tag(box(26.45, 26.65, 0, 0.32, 7.76, 7.95, mat(T.iron, { color:0xd08070 })), 'jerry');   /* the jerry can */
+  { const pf = new THREE.MeshStandardMaterial({ map:seamTex('f3phone', 300, '#5a504a'), roughness:0.5 }), ps = new THREE.MeshStandardMaterial({ map:seamTex('f3phoneSide', 200, '#8b8a87'), roughness:0.6 }), pk = mat(null, { color:0x5a504a });
+    pf.userData.m = [0.6, 2.05]; ps.userData.m = [0.65, 2.05];
+    tag(box(8.32, 8.97, -0.3, 1.75, 9.55, 10.15, [pk, pf, pk, pk, ps, ps]), 'phone'); }   /* the payphone, at the station's west end (Seam's second pass moved it there: it hid the tobacco window) */   /* the payphone (its close-up: milestone 2) */
+  { const bb = new THREE.MeshStandardMaterial({ map:seamTex('f3binBody', 400, '#7e7b74'), roughness:0.95 }), hf = new THREE.MeshStandardMaterial({ map:seamTex('f3binHoodF', 500, '#86837c'), roughness:0.95 }), hs = new THREE.MeshStandardMaterial({ map:seamTex('f3binHoodS', 300, '#86837c'), roughness:0.95 }), bt = mat(T.conc, { color:0x9a968e });
+    bb.userData.m = [0.36, 0.6]; hf.userData.m = [0.42, 0.26]; hs.userData.m = [0.4, 0.26];   /* (Seam's bin with eyes: grey concrete gone grimy, a hood over it, its two eyes) */
+    tag(box(26.02, 26.38, 0, 0.6, 7.59, 7.95, [bb, bb, bt, bt, bb, bb]), 'bin'); tag(box(25.99, 26.41, 0.6, 0.86, 7.55, 7.95, [hs, hs, bt, bt, hs, hf], { solid:false }), 'bin'); }
+  { const jf = new THREE.MeshStandardMaterial({ map:seamTex('f3jcF', 600, '#b8847a'), roughness:0.7, alphaTest:0.4 }), js = new THREE.MeshStandardMaterial({ map:seamTex('f3jcS', 600, '#b8847a'), roughness:0.7, alphaTest:0.4 }), jt = mat(null, { color:0xb8847a });
+    jf.userData.m = [0.26, 0.36]; js.userData.m = [0.18, 0.36];   /* (Seam's faded pink kerosene can, 灯油 moulded faint on its side) */
+    tag(box(26.42, 26.68, 0, 0.36, 7.77, 7.95, [js, js, jt, jt, jf, jf]), 'jerry'); }
   const vf = paintVendFront(); sized(vf, 1.02, 1.86); vf.wrapS = vf.wrapT = THREE.ClampToEdgeWrapping;
   const vfM = new THREE.MeshStandardMaterial({ map:vf, emissiveMap:vf, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.32, roughness:0.5 });
   const vs = mat(null, { color:0xd8d2c8 });
@@ -301,9 +316,9 @@ export function buildStation(scene){
   const ms = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.48), new THREE.MeshStandardMaterial({ map:msT, roughness:0.95 })); ms.position.set(31.86, 1.24, 24.58); ms.rotation.y = -Math.PI/2; ms.receiveShadow = true; scene.add(ms); tag(ms, 'missing');
 
   /* ---- the street lamp where the road leaves the platform: the one real lamp out here ---- */
-  tag(cyl(0.075, 0.06, 4.6, M.woodD, 30.87, -0.3, 8.15, 12), 'streetlamp'); SRC.lamp = { x:30.36, y:3.95, z:8.15 }; K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
+  tag(cyl(0.075, 0.06, 4.6, M.woodD, 30.87, -0.3, 8.15, 12), 'lamp'); SRC.lamp = { x:30.36, y:3.95, z:8.15 }; K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
   box(30.25, 30.88, 4.12, 4.2, 8.13, 8.17, M.iron, { solid:false });
-  tag(lathe([[0.012, 0.16], [0.05, 0.15], [0.12, 0.07], [0.21, 0.0]], shadeM, 30.36, 3.96, 8.15, 12, { cast:false }), 'streetlamp');
+  tag(lathe([[0.012, 0.16], [0.05, 0.15], [0.12, 0.07], [0.21, 0.0]], shadeM, 30.36, 3.96, 8.15, 12, { cast:false }), 'lamp');
   const lb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), M.glass); lb.position.set(30.36, 3.99, 8.15); scene.add(lb);
   L.lamp = spot(30.36, 3.95, 8.15, 0.95, 16, 0xffbe80, 2048); L.lamp.userData = { weak:false, ph:0 };
   halo(30.36, 3.99, 8.15, 0.7, 0xffc890);
@@ -314,8 +329,8 @@ export function buildStation(scene){
     fragmentShader:'uniform float uK; uniform vec3 uC; varying float vH; varying vec3 vN, vV; void main(){ float e = abs(dot(normalize(vN), normalize(vV))); float a = uK*pow(1.0 - vH, 1.6)*e*e; gl_FragColor = vec4(uC*a, 1.0); }' });
   L.shaft = new THREE.Mesh(cg, cm); L.shaft.position.set(30.36, 3.95, 8.15); scene.add(L.shaft);
   /* poles down the road, wires going off into the dusk */
-  const PY = [10.5, 17.5, 24.5, 31.5];
-  PY.forEach((z, i) => { tag(cyl(0.11, 0.09, 7.5, M.woodD, 31.98, -0.5, z + 0.08, 14), 'pole'); SRC.poles.push({ x:31.98, y:6.4, z:z + 0.08 }); K.solids.push({ x0:31.9, x1:32.06, y0:-0.5, y1:7, z0:z, z1:z + 0.16 }); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false });
+  const PY = [10.5, 17.5, 24.5, 31.5, 38.5];   /* (17.5 is the cut pole: station2 hangs it from the wires) */
+  PY.forEach((z, i) => { if (z !== 17.5) tag(cyl(0.11, 0.09, 7.5, M.woodD, 31.98, -0.5, z + 0.08, 14), 'pole'); if (z !== 17.5) { SRC.poles.push({ x:31.98, y:6.4, z:z + 0.08 }); K.solids.push({ x0:31.9, x1:32.06, y0:-0.5, y1:7, z0:z, z1:z + 0.16 }); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false }); }
     wire([30.88, 4.15, 8.15], [31.98, 6.5, 10.58], 0.2, M.wire, 0.008);
     if (i < PY.length - 1) for (const k of [-0.4, 0.4]) wire([31.98 + k, 6.56, z + 0.08], [31.98 + k, 6.56, PY[i + 1] + 0.08], 0.45, M.wire); });
 
@@ -325,18 +340,18 @@ export function buildStation(scene){
   const insM = mat(null, { color:0x6e675e, rough:0.4 });
   const insul = (x, y, z) => cyl(0.03, 0.025, 0.09, insM, x, y, z, 6, { cast:false });
   PX.forEach(x => { for (const k of [-0.5, -0.2, 0.36, 0.66]) insul(x + 0.08 + k, 6.74, 1.1); });
-  PY.forEach(z => { for (const k of [-0.5, -0.2, 0.2, 0.5]) insul(31.98 + k, 6.52, z + 0.08); });
+  PY.forEach(z => { if (z !== 17.5) for (const k of [-0.5, -0.2, 0.2, 0.5]) insul(31.98 + k, 6.52, z + 0.08); });
   const can = (x, y, z) => { cyl(0.2, 0.2, 0.62, mat(T.tinG, { color:0x9a948c }), x, y, z, 10); cyl(0.21, 0.17, 0.06, M.iron, x, y + 0.62, z, 10); box(x - 0.04, x + 0.04, y + 0.1, y + 0.5, z - 0.24, z - 0.2, M.iron, { solid:false }); };
-  can(31.98, 5.4, 17.84); can(18.08, 5.5, 1.36);
+  can(18.08, 5.5, 1.36);   /* (the road's can is on the newer pole by the cut one now: station2) */
   for (let i = 0; i < PX.length - 1; i++) for (const [dx, y, sg] of [[-0.12, 6.78, 0.5], [0.66, 6.78, 0.3], [0.2, 6.3, 0.7], [0.08, 5.6, 0.9]]) wire([PX[i] + dx, y, 1.1], [PX[i + 1] + dx, y, 1.1], sg, M.wire, 0.009);
   for (let i = 0; i < PY.length - 1; i++) for (const [dx, y, sg] of [[-0.2, 6.56, 0.6], [0.2, 6.56, 0.38], [0, 5.9, 0.8]]) wire([31.98 + dx, y, PY[i] + 0.08], [31.98 + dx, y, PY[i + 1] + 0.08], sg, M.wire, 0.009);
   wire([31.98, 5.9, 10.58], [28.9, 2.4, 9.0], 0.3, M.wire, 0.008);   /* the service drop to the shed */
   wire([31.98, 6.3, 10.58], [25.0, 3.0, 13.1], 0.5, M.wire, 0.008);  /* and to the building's back */
   wire([32.08, 6.4, 1.1], [31.98, 6.4, 10.58], 0.6, M.wire, 0.009);  /* across the line to the road's poles */
   wire([25.08, 6.0, 1.1], [31.98, 5.8, 10.58], 0.8, M.wire, 0.008);
-  wire([32.06, 5.0, 17.66], [33.6, -0.3, 17.66], 0, M.wire, 0.008);   /* the guy wire, and its guard */
+  wire([31.98, 5.3, 10.5], [31.98, -0.3, 8.62], 0, M.wire, 0.008);   /* the guy wire on the first pole (where Seam has it: the line ends there), and its guard */
   const strT = sized(paint(16, 64, 0.1, 2, (x, y) => [frac(y*3.5) < 0.5 ? 'hamber' : 'hblack', frac(y*3.5) < 0.5 ? 0.5 - 0.15*fbm(x*30, y*6) : 0.15, 1, 0.5, 0.6]), 0.1, 2);
-  const gd = cyl(0.04, 0.04, 2.0, mat(strT), 0, 0, 0, 8); gd.position.set(33.6 - 1.92/2*0.29, -0.3 + 0.98, 17.66); gd.rotation.z = Math.atan2(1.54, 5.3);
+  const gd = cyl(0.04, 0.04, 2.1, mat(strT), 0, 0, 0, 8); const ga = Math.atan2(1.88, 5.6); gd.rotation.x = ga; gd.position.set(31.98, -0.3 + Math.cos(ga)*1.05, 8.62 + Math.sin(ga)*1.05);
   box(28.9, 28.96, 1.3, 1.62, 8.4, 8.75, mat(T.tinG, { color:0xb8b0a4 }), { solid:false });   /* an electric meter box on the shed's side */
 
   /* ---- fallen leaves, blown in: more against walls and in corners, a scatter on the platform and the road ---- */
@@ -405,6 +420,8 @@ export function buildStation(scene){
   L.hemi = new THREE.HemisphereLight(0x9a8a84, 0x4e4036, 1);   /* (the ground colour: light bouncing up off the platform and the fields, so ceilings aren't a void) */ scene.add(L.hemi);
   L.west = new THREE.DirectionalLight(0xc89a70, 0.2); L.west.position.set(-30, 8, 4); scene.add(L.west);
 
+  TKM = buildMore({ scene, M, T, tag, groundAt, halo, L });   /* (Nov 17, evening) everything else the Seam version has */
+
   /* ---- grass, weeds and corn ---- */
   const R = rnd(4242), grass = [], corn = [];
   const inB = (x, z) => (x > 8.6 && x < 25.4 && z > 7.7 && z < 13.4) || (x > 24.8 && x < 29.2 && z > 7.6 && z < 9.9) || (x > ROAD[0] - 0.15 && x < ROAD[1] + 0.15 && z > 7.9);
@@ -422,9 +439,9 @@ export function buildStation(scene){
   for (let i = 0; i < 240; i++) { const x = -2 + R()*44, z = 0.9 + R()*0.35; grass.push([x, groundAt(x, z), z, 0.5 + R()*0.5, R()*6.3, Math.floor(R()*4)]); }
   [[9.05, 3.2], [9.2, 7.55], [32.5, 3.3], [32.3, 7.6], [24.7, 7.62], [31.0, 7.7]].forEach(p => grass.push([p[0], 0, p[1], 0.45, R()*6, Math.floor(R()*4)]));   /* through the platform's cracks (Seam's spots) */
   clumps(grass, paintGrassAtlas(), 3, 1, 1.0);   /* (atlas: 4 clumps) */
-  const cornAt = (x, z) => { if (R() < 0.08) return; corn.push([x + (R() - 0.5)*0.25, groundAt(x, z) - 0.05, z + (R() - 0.5)*0.25, 1.0 + R()*0.3, R()*6.3, Math.floor(R()*4), 2.6]); };
+  const cornAt = (x, z) => { if (R() < 0.08 || cornClear(x, z)) return; corn.push([x + (R() - 0.5)*0.25, onTunnelRoof(x, z) ? TUN.bank - 0.02 : groundAt(x, z) - 0.05, z + (R() - 0.5)*0.25, 1.0 + R()*0.3, R()*6.3, Math.floor(R()*4), 2.6]); };
   for (let x = -8; x < 48; x += 0.36) for (let z = -9; z < 0.55; z += 0.42) cornAt(x, z);              /* across the track */
-  for (let x = -8; x < 48; x += 0.42) for (let z = 24.4; z < 31; z += 0.5) if (x < ROAD[0] - 0.6 || x > ROAD[1] + 1.6) cornAt(x, z);   /* (clear round the pole with the missing poster) */   /* the corn the road runs into */
+  for (let x = -8; x < 48; x += 0.42) for (let z = 24.4; z < 37; z += 0.5) if (x < ROAD[0] - 0.6 || x > ROAD[1] + 1.6) cornAt(x, z);   /* (clear round the pole with the missing poster) */   /* the corn the road runs into */
   for (let x = -8; x < 0.6; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* west */
   for (let x = 41.4; x < 48; x += 0.42) for (let z = 0.55; z < 24.4; z += 0.5) cornAt(x, z);           /* east */
   clumps(corn, paintCornAtlas(), 2, 1, 0.55, 8);
@@ -448,7 +465,9 @@ export function applyLook(scene, V){
   L.lamp.shadow.radius = V.shadowSoft;
 }
 /* the struggling bulbs: a slow dim and back, two to five seconds, never faster than a breath */
+let TKM = null;
 export function tickLights(t){
+  tickMore(TKM, t, K.wind.uGust.value);
   for (const b of L.bulbs) {
     if (b === L.lamp) continue; let k = 1;
     if (b.userData.weak) { const s = Math.sin(t*0.9 + b.userData.ph)*0.5 + Math.sin(t*0.37 + b.userData.ph*2)*0.5; k = 0.62 + 0.38*clamp(s*0.5 + 0.6, 0, 1); }

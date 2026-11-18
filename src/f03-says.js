@@ -24,6 +24,10 @@ export const F3_SAYS = {
   mail:['a mailbox on a post, R.R. 2, its little red flag up. there\'s no house anywhere. inside: nothing.'],
   treeF:['a tree on its own out in the field, its leaves turning. nothing near it for a long way.']
 };
+F3_SAYS.station = ['the station building. stucco over brick, the paint gone. its roof is old tin, rusting in streaks.'];   /* (from f03-3d2.js) */
+F3_SAYS.corn = ['corn, taller than you. the leaves rasp against each other though there isn\'t any wind.', 'you could walk in. you don\'t.'];   /* (from f03-3d2.js) */
+F3_SAYS.door = ['the doors are old boards, gone grey. a chain through the handles, a padlock, rusted shut.', 'the padlock is newer than the chain.'];   /* (from f03-3d2.js) */
+F3_SAYS.window = ['newspaper pasted over the glass from inside, gone brown. one pane is broken. only dark behind it.'];   /* (from f03-3d2.js) */
 F3_SAYS.windmill = ['far out in the field, an old windmill, much too tall. its wheel doesn\'t turn. there\'s no farm near it.', 'the windmill. on its vane, old letters: MAPLES & SONS. the wheel is still, though the corn is moving.'];   /* (from f03-3d3.js) */
 F3_SAYS.pole = ['a telephone pole, grey and split with age. the wires sing a little when the wind comes through the corn.', 'the wires sag pole to pole down the road and off into the fog.'];   /* (from f03-3d3.js) */
 F3_SAYS.streetlamp = ['an old lamp on the pole, a tin shade over a bare bulb.', 'the lamp over the road. the fog takes most of its light before it gets to the ground.'];   /* (from f03-3d4.js) */
@@ -37,4 +41,7 @@ export const F3_WALL = {
   stucco: ['stucco over brick. where it\'s fallen away, the brick underneath is soft and red.'],
   road: ['the road goes on into the dusk. far off, a little glow: the town, maybe.'],
   sit: ['you sit on the bench. the bulbs hum. the corn moves, all at once, and stops. somewhere far off a dog barks, once. you wait.'],
+  windmill: ['far out in the corn, an old windmill, much too tall. its wheel doesn\'t turn. there\'s no farm near it.', 'the windmill. on its vane, old letters: MAPLES & SONS. the wheel is still, though the corn is moving.'],
+  tunnel: ['the line goes into the ground here: an old concrete mouth, low, in a bank, the corn standing thick on top. inside, only dark.', 'cold air comes out of the tunnel mouth, and a smell of earth. far in, very far, something drips.'],
+  fields: ['the fields go on, flat, to a line of trees. a farm, very small. nothing moves.', 'flat land, cut to stubble, as far as the tree line. the poles go off along a road you can\'t see.', 'the line runs off into the fields. a grain elevator, very small, against the last of the light.'],
 };

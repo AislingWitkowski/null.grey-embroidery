@@ -53,7 +53,7 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
 - `src/inks.js` the ramps and the ink tables · `src/look.js` the ink pass (glow, film roll-off, grain, ramps, dither)
 - `src/paint.js` textures painted in code · `src/kit.js` reusable pieces (boxes in world metres, lathe, wires, grass/corn with wind)
 - `src/player.js` walking, running, crouching, jumping, collisions; keys, mouse, touch, gamepad
-- `src/station.js` F03 Missing Mile's station · `src/looks.js` the looks · `src/main.js` the page
+- `src/station.js` F03 Missing Mile's station · `src/station2.js` everything else the Seam version has (trees, windmill, crossbuck, mileage signs, mailbox, cut pole, road lamps, tunnel, shed sign, tobacco window, pole tags; ground clicks) · `src/looks.js` the looks · `src/main.js` the page
 - `src/ui.js` captions and the sound/CC switches (Seam's look) · `src/sound.js` 3D sound and its slots (`sounds/`)
 - `src/f03-says.js` the click lines, copied word for word by `tools/copy-says.py` from the Seam version
 - **The bridge to Seam (`seam/`, `tools/seam-shared.py`):** Seam's own pocket (and its pictures, food and drink, sounds)

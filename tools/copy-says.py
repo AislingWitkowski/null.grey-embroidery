@@ -9,8 +9,8 @@ road = open(os.path.join(f03, 'f03-road.js')).read()
 i = road.index('var F3_SAYS = {'); j = road.index('\n};', i) + 3
 obj = road[i:j].replace('var F3_SAYS', 'export const F3_SAYS', 1)
 extra = []
-for fn in ['f03-3d3.js', 'f03-3d4.js', 'f03-details.js']:
-    for m in re.finditer(r"F3_SAYS\.(\w+) = (\[.*?\]);", open(os.path.join(f03, fn)).read()):
+for fn in ['f03-3d2.js', 'f03-3d3.js', 'f03-3d4.js', 'f03-details.js']:
+    for m in re.finditer(r"F3_SAYS\.(\w+) = (?:F3_SAYS\.\w+ \|\| )?(\[.*?\]);", open(os.path.join(f03, fn)).read()):
         extra.append("F3_SAYS.%s = %s;   /* (from %s) */" % (m.group(1), m.group(2), fn))
 # the lines for the building's walls (from f03-road.js lookAction), kept word for word too
 walls = {}
@@ -18,7 +18,9 @@ STR = r"'(?:[^'\\]|\\.)*'"
 for key, pat in [('back', r"say\(\['the back of the station[^\]]*\]"), ('doors', r"say\(\['the doors are locked[^\]]*\]"),
                  ('window', r"say\((?='the window is dark)" + STR), ('plaque', r"say\((?='a small plaque)" + STR),
                  ('stucco', r"say\((?='stucco over brick)" + STR), ('road', r"say\((?='the road goes on into the dusk)" + STR),
-                 ('sit', r"say\((?='you sit on the bench)" + STR)]:
+                 ('sit', r"say\((?='you sit on the bench)" + STR),
+                 ('windmill', r"say\(\['far out in the corn, an old windmill[^\]]*\]"), ('tunnel', r"say\(\['the line goes into the ground[^\]]*\]"),
+                 ('fields', r"say\(\['the fields go on[^\]]*\]")]:
     m = re.search(pat, road); walls[key] = m.group(0)[4:] if m else None
 out = ['/* copy of Missing Mile\'s click lines from null.grey-furusatostation/src/f03/ (the master lives there; Aisling\'s',
        '   and the Seam version\'s words, unchanged). made by tools/copy-says.py: run it again when they change. */', obj] + extra

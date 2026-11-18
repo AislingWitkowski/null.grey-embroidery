@@ -7,6 +7,11 @@ const C = [
   ['a door', [16.5, 6.6, 180, 0.0]], ['a window', [13.5, 6.6, 180, 0.12]], ['the payphone', [8.65, 11.0, 0, 0.05]],
   ['the bin', [26.2, 6.6, 180, -0.5]], ['the drinks machine (opens its close-up)', [27.43, 6.0, 180, 0]], ['the street lamp', [30.87, 9.5, 0, 0.1]],
   ['a telephone pole', [11.1, 3.4, 0, 0.1]], ['the back wall', [17, 14.4, 0, 0.1]], ['the shed', [27, 10.6, 0, 0.1]], ['nothing (too far)', [33, 6, 90, 0]],
+  /* (Nov 17, evening) everything carried over from the Seam version */
+  ['the crossbuck', [37.94, 1.9, 180, 0.5]], ['the tunnel mouth', [38.6, 4.2, -90, 0.1]], ['the gold tree', [35.0, 6.2, -90, -0.1]], ['the tree by the west end', [6.2, 6.0, 90, -0.3]],
+  ['the mileage sign', [28.5, 10.4, 180, 0.16]], ['the mailbox', [30.6, 20.24, -90, -0.35]], ['the cut pole (looking up)', [30.6, 17.58, -90, 1.0]], ['the newer pole', [31.0, 20.45, -90, 0.1]],
+  ['the shed sign', [26.9, 6.3, 180, 0.35]], ['the tobacco window', [25.55, 6.6, 180, -0.1]], ['the jerry can', [26.55, 7.0, 180, -0.9]],
+  ['the grass', [20, 16, 0, -0.6]], ['the road', [30, 14, 180, -0.7]], ['the corn', [20, 23.8, 180, -0.5]],
 ];
 (async () => {
   const b = await chromium.launch({ args:['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
