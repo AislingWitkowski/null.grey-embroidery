@@ -273,3 +273,21 @@ Aisling: *"i think we can punp up the graphic one biut more? towards ps3.. but k
   - the browser question;
   - the look pick;
   - "looking down moves a little odd" (what she sees).
+
+### Nov 17, 2026 (night) — decided for going forward: one list of things, two looks each
+Aisling: *"we probably need like a database or spread sheet of what it is, how it appears in seam and we will updatye its appearaance in embroidery too (small items like .. pocket items and stuff that carries over only, maybe a seperate one fro trains … just stuff the player would see to keep things straight) the umm like uh words about it would stay the. same, so we wil have to keep both appearances so they can move both back and forth between seam and embroidery … this is a very important system, must remain consistent, always work and the items must have correct appearance in each engine … we need to build going forwards with thgis in mind"*. And: *"the people on like um the missing poster and stuff are still statric … all the crowds also will be updated to reflect the new engine as well, still the same rules and appearances, but in new engine … they will resembe the shapes of tghe models ion the reference games i gave tyou and the images i gave...so they will be rebuilt but same rules as before"*.
+- **The rule from now on:**
+  - every thing the player carries or sees on both engines (pocket items, food and drink, trains, signs that travel) has **one id and one set of words** (Seam's, the master);
+  - it has **two looks: its Seam look and its Embroidery look**, kept side by side;
+  - moving between pages, any number of times, it stays the same thing.
+- **What's already true:**
+  - the pocket in Embroidery is Seam's own (same saved pocket, same ids, same words, same pocket pictures);
+  - the Embroidery drinks machine sells Seam's cans by Seam's ids;
+  - the train is the Furusato line's own, redrawn in the round.
+- **To build (a later round):**
+  - **the list, as a spreadsheet:** id · name · words (from Seam) · where it's seen · Seam look · Embroidery look · status. One list for small things and pocket items, a separate one for trains, only what the player sees;
+  - **in Embroidery's code, one file of 3D looks keyed by the same ids**, so a thing that turns up in the world (a can in the tray, a thing on a bench) is drawn from that one place.
+- **People:**
+  - pictures of people (the missing poster) stay static;
+  - crowds and figures get rebuilt in Embroidery under **the same rules** (faces never real, drawn as our own; no NPC ever totally solid). Their shapes are after the reference games' models (Silent Hill 3, Folklore, Rule of Rose) and her images.
+  - None in Missing Mile yet.
