@@ -8,6 +8,7 @@ src/f03/f03-3d2.js|fpic('f3vmSide2'
 src/f03/f03-3d2.js|fpic('f3vmClip2'
 
 src/f5c-things.js|var F_JP
+src/f5c-things.js|var F_DIN
 
 src/f03/f03-things.js|var Q3
 src/f03/f03-things.js|fpic('f3time'

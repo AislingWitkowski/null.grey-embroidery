@@ -443,3 +443,9 @@ Aisling: *"bright light weird spark on the machine? the trees are just a little 
 - **Doorknobs:** old dulled brass knobs and plates on the station's doors.
 - **The train's signs:** the destination board and the line map you choose stops on are now in a **rounded gothic** (Hiragino Maru Gothic, the face of old Japanese railway signs and line maps), with **Futura** for the English. Readable, less generic. The line map is Seam's (`f9c-ride-map.js`), so Furusato's and Main Street's rides change too.
 - **Cost:** the trees are now the heaviest thing (up to about 420k triangles in one view). Aisling to check smoothness on her Mac.
+
+### Nov 18 (evening) — the train's lettering, settled
+Aisling: *"for led I want closest to Japan and modern and almost like futuristic? And for all the stop maps I want 2 [DIN]? … Can that work for the Japanese and Soviet let[ters] though if not just keep it for the like English ok?"* (She'd asked whether Garamond would work and what Berlin uses: Berlin's BVG uses FF Transit, a Frutiger-based signage face by MetaDesign; serifs like Garamond break up on LED dots and aren't used for rail wayfinding.)
+- **The LED destination board:** a modern JR-style board. Fine square amber dots on a faint dark grid; **各停 ？？** in a heavy gothic, then a slow fade (about a second) to **LOCAL ??** in a narrow DIN, and back, each holding about 3 s. Nothing flashes.
+- **The stop maps:** the English is in **DIN** (`F_DIN`, `f5c-things.js`: DIN Alternate is built into Macs and iPhones; Bahnschrift on Windows). That covers the ride's line map (`f9c-ride-map.js`, so Furusato's and Main Street's rides too) and Main Street's wall line map (`f3linemap`). **Japanese keeps its rounded gothic; Cyrillic keeps its own face** (the Mac's DIN has no Cyrillic). The hub's maps are unchanged.
+- Checked: the train both ways, the text check (nothing runs off), no errors.

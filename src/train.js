@@ -229,14 +229,21 @@ export function buildTrain(scene, tag, haloFn){
         const lgs = []; for (const z of [-0.62, 0.62]) { const lg = new THREE.CircleGeometry(0.075, 14); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + 0.006 : -0.006, 0.46, z); lgs.push(lg.toNonIndexed()); }
         const lm = new THREE.Mesh(mergeGeometries(lgs), MT.head); G.add(lm); (TR.lamps = TR.lamps || {})[e ? 'east' : 'west'] = lm; TR.MT = MT;
         /* (Nov 18) the destination board lit from inside: its LED dots glow on their own panel */
-        if (!TR.ledMat) { const c2 = document.createElement('canvas'); c2.width = 720; c2.height = 130; const g = c2.getContext('2d'), m = document.createElement('canvas'); m.width = 240; m.height = 44; const q = m.getContext('2d');
-          q.fillStyle = '#fff'; q.textAlign = 'center'; q.textBaseline = 'middle'; q.font = '800 24px "Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","M PLUS Rounded 1c","Kosugi Maru","Hiragino Sans",sans-serif'; q.fillText('各停  ？？', 120, 16);
-          q.font = '700 12px Futura,"Century Gothic","Avenir Next",sans-serif'; q.fillText('LOCAL  ??', 120, 36);
-          const d = q.getImageData(0, 0, 240, 44).data; g.fillStyle = '#0c0806'; g.fillRect(0, 0, 720, 130);
-          for (let yy = 0; yy < 44; yy++) for (let xx = 0; xx < 240; xx++) { const on = d[(yy*240 + xx)*4 + 3] > 90; g.fillStyle = on ? '#ffb24a' : '#24160c'; g.beginPath(); g.arc(xx*3 + 1.5, yy*3 + 1.5, on ? 1.35 : 0.7, 0, Math.PI*2); g.fill(); }
-          const t = new THREE.CanvasTexture(c2); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
-          TR.ledMat = new THREE.MeshStandardMaterial({ map:t, emissiveMap:t, emissive:new THREE.Color(1, 0.8, 0.55), emissiveIntensity:1.6, roughness:0.5 }); }
-        { const lg = new THREE.PlaneGeometry(1.16, 0.2); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + 0.004 : -0.004, 1.985, 0); const lm2 = new THREE.Mesh(lg, TR.ledMat); G.add(lm2); }
+        /* (Nov 18, Aisling: the LED "closest to Japan and modern … almost like futuristic") a modern JR-style board: fine square
+           amber dots, the unlit ones a faint grid; it shows the Japanese, then fades over to the English and back, every few
+           seconds (a slow fade, nothing flashes). Japanese in a heavy gothic, English in a narrow DIN, both drawn as dots */
+        if (!TR.ledMats) { const mk = (draw) => { const DW = 288, DH = 48, P = 2.5, c2 = document.createElement('canvas'); c2.width = DW*P; c2.height = DH*P; const g = c2.getContext('2d'), m = document.createElement('canvas'); m.width = DW; m.height = DH; const q = m.getContext('2d');
+              q.fillStyle = '#fff'; q.textAlign = 'center'; q.textBaseline = 'middle'; draw(q, DW, DH); const d = q.getImageData(0, 0, DW, DH).data; g.fillStyle = '#080605'; g.fillRect(0, 0, c2.width, c2.height);
+              for (let yy = 0; yy < DH; yy++) for (let xx = 0; xx < DW; xx++) { const on = d[(yy*DW + xx)*4 + 3] > 110; g.fillStyle = on ? '#ffa630' : '#1d130b'; const sz = on ? 1.9 : 1.2; g.fillRect(xx*P + (P - sz)/2, yy*P + (P - sz)/2, sz, sz); }
+              const t = new THREE.CanvasTexture(c2); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.minFilter = THREE.LinearMipmapLinearFilter;
+              return new THREE.MeshStandardMaterial({ map:t, emissiveMap:t, emissive:new THREE.Color(1, 0.8, 0.55), emissiveIntensity:1.7, roughness:0.5, transparent:true }); };
+            const jp = mk((q, W, H) => { q.font = '900 34px "Hiragino Sans","Hiragino Kaku Gothic StdN","Noto Sans CJK JP","Yu Gothic",sans-serif'; q.fillText('各停', W*0.3, H/2 + 1); q.fillText('？？', W*0.72, H/2 + 1); });
+            const en = mk((q, W, H) => { q.font = '700 30px "DIN Condensed","DIN Alternate",Bahnschrift,"Arial Narrow",sans-serif'; q.fillText('LOCAL', W*0.3, H/2 + 2); q.fillText('? ?', W*0.72, H/2 + 2); });
+            TR.ledMats = [jp, en];
+            const tick = () => { const t = performance.now()/1000, k = Math.min(1, Math.max(0, (Math.sin(t*Math.PI/4) + 1)/2*3 - 1));   /* (each holds about 3 s, then fades over 1 s) */
+              jp.opacity = 1 - k; en.opacity = k; requestAnimationFrame(tick); }; tick(); }
+        for (const [mm, off] of [[TR.ledMats[0], 0.004], [TR.ledMats[1], 0.006]]) { const lg = new THREE.PlaneGeometry(1.16, 0.2); lg.rotateY(e ? Math.PI/2 : -Math.PI/2); lg.translate(e ? L + off : -off, 1.985, 0); G.add(new THREE.Mesh(lg, mm)); }
+        { const bg = new THREE.PlaneGeometry(1.18, 0.21); bg.rotateY(e ? Math.PI/2 : -Math.PI/2); bg.translate(e ? L + 0.003 : -0.003, 1.985, 0); G.add(new THREE.Mesh(bg, new THREE.MeshBasicMaterial({ color:0x080605 }))); }   /* (the board's black behind the fading dots) */
         /* (Nov 18) the cab face sculpted: a brow over the windscreen, a heavy bumper beam and anticlimber low down, the coupler and its hoses, the lamp hoods */
         const fx = e ? L : 0, out = e ? 1 : -1, X = (d0, d1) => [Math.min(fx + out*d0, fx + out*d1), Math.max(fx + out*d0, fx + out*d1)];
         { const [a, b] = X(0, 0.09); add('steel', bgeo(a, b, 2.1, 2.16, -HW + 0.04, HW - 0.04)); }   /* the brow (above the destination board) */
