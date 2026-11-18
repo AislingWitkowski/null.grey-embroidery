@@ -291,3 +291,17 @@ Aisling: *"we probably need like a database or spread sheet of what it is, how i
   - pictures of people (the missing poster) stay static;
   - crowds and figures get rebuilt in Embroidery under **the same rules** (faces never real, drawn as our own; no NPC ever totally solid). Their shapes are after the reference games' models (Silent Hill 3, Folklore, Rule of Rose) and her images.
   - None in Missing Mile yet.
+
+### Nov 17, 2026 (night, last) — the pocket and passport's Embroidery look; the transition
+Aisling: *"does pocket get a new look? dopes passport get a new look? i think we could? like a real neat pretty holographic look on runes and such? leathery look on the outside and such? magical, but the same like base? and all the stuff gets a new sheen.. i really want the magical transition, but obsious get the transition and missing mile workling first?"*, then *"yeah i just mean it gets more real"* and *"i think the holograms can have a slight blue liuister, breaking the rule..making it weird"*.
+- **The pocket and the passport get an Embroidery look**, on the same base: the same layout, art and words.
+  - The passport's outside is real leather: grained, worn at the edges, catching the light.
+  - The foil and runes are holographic and shift as you move. **A slight blue lustre is allowed in them**, breaking the blue rule on purpose ("making it weird"; added to every repo's CLAUDE.md as an exception).
+  - Everything in the pocket gets a sheen fitting what it's made of.
+  - Built together with the list of things (one id, two looks).
+- **The transition:** crossing from a Seam page into Embroidery, **it gets more real**. The pixels resolve into the smooth world as you arrive, and the other way as you leave.
+- **Order:**
+  1. her bugs (waiting on which browser and which buttons);
+  2. Missing Mile's graphics pass and the look pick;
+  3. the transition;
+  4. the pocket and passport look, with the list.
