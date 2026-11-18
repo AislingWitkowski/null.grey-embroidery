@@ -83,13 +83,20 @@ export function buildMore(C){
     return cvTex(256, 256, (c) => { const lr = rnd(31 + L.n);
       for (let k = 0; k < 16; k++) { const ox = (k % 4)*64 + 32, oy = Math.floor(k/4)*64 + 32, P = L.p[k % L.p.length], sh = k % 4, t = P[1] + (lr() - 0.5)*0.14;
         c.save(); c.translate(ox, oy); c.rotate(lr()*6.28); c.fillStyle = col(P[0], t); c.beginPath();
-        if (sh === 0) { for (let i = 0; i <= 10; i++) { const a = i/10*Math.PI*2, r = (i % 2 ? 12 : 27) + lr()*3; c.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
-        else if (sh === 1) c.ellipse(0, 0, 25, 15, 0, 0, Math.PI*2);
-        else if (sh === 2) c.ellipse(0, 0, 28, 9, 0, 0, Math.PI*2);
-        else for (let i = 0; i <= 24; i++) { const a = i/24*Math.PI*2, r = 20 + 3*Math.sin(a*7); c.lineTo(Math.cos(a)*r, Math.sin(a)*r); }
-        c.fill(); c.strokeStyle = col(P[0], t*0.55); c.lineWidth = 3; c.stroke();   /* the dried edge */
-        c.strokeStyle = col(P[0], t*0.6); c.lineWidth = 1.6; c.beginPath(); c.moveTo(-24, 0); c.lineTo(22, 0); c.stroke();   /* the rib */
-        for (let i = 0; i < 14; i++) { c.fillStyle = col('hwood', 0.18 + lr()*0.12); c.fillRect(-16 + lr()*32, -8 + lr()*16, 2, 2); }
+        /* (Nov 18, Aisling: "a little too outlined and cartoonish") no hard outline: each leaf is shaded from its middle out,
+           a little darker and browner toward its edge, the rib a faint line, a few soft blemishes; the maple's lobes are
+           rounded, not a star */
+        const path = () => { c.beginPath();
+          if (sh === 0) { for (let i = 0; i <= 60; i++) { const a = i/60*Math.PI*2, r = 12 + 14*Math.pow(Math.abs(Math.sin(a*2.5)), 1.8) + lr()*1.2; c.lineTo(Math.cos(a)*r, Math.sin(a)*r*0.92); } }
+          else if (sh === 1) c.ellipse(0, 0, 25, 15, 0, 0, Math.PI*2);
+          else if (sh === 2) c.ellipse(0, 0, 27, 9.5, 0, 0, Math.PI*2);
+          else for (let i = 0; i <= 36; i++) { const a = i/36*Math.PI*2, r = 20 + 1.6*Math.sin(a*7) + lr()*0.8; c.lineTo(Math.cos(a)*r, Math.sin(a)*r); }
+          c.closePath(); };
+        path(); const g = c.createRadialGradient(-4, -2, 2, 0, 0, 27); g.addColorStop(0, col(P[0], Math.min(1, t + 0.06))); g.addColorStop(0.7, col(P[0], t)); g.addColorStop(1, col(P[0], t*0.82)); c.fillStyle = g; c.fill();
+        c.save(); path(); c.clip();
+        c.strokeStyle = col(P[0], t*0.8); c.globalAlpha = 0.5; c.lineWidth = 1; c.beginPath(); c.moveTo(-22, 0); c.lineTo(20, 0); c.stroke();   /* the rib, faint */
+        for (let i = 0; i < 6; i++) { const bx = -14 + lr()*28, by = -7 + lr()*14, br = 1.5 + lr()*3; const bg = c.createRadialGradient(bx, by, 0, bx, by, br); bg.addColorStop(0, col('hwood', 0.3)); bg.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = 0.45; c.fillStyle = bg; c.fillRect(bx - br, by - br, br*2, br*2); }   /* soft blemishes */
+        c.restore();
         c.restore(); }
     });
   }
@@ -138,15 +145,15 @@ export function buildMore(C){
       const nb = ph >= 2 ? 3 : 2;
       for (let j = 0; j < nb; j++) { const a2 = ang + (j - (nb - 1)/2)*0.9 + (Rt() - 0.5)*0.4, m2 = 0.55 + Rt()*0.45, P1 = [E[0], E[1] - 0.05, E[2]];
         const E2 = limb(P1, 0.8 + Rt()*0.5, Math.cos(a2)*m2, Math.sin(a2)*m2, 0.055, 0.02);
-        for (const f of [0.25, 0.5, 0.8, 1.05]) site(P1, E2, f);
+        for (const f of [0.3, 0.55, 0.8, 0.98]) site(P1, E2, f);
         for (let w = 0; w < (ph === 2 ? 1 : 2); w++) { const a3 = a2 + (w - 0.5)*1.1 + (Rt() - 0.5)*0.5, m3 = 0.7 + Rt()*0.6, P2 = [E2[0], E2[1] - 0.03, E2[2]];
           const E3 = limb(P2, 0.45 + Rt()*0.4, Math.cos(a3)*m3, Math.sin(a3)*m3, 0.024, 0.008);   /* its twigs */
-          for (const f of [0.35, 0.75, 1.1, 1.4]) site(P2, E3, f); }   /* (and past the twig's end: a shaggy outline) */
+          for (const f of [0.35, 0.65, 0.9, 1.02]) site(P2, E3, f); }   /* (Nov 18: on the twig, not past its end: Aisling, "they float a little too much") */
       } }
     tag(meshOf(geos, bark), say); K.solids.push({ x0:tx - 0.28, x1:tx + 0.28, y0:gy - 1, y1:gy + H1, z0:tz - 0.28, z1:tz + 0.28 });
     for (let k = sites.length - 1; k > 0; k--) { const s = Math.floor(Rt()*(k + 1)); [sites[k], sites[s]] = [sites[s], sites[k]]; }   /* (which sites get leaves: at random, so no two trees match) */
     const lv = [];
-    for (let t = 0; t < Math.min(Lf.n, sites.length); t++) { const S = sites[t], r = Lf.rb[0] + Rt()*(Lf.rb[1] - Lf.rb[0]), cx = S[0] + (Rt() - 0.5)*0.85, cy = S[1] - 0.1 + (Rt() - 0.5)*0.45, cz = S[2] + (Rt() - 0.5)*0.85;
+    for (let t = 0; t < Math.min(Lf.n, sites.length); t++) { const S = sites[t], r = (Lf.rb[0] + Rt()*(Lf.rb[1] - Lf.rb[0]))*0.8, cx = S[0] + (Rt() - 0.5)*0.3, cy = S[1] - 0.04 + (Rt() - 0.5)*0.18, cz = S[2] + (Rt() - 0.5)*0.3;   /* (bunches sit on their twig) */
       const n = Math.round(30 + 120*r*r);
       for (let i = 0; i < n; i++) { const u = Rt()*2 - 1, a = Rt()*6.283, d = Math.cbrt(Rt()), s = Math.sqrt(1 - u*u);   /* a loose bunch, thinning at its edge */
         if (d > 0.8 && Rt() < 0.5) continue;

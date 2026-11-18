@@ -97,6 +97,7 @@ function cabPic(tail){   /* the flat cab face: the black mask round the windscre
     c.font = '700 11px sans-serif'; c.fillText('LOCAL ??', w/2, y(1.92));
     c.fillStyle = '#a63a26'; c.fillRect(0, y(0.86), w, y(0.7) - y(0.86));   /* the vermilion lacquer band, like an old shrine car */
     c.fillStyle = '#c9a067'; c.fillRect(0, y(0.92), w, y(0.87) - y(0.92));
+    c.fillStyle = '#2a211c'; c.beginPath(); c.arc(w/2, y(0.48), 21, 0, Math.PI*2); c.fill();   /* (Nov 18, the text check: a dark roundel under the crest, so the gold ふ reads on the cab face) */
     c.strokeStyle = '#c9a067'; c.lineWidth = 5; c.beginPath(); c.arc(w/2, y(0.48), 22, 0, Math.PI*2); c.stroke(); c.fillStyle = '#c9a067'; c.font = '900 26px sans-serif'; c.fillText('ふ', w/2, y(0.48) + 2);
     c.fillStyle = '#1a1512'; c.fillRect(30, y(0.56), 80, y(0.36) - y(0.56)); c.fillRect(w - 110, y(0.56), 80, y(0.36) - y(0.56));   /* the lamps' band */
     c.fillStyle = 'rgba(40,30,24,0.4)'; c.fillRect(0, y(0.05), w, h - y(0.05)); }), { clampEdge:true });
@@ -136,7 +137,7 @@ export function buildTrain(scene, tag, haloFn){
     steel:std(steel(), { r:0.42, m:0.35 }), rib:std(ribbed(), { r:0.45, m:0.35 }), stripe:std(stripe(), { r:0.5 }), verm:std(null, { c:0x9a3826, r:0.6 }),
     roof:std(null, { c:0x7e7872, r:0.7 }), under:std(null, { c:0x221d1a, r:0.9 }), door:std(doorPic(), { r:0.45, m:0.3 }), crest:std(crest(), { cut:true }),
     cab:std(cabPic(false), { r:0.5 }), wheel:std(null, { c:0x2c2622, r:0.5, m:0.6 }),
-    cream:lit(cream(), { c:0xffffff, k:0.32 }), floor:lit(slats(), { k:0.3 }), seat:lit(moquette(), { k:0.36 }), dark:lit(null, { c:0x3a322c, e:0x3a322c, k:0.2 }),
+    cream:lit(cream(), { c:0xffffff, k:0.32 }), floor:lit(slats(), { k:0.3 }), seat:lit(moquette(), { k:0.36 }), dark:lit(null, { c:0x3a322c, e:0x3a322c, k:0.2 }), gasket:new THREE.MeshStandardMaterial({ color:0x1d1816, roughness:0.85 }),
     pole:new THREE.MeshStandardMaterial({ color:0xc8c2b6, roughness:0.3, metalness:0.7, emissive:new THREE.Color(0x3a3630) }),
     ring:new THREE.MeshStandardMaterial({ color:0xe8e0cc, roughness:0.6, emissive:new THREE.Color(0x4a443a) }),
     tube:new THREE.MeshStandardMaterial({ color:0xfff2dc, emissive:new THREE.Color(1.0, 0.95, 0.85), emissiveIntensity:2.4 }),
@@ -161,10 +162,17 @@ export function buildTrain(scene, tag, haloFn){
       const rows = [[TR.BOT, -0.0, []], [0, 0.76, doors], [0.76, 0.79, doors], [0.79, 0.92, doors], [0.92, WY0, doors], [WY0, WY1, doors.concat(WINS)], [WY1, DY1, doors], [DY1, TR.ROOF, []]];
       for (const [y0, y1, holes] of rows) for (const [a, b] of solidRuns(holes)) {
         const mo = y1 <= 0.0 ? 'rib' : (y0 >= 0.76 && y1 <= 0.79 ? 'verm' : (y0 >= 0.79 && y1 <= 0.92 ? 'stripe' : (y1 <= 0.76 ? 'rib' : 'steel')));
-        add(mo, bgeo(a, b, y0, y1, zo[0] - (mo === 'stripe' ? (s > 0 ? 0 : 0.006) : 0), zo[1] + (mo === 'stripe' ? (s > 0 ? 0.006 : 0) : 0), mo === 'stripe' ? [0.5, 0.13] : (mo === 'rib' ? [1, 0.5] : [1, 1])));
-        if (y0 >= 0 && y1 <= TR.ROOF) add('cream', bgeo(a, b, Math.max(y0, TR.FL), y1, zi[0], zi[1], [1, 1]));
+        add(mo, bgeo(a - 0.004, b + 0.004, y0 - (y0 > TR.BOT ? 0.004 : 0), y1 + (y1 < TR.ROOF ? 0.004 : 0), zo[0] - (mo === 'stripe' ? (s > 0 ? 0 : 0.006) : 0), zo[1] + (mo === 'stripe' ? (s > 0 ? 0.006 : 0) : 0), mo === 'stripe' ? [0.5, 0.13] : (mo === 'rib' ? [1, 0.5] : [1, 1])));
+        if (y0 >= 0 && y1 <= TR.ROOF) add('cream', bgeo(Math.max(a, 0.052), Math.min(b, L - 0.052), Math.max(y0, TR.FL), y1, zi[0], zi[1], [1, 1]));   /* (kept behind the end plates: its edge used to show through on the car's end) */
       }
       for (const [a, b] of WINS) { add('dark', bgeo(a, b, WY0 - 0.02, WY0, Math.min(zo[0], zi[0]), Math.max(zo[1], zi[1]))); }   /* the sills */
+      /* (Nov 18, Aisling: "there are like weird white gaps") every opening gets its frame: a dark rubber reveal from the
+         outer skin to the inner one round each window and doorway, so you never see light through the wall's slit */
+      { const za = Math.min(zo[0], zi[0]) - 0.002, zb = Math.max(zo[1], zi[1]) + 0.002, fr = (a, b, y0, y1, w) => {
+          add('gasket', bgeo(a - w, a + 0.006, y0 - w, y1 + w, za, zb)); add('gasket', bgeo(b - 0.006, b + w, y0 - w, y1 + w, za, zb));
+          add('gasket', bgeo(a - w, b + w, y1 - 0.006, y1 + w, za, zb)); if (y0 > TR.FL + 0.01) add('gasket', bgeo(a - w, b + w, y0 - w, y0 + 0.006, za, zb)); };
+        for (const [a, b] of WINS) fr(a, b, WY0, WY1, 0.022);
+        for (const d of TR.DOORS) fr(d - TR.DHW, d + TR.DHW, TR.FL, DY1, 0.03); }
       for (const d of TR.DOORS) { add('dark', bgeo(d - TR.DHW, d + TR.DHW, TR.FL - 0.005, TR.FL, Math.min(zo[0], zi[0]), Math.max(zo[1], zi[1]))); }   /* the door tracks */
       /* the crest, on each car, low between the first two doors */
       const cg = new THREE.PlaneGeometry(0.34, 0.34); if (s < 0) cg.rotateY(Math.PI); cg.translate(2.85, 0.45, s*(HW + 0.004)); add('crest', cg.toNonIndexed());
@@ -191,7 +199,7 @@ export function buildTrain(scene, tag, haloFn){
     for (const e of [0, 1]) {
       const x0 = e ? L - 0.05 : 0, x1 = e ? L : 0.05, cab = (k === 0 && e === 1) || (k === TR.N - 1 && e === 0);
       if (cab) { const fg = new THREE.PlaneGeometry(2*HW, TR.TOP - TR.BOT); fg.rotateY(e ? Math.PI/2 : -Math.PI/2); fg.translate(e ? L + 0.002 : -0.002, (TR.TOP + TR.BOT)/2, 0); add('cab', fg.toNonIndexed()); }
-      add(cab ? 'steel' : 'steel', bgeo(x0, x1, TR.BOT, TR.ROOF + 0.05, -HW, HW, [1, 1]));
+      add('steel', bgeo(x0, x1, TR.BOT, TR.ROOF + 0.05, -HW + 0.004, HW - 0.004, [1, 1]));   /* (just inside the side skins, so their faces never fight) */
       add('cream', bgeo(e ? x0 - 0.012 : x1, e ? x0 : x1 + 0.012, TR.FL, TR.ROOF, -HW + inn, HW - inn, [1, 1]));
       TR.solids.push({ car:k, lx0:e ? L - 0.07 : 0, lx1:e ? L : 0.07, y0:TR.BOT, y1:TR.ROOF, z0:TR.ZC - HW, z1:TR.ZC + HW, x0:0, x1:0 });
       if (cab) {   /* the lamps: white at whichever end leads, red at the end that follows (it runs both ways) */
@@ -199,6 +207,12 @@ export function buildTrain(scene, tag, haloFn){
         const lm = new THREE.Mesh(mergeGeometries(lgs), MT.head); G.add(lm); (TR.lamps = TR.lamps || {})[e ? 'east' : 'west'] = lm; TR.MT = MT;
       }
     }
+    /* (Nov 18) between this car and the next: the gangway, dark folded bellows, so the cars read as one train and no
+       light shows through between them */
+    if (k < TR.N - 1) { const gx0 = -TR.G - 0.02, gx1 = 0.02;
+      add('gasket', bgeo(gx0, gx1, TR.FL - 0.05, TR.ROOF - 0.12, -0.62, 0.62));
+      for (let f = 0; f < 5; f++) { const x = gx0 + (f + 0.5)*(gx1 - gx0)/5; add('gasket', bgeo(x - 0.012, x + 0.012, TR.FL - 0.07, TR.ROOF - 0.1, -0.65, 0.65)); }   /* its folds */
+      add('wheel', bgeo(gx0, gx1, -0.1, 0.0, -0.08, 0.08)); }   /* the coupler under it */
     /* the floor, as a solid you stand on (in the tunnel too) */
     TR.solids.push({ car:k, lx0:0, lx1:L, y0:TR.BOT, y1:TR.FL, z0:TR.ZC - HW, z1:TR.ZC + HW, floor:true, x0:0, x1:0 });
     /* the bogies: wheels and frames under each end */

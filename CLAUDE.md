@@ -46,6 +46,13 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
 2. Make the change. Build: `npm install` once, then `bash build.sh` → `dist/missing-mile-station.html` (one self-contained page).
 3. Test with pictures: `node t/shots.js '[[x,z,yawDeg,pitch,look],...]' /tmp/p_` (look 1 = Missing Mile's own (soft + 2% grit + 2% glow, a hair darker), 2–4 = soft, grit, glow, 5 = side by side; x east,
    z south, as Seam's map cells). `node t/walk.js` checks walking and collisions. `python3 t/bluescan.py /tmp/p_` checks for blue.
+   **`node t/text.js` every round (Aisling, Nov 18):** every word on screen (captions, CC, pocket, close-ups, buttons) and
+   every word painted on things (canvas pictures, Seam's FPIC pictures), at computer, tablet and phone sizes: off the
+   screen, cut off, overlapping, too faint (captions and CC 4.5:1), runs off its picture. It must end with no MUST FIX.
+   True exceptions go in `t/text-allow.json`, each with its reason. **Phones:** as much as can possibly work on a phone
+   does (Aisling: "we will do as much as possible everything we can in phones"); only what truly can't goes on a
+   short "computer or tablet only" list she sees. **CC for every sound, minimal** (only what a deaf player needs to
+   know), with room kept for it: the caption and the CC line stack (`#subs`), never on top of each other.
 4. Log it in doc 50 (nullgrey-lore `claude/`, copy in `docs/`, and the project).
 5. Commit and push every repo you touched (plain-language messages, with the session's attribution lines).
 6. Send Aisling the built page and pictures. Always send `dist/missing-mile-station.html` itself, on its own, so she can open it straight in a browser (Aisling, Nov 18), as well as any zip of the linked pages.

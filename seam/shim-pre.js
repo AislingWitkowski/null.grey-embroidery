@@ -6,6 +6,11 @@
    ================================================================ */
 var EG_SEAM = window.EG_SEAM = window.EG_SEAM || { say:function(){}, cc:function(){}, steps:[] };
 var stage = document.getElementById('stage');
+/* (Nov 18) Seam's pocket and close-ups are laid out for Seam's stage: a 16:9 box, centred (the whole width on a tall
+   screen). The same box here (Seam's own d8-fit rule), so their words land where Seam puts them and never on the border */
+(function(){ function egFit(){ var W = 960, H = 540, rw = window.innerWidth, rh = window.innerHeight, tall = rh > rw*1.1, s = tall ? rw/W : Math.min(rw/W, rh/H);
+  stage.classList.toggle('tall', tall); stage.style.width = Math.round(W*s) + 'px'; stage.style.height = Math.round(H*s) + 'px'; }
+  egFit(); window.addEventListener('resize', egFit); })();
 var capEl = document.getElementById('seam-caption');
 var capTimer = 0;
 function setCaption(t, ms){ EG_SEAM.say(t, ms); }

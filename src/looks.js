@@ -40,6 +40,7 @@ function mixLooks(parts){
 const MM = mixLooks([[BASE[0], 0.90], [BASE[1], 0.05], [BASE[2], 0.05]]);   /* (then "maybe like 3% more of same things": 5% grit, 5% glow, a little darker again) */
 MM.label = 'missing mile'; MM.say = 'missing mile · soft, with a little grit and glow, a little darker';
 MM.contrast *= 1.07; MM.exposure *= 0.97; MM.res = Math.round(MM.res);
+MM.mist = 0.2;   /* (Nov 18, Aisling: "a little more dreamy...but not blurry") a mist filter, as on a camera lens */
 /* (Nov 17, night) Aisling: "i think we can punp up the graphic one biut more? towards ps3.. but keeping slight 1% crunch?"
    the same look, smoother: each drawn pixel is one screen pixel (was up to 1.25), edges smoothed (4× multisampling),
    much less of the ink snap and dither (the crunch), a little less grain. the colours, fog and light stay the same.

@@ -9,6 +9,11 @@
    ================================================================ */
 var EG_SEAM = window.EG_SEAM = window.EG_SEAM || { say:function(){}, cc:function(){}, steps:[] };
 var stage = document.getElementById('stage');
+/* (Nov 18) Seam's pocket and close-ups are laid out for Seam's stage: a 16:9 box, centred (the whole width on a tall
+   screen). The same box here (Seam's own d8-fit rule), so their words land where Seam puts them and never on the border */
+(function(){ function egFit(){ var W = 960, H = 540, rw = window.innerWidth, rh = window.innerHeight, tall = rh > rw*1.1, s = tall ? rw/W : Math.min(rw/W, rh/H);
+  stage.classList.toggle('tall', tall); stage.style.width = Math.round(W*s) + 'px'; stage.style.height = Math.round(H*s) + 'px'; }
+  egFit(); window.addEventListener('resize', egFit); })();
 var capEl = document.getElementById('seam-caption');
 var capTimer = 0;
 function setCaption(t, ms){ EG_SEAM.say(t, ms); }
@@ -174,7 +179,7 @@ fpic('f3binSide', 0.4, 0.85, 120, 40, 85, '', function(){ return '<rect width="4
     [27, 29.6, 32.2].map(function(y){ return '<rect x="1.5" y="' + y + '" width="15" height="1.1" fill="#9e6c62"/>'; }).join('') + '<rect y="33.5" width="18" height="2.5" fill="#6e4e46"/>'; });
   fpic('f3tag', 0.08, 0.11, 400, 16, 22, '', function(){ return '<rect width="16" height="22" rx="1" fill="#9a958c"/><rect x="1" y="1" width="14" height="20" fill="none" stroke="#6a6660" stroke-width="0.6"/><path d="M4,6 h8 M4,10 h6 M4,14 h8 M4,18 h4" stroke="#4a4642" stroke-width="1.4"/>'; });
 fpic('f3shedSign', 1.4, 0.55, 240, 140, 55, '', function(){
-  return '<rect width="140" height="55" fill="#e2d6be"/>' + fTx('FEED · SEED · BAIT', 54, 17, '#9a2a22', 12, { f:F_EN, w:900 }) + fTx('造花 · 生花', 54, 31, '#3c2f1f', 9, { w:800 }) + fTx('MAPLES & SONS · TEL 2-1137', 54, 44, '#3c2f1f', 6, { f:F_EN, w:700 }) +
+  return '<rect width="140" height="55" fill="#e2d6be"/>' + fTx('FEED · SEED · BAIT', 55, 17, '#9a2a22', 9.6, { f:F_EN, w:900 }) + fTx('造花 · 生花', 54, 31, '#3c2f1f', 9, { w:800 }) + fTx('MAPLES & SONS · TEL 2-1137', 54, 44, '#3c2f1f', 6, { f:F_EN, w:700 }) +
     '<rect x="112" y="4" width="24" height="47" fill="#f2f0ea"/>' + fTx('ハ', 124, 18, '#9a2a22', 10, { w:900 }) + fTx('ナ', 124, 31, '#9a2a22', 10, { w:900 }) + fTx('ワ', 124, 44, '#9a2a22', 10, { w:900 }) + '<rect x="0" y="48" width="60" height="7" fill="#c7b89c" opacity="0.6"/>';
 });
 fpic('f3tobacco', 0.8, 0.12, 300, 80, 12, '', function(){ return '<rect width="80" height="12" fill="#9a2a22"/>' + fTx('たばこ · TOBACCO', 40, 8.6, '#f2f0ea', 6.6, { w:900 }); });
@@ -3838,6 +3843,8 @@ EG_SEAM.where = function(x, z, a){ me.x = x; me.y = z; me.a = a; };
 EG_SEAM.closeUpOpen = function(){ return !!((typeof F3C !== 'undefined' && F3C.open) || (typeof FVM !== 'undefined' && FVM.open)); };
 EG_SEAM.closeAll = function(){ try { if (typeof F3C !== 'undefined' && F3C.open) f3Close(); } catch (e) {} try { if (typeof FVM !== 'undefined' && FVM.open) fvmClose(); } catch (e) {} };
 EG_SEAM.pic = function(name){ return FPIC[name] || null; };
+EG_SEAM.liftFirst = function(){ try { var it = (POK.items || []).filter(function(i){ return !i.deep; })[0]; if (it) { pkLift(it); return it.id; } } catch (e) {} return null; };   /* (tests: lift the first thing, as a click on it would) */
+EG_SEAM.picNames = function(){ return Object.keys(FPIC); };   /* (for the text check, t/text.js) */
 /* (the train) going between pages, as every Seam page does (shared/hy2-journey.js), and the ride's line map and words */
 EG_SEAM.ride = { stops:RIDE_STOPS, pages:F_STOP_PAGES, say:RIDE_SAY, map:RIDE_MAP, svg:RIDE_MAP_SVG, warn:F_WARN, here:RIDE_HERE,
   arrived:(typeof ngArrivedHere !== 'undefined' ? ngArrivedHere : null), go:function(page, at){ keys = {}; ngGoTo(page, at); }, fade:function(on){ ngFade(on); }, leaving:function(){ return NGJ.leaving; } };

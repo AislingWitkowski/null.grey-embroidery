@@ -334,3 +334,31 @@ Aisling: *"ok great lets go forwards?"* (step 2: Missing Mile's graphics pass).
 - **Checked:** walking, clicks, the train both ways, 0 errors, no blue; draw calls about as before (75–171 from the busiest spots).
 - **Still in the graphics pass:** glass in the windows, the windmill's wheel and vane in the round, the tunnel inside, the hanging sign and name board as Seam's own pictures, the train's windows and its light on the platform, the grass and corn up close.
 - **Pending, Aisling:** the look pick (1 · missing mile or 6 · more ps3); which browser she uses; what "looking down moves a little odd" means; whether the sky tag's spot is right.
+
+### Nov 18 (night) — the train fits together, the pocket's words, the leaves, dreamier; a text check every round
+Aisling: *"the leaves are ok, but htey are a little tto outlines and cartoonish, and they float a little too much and the train is like not fitting together? there are ;ole weird white gaps? and all the pocket text and the object text is all overlapping each other? … everything looks a little too crisp … a little more dreamy...but not blurry? … can we add something to embriodery to auto check the text boxes always and the font on everything to make sure its not running off or overlapping or running off an object or not running into a color that will not be realdable? also remember to add cc for everything … those closed captions need space as well, for like deaf people … just what they need to know though... very minaimal"*. Then on phones: *"this is not made for phones really and less priority for phones, but not impossible … ipads more so or tablet"*, and *"we will do as muscjh as possible everything we can in phones i want as much as we can possibly do, but some might have to be computer or tablet"*.
+- **The train fits together:**
+  - every window and doorway has a dark rubber frame from the outer skin to the inner one (you saw light through the wall's slit before);
+  - between cars there's a gangway now (folded dark bellows and a coupler), so they read as one train;
+  - the side panels overlap a hair, so no hairlines between them;
+  - the thin pale line on each car's end (the inside wall's edge showing through the end plate) is gone.
+- **The pocket's words:** Seam's pocket is laid out for Seam's 16:9 stage, and in Embroidery it was stretched over the whole window, so its words landed on its rune border. Embroidery now gives it Seam's own stage (16:9, centred; the full width on a tall phone), so everything sits where Seam puts it. Round it is plain dark, as in Seam. On a tall phone its close and deeper buttons sit just under it, so the words never run into them.
+- **Captions and CC:** they now stack. A long caption pushes the CC line up and never covers it. The CC line is a little brighter on a darker band, so it reads easily. Room for them is part of the text check.
+- **The leaves:** no hard outline. Each leaf is shaded from the middle out, a little browner at its edge, with a faint rib and a few soft blemishes. The maples have rounded, pointed lobes rather than a star. The bunches sit on their twigs (they used to float out past the twig ends and away from the branches).
+- **Dreamier, not blurry:**
+  - **A bug, found and fixed:** the setting that mixes the smooth picture with the station's ink was never applied. Every pixel was snapped hard to the ink steps, which was a big part of the crispness. Now each look's ink amount works as described (Missing Mile: 30% snapped ink over a smooth ink grade).
+  - **A mist filter**, like one on a camera lens: the picture breathes a little into a soft copy of itself, the lights most. Edges stay; it just feels softer and more like a dream. (Missing Mile's look only; `mist` in `src/looks.js`.)
+- **The text check, `node t/text.js`, every round from now on** (in CLAUDE.md):
+  - **words on the screen:** captions, CC, the pocket (open, and with a thing lifted), the close-ups (clippings, one clipping, newspaper, missing poster, drinks machine), the buttons, at six window sizes (two computers, two tablets, a phone upright and sideways). It checks for words off the screen, cut off by their box, overlapping, or too faint against what's behind them (captions and CC 4.5:1, the rest 3:1);
+  - **words painted on things** (every canvas picture, Embroidery's and Seam's) and **in Seam's pictures:** running off the picture, overlapping, too faint on it.
+  - **First run, found and fixed:**
+    - the CC line slightly too faint;
+    - the train caption over the CC line on a phone;
+    - the pocket's caption over its close and deeper buttons on a phone;
+    - **FEED · SEED · BAIT** running off the shed sign (made a little smaller, in Seam's picture, so both engines match);
+    - the train cab's ふ crest too faint (a dark roundel under it now);
+    - the sound/CC switches and look buttons too see-through over busy scenery.
+  - **Allowed on purpose** (`t/text-allow.json`, each with its reason): 灯油 on the jerry can, moulded faint into the plastic as in Seam.
+  - **Phones:** as much as can possibly work on a phone does; phone sizes are checked as strictly as the others. Anything that truly can't work goes on a short "computer or tablet only" list for Aisling to see. None so far.
+- **Checked:** walking, clicks, the train both ways, real clicks on the close-ups and the pocket, 0 errors, no blue; draw calls about as before (82–179).
+- **Pending, Aisling:** the look pick (1 or 6); which browser; what "looking down moves a little odd" means; the sky tag's spot.

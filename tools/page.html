@@ -8,7 +8,7 @@ html,body{margin:0;height:100%;background:#130d0a;overflow:hidden;touch-action:n
 #wait{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#a39a8c;font-size:13px;letter-spacing:2px;background:#130d0a;transition:opacity 1.2s}
 #wait.gone{opacity:0;pointer-events:none}
 #looks{position:fixed;top:10px;left:10px;display:flex;flex-direction:column;gap:3px;align-items:flex-start;opacity:.75}
-#looks button{font:inherit;font-size:10px;letter-spacing:1px;color:#b8ad9c;background:rgba(19,13,10,.7);border:1px solid #3c2f27;padding:4px 9px;cursor:pointer}
+#looks button{font:inherit;font-size:10px;letter-spacing:1px;color:#b8ad9c;background:rgba(19,13,10,.88);border:1px solid #3c2f27;padding:4px 9px;cursor:pointer}
 #looks button.on{color:#efe3cc;border-color:#8b6838}
 #names{position:fixed;top:10px;left:160px;right:160px;display:none;justify-content:space-around;pointer-events:none;color:#d9cfbf;font-size:11px;letter-spacing:2px}
 #names span{background:rgba(19,13,10,.6);padding:2px 8px}
@@ -18,10 +18,12 @@ html,body{margin:0;height:100%;background:#130d0a;overflow:hidden;touch-action:n
 #tbtn div{width:54px;height:54px;border-radius:50%;background:rgba(19,13,10,.55);border:1px solid #4b3840;color:#c9bca8;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:1px}
 /* (milestone 2) Seam's pocket lives in its own layer over the 3D view, as it does in Seam */
 #page-root{position:fixed;inset:0;pointer-events:none;z-index:20;font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;color:#e4dcd0}
-#stage{position:absolute;inset:0;pointer-events:none}
+#stage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}   /* (sized like Seam's stage by the bridge) */
 #stage #pk-icon,#stage #pocket.open,#stage #pocket.open *,#stage #pk-drop,#stage #f3close.open,#stage #f3close.open *,#stage #fvm.open,#stage #fvm.open *{pointer-events:auto}   /* (the pocket, and Seam's close-ups: they take their own clicks, so you can step back out of them) */
 #seam-caption,#grain{display:none}
-body.pk-open .sw,body.pk-open #looks,body.pk-open #fps,body.pk-open #caption,body.pk-open #ccline,body.pk-open #tbtn{visibility:hidden}   /* (as in Seam: the switches step aside while the pocket is open) */
+body.pk-open #page-root{background:#0b0908}   /* (Nov 18) round the pocket and the close-ups: plain dark, as in Seam */
+#stage.tall #pk-nav,#stage.tall #pk-back{bottom:auto!important;top:calc(100% + 14px)}   /* (Nov 18) on a tall phone screen the pocket's bottom buttons go just under it, where there's room, so its words never run into them */
+body.pk-open .sw,body.pk-open #looks,body.pk-open #fps,body.pk-open #caption,body.pk-open #tbtn{visibility:hidden}   /* (as in Seam: the switches step aside while the pocket is open) */
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="names"><span>soft</span><span>grit</span><span>glow</span></div>
