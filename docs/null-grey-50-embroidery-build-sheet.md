@@ -318,3 +318,19 @@ Aisling: *"it was lik,e i couldnt move in and out of poicket, when i went into t
 - **"Some object still missing":** every clickable thing on Seam's Missing Mile is now in Embroidery (checked name by name). If she means something that isn't clickable, she should say which.
 - Checks: walking, clicks, the train both ways, 0 errors, no blue.
 - **Still open:** which browser she uses; what "looking down moves a little odd" means; whether the sky tag's spot is right.
+
+### Nov 18 (just after midnight) — the graphics pass, part 1: the stucco holes, the trees, the road lamps
+Aisling: *"ok great lets go forwards?"* (step 2: Missing Mile's graphics pass).
+- **The holes in the stucco** (her note: *"they look too..umm smooth and stuff not very natural"*):
+  - the outline is chipped and ragged at three sizes;
+  - the stucco stands proud with a broken pale lip, its own thickness showing, and throws a little shadow onto the brick under it;
+  - fine cracks gather round each hole;
+  - the brick behind is laid in courses: each brick its own colour (mostly red-brown, a few burnt dark, a few gone purplish), worn round at its edges; a few are cracked and a few are gone, leaving only dark; the mortar is grey and sunk back;
+  - crumbs lie at the wall's foot under the holes.
+  - The front wall's texture has 1.5× the pixels to hold it. It shows on the station's front, back and gables.
+- **The trees in the wind:** the same wind as the grass (the same gusts, from the same side). The crown leans and comes back, more the higher up it is, and the branches bend with it, so the leaves stay on them. Each leaf trembles a little on its own, slowly (well under three times a second). Checked calm against a full gust: the crown moves as one.
+- **Light through the leaves:** the leaves glow a little in the dusk, most when you look up at them against the sky. Underneath, they used to be near-black silhouettes; now their gold and rust show (Folklore's backlit canopies).
+- **The road lamps light the road:** the lit lamp and the weak one each lay a soft warm pool on the ground under them, following every dip of the road and verge, falling off softly and fading with the fog. It's steady (no flicker). The earlier attempt went dark under the ink grade; this one is added on top of the ground's own colour, so it stays warm. It costs one small mesh per lamp, not a real light.
+- **Checked:** walking, clicks, the train both ways, 0 errors, no blue; draw calls about as before (75–171 from the busiest spots).
+- **Still in the graphics pass:** glass in the windows, the windmill's wheel and vane in the round, the tunnel inside, the hanging sign and name board as Seam's own pictures, the train's windows and its light on the platform, the grass and corn up close.
+- **Pending, Aisling:** the look pick (1 · missing mile or 6 · more ps3); which browser she uses; what "looking down moves a little odd" means; whether the sky tag's spot is right.

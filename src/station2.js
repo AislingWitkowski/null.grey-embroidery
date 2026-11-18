@@ -93,9 +93,29 @@ export function buildMore(C){
         c.restore(); }
     });
   }
+  /* (Nov 17, graphics pass) the trees in the wind, the same wind as the grass (the same gusts, the same way): the crown
+     leans and comes back, more the higher it is, the branches bending with it so the leaves stay on them; each leaf
+     trembles a little on its own, slowly (well under three times a second). and light comes through the leaves: they
+     glow a little in the dusk, most when you look up at them against the sky (Folklore's backlit canopies) */
+  const SWAY = 'vec4 mvPosition; { vec4 wp = modelMatrix*vec4(transformed, 1.0);\n#ifdef USE_INSTANCING\n wp = modelMatrix*instanceMatrix*vec4(transformed, 1.0);\n#endif\n' +
+    ' float hk = clamp((wp.y - 0.9)/3.2, 0.0, 1.0); hk *= hk;\n' +
+    ' float lean = (0.016 + uGust*0.07)*(0.65 + 0.35*sin(uTime*0.55 + wp.x*0.3 + wp.z*0.21)) + 0.012*sin(uTime*0.37 + wp.z*0.4);\n' +
+    ' vec3 egSw = vec3(0.85, 0.0, 0.5)*lean*hk; egSw.y = -0.25*lean*hk;\n';
+  const swayVert = (sh, leaf) => { sh.uniforms.uTime = K.wind.uTime; sh.uniforms.uGust = K.wind.uGust;
+    sh.vertexShader = (leaf ? '' : 'uniform float uTime; uniform float uGust;\n') + sh.vertexShader.replace('#include <project_vertex>', SWAY +
+      (leaf ? ' float fl = sin(uTime*(1.6 + mod(aVar, 5.0)*0.12) + aVar*1.7 + wp.x*2.3 + wp.z*1.9)*(0.006 + uGust*0.018);\n egSw += vec3(fl, fl*0.6, fl*0.8);\n' : '') +
+      ' mvPosition = viewMatrix*(wp + vec4(egSw, 0.0)); gl_Position = projectionMatrix*mvPosition; }'); };
+  bark.onBeforeCompile = sh => swayVert(sh, false); bark.customProgramCacheKey = () => 'tree-bark';
   function leafMat(map){
     const m = new THREE.MeshStandardMaterial({ map, alphaTest:0.5, roughness:0.85, side:THREE.DoubleSide }); m.userData.noDetail = true;
-    m.onBeforeCompile = sh => { sh.vertexShader = 'attribute float aVar;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv = vMapUv*0.25 + vec2(mod(aVar, 4.0), floor(aVar/4.0))*0.25;'); };
+    m.onBeforeCompile = sh => {
+      sh.vertexShader = 'attribute float aVar; uniform float uTime; uniform float uGust;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv = vMapUv*0.25 + vec2(mod(aVar, 4.0), floor(aVar/4.0))*0.25;');
+      swayVert(sh, true);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n' +
+        ' { vec3 d = normalize(-vViewPosition), up = normalize((viewMatrix*vec4(0.0, 1.0, 0.0, 0.0)).xyz); float back = clamp(-dot(d, up)*1.4 + 0.15, 0.0, 1.0);\n' +
+        '   reflectedLight.indirectDiffuse += diffuseColor.rgb*vec3(1.0, 0.86, 0.66)*(0.1 + 0.42*back*back); }');   /* (thin leaves: the dusk comes through them) */
+    };
+    m.customProgramCacheKey = () => 'tree-leaf';
     return m;
   }
   function leafField(items, m, flat){
@@ -243,6 +263,24 @@ export function buildMore(C){
 
   /* ================= old street lamps on three of the road's poles: one lit, dim and orange; one burnt out; one weak
      but steady (Seam f03-3d4: hx 0.78 m out over the road, the shade at 5.36) ================= */
+  /* (Nov 17, graphics pass) its light on the road: a pool laid on the ground itself (following every dip of it), added
+     on top of what's there, warm, strongest under the lamp and falling off softly; it fades with the fog like everything
+     else. (a real light would cost every surface in view; this costs one small mesh.) the light runs slow and steady:
+     no flicker */
+  function lampPool(cx, cz, R, k){
+    const N = 28, pos = [], idx = [];
+    for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) { const x = cx - R + 2*R*i/N, z = cz - R + 2*R*j/N; pos.push(x, groundAt(x, z) + 0.025, z); }
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) { const a = j*(N + 1) + i, b = a + 1, c = a + N + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
+    const m = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, fog:true,
+      polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2,
+      uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uC:{ value:new THREE.Vector3(cx, 5.3, cz) }, uR:{ value:R }, uK:{ value:k }, uCol:{ value:new THREE.Color(1.0, 0.62, 0.3) } }]),
+      vertexShader:'varying vec3 vW; varying float vD; void main(){ vec4 w = modelMatrix*vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix*w; vD = -mv.z; gl_Position = projectionMatrix*mv; }',
+      fragmentShader:'uniform vec3 uC, uCol; uniform float uR, uK; uniform float fogNear, fogFar; varying vec3 vW; varying float vD;\n' +
+        'void main(){ float r = length(vW.xz - uC.xz)/uR; if (r > 1.0) discard; float f = pow(1.0 - r, 2.2)*(0.55 + 0.45/(1.0 + r*r*6.0));\n' +
+        ' float a = uK*0.16*f*(1.0 - smoothstep(fogNear, fogFar*1.1, vD)); gl_FragColor = vec4(uCol*a, 1.0); }' });
+    const me = new THREE.Mesh(g, m); me.renderOrder = 1; scene.add(me); return me;
+  }
   const shadeM = mat(T.tinG, { rough:0.6, metal:0.4, two:true });
   [[24.58, 0.7], [31.58, 0], [38.58, 0.32]].forEach(([z, k]) => {
     const px = 31.88, hx = 31.2, hz = 5.36;
@@ -250,8 +288,7 @@ export function buildMore(C){
     tag(lathe([[0.02, 0.09], [0.03, 0.07], [0.095, 0.05], [0.17, 0.012], [0.19, -0.004]], shadeM, hx, hz, z, 14, { cast:false }), 'streetlamp');
     const gm = k > 0 ? new THREE.MeshStandardMaterial({ color:0x2a1a08, emissive:new THREE.Color(1.0, 0.66, 0.34), emissiveIntensity:1.5 + 4*k }) : mat(null, { color:0x6a6460, rough:0.4 });
     const b = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), gm); b.position.set(hx, hz - 0.045, z); scene.add(b); tag(b, 'streetlamp');
-    if (k > 0) { halo(hx, hz - 0.05, z, 0.55*k + 0.2, 0xffb070);
-      }   /* (its light on the road: a pool was tried, but the ink grade turned it into a dark patch; a later pass, with the lighting) */
+    if (k > 0) { halo(hx, hz - 0.05, z, 0.55*k + 0.2, 0xffb070); lampPool(hx, z, 3.4 + 2.2*k, k); }
   });
 
   /* ================= the tunnel mouth: the line goes into the ground east of the platform. an old concrete mouth in a

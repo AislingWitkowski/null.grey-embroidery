@@ -60,10 +60,11 @@ export function tex(cv, opts = {}){
    window bay (Seam's f3Building, carried over). 3.4 m tall. (Nov 17, later: twice the pixels, hairline cracks in the
    stucco, salt bloom low down, grime run down from the sills and the straps, and a relief for every part.) ---------------- */
 export function paintFacade(){
-  return paint(1024, 600, 6, 3.4, (x, h) => {
+  return paint(1536, 870, 6, 3.4, (x, h) => {
     const bay = x % 3, isDoor = x < 3, win = !isDoor && bay > 1.05 && bay < 1.95 && h > 0.95 && h < 2.25;
     const door = isDoor && bay > 0.95 && bay < 2.05 && h < 2.45;
-    if (h < 0.14) return ['hgrey', 0.24 + 0.08*vn(x*20, h*30) - 0.06*vn(x*90, h*90), 1, 0.5 + 0.3*vn(x*40, h*40)];
+    if (h < 0.14) { const above = Math.max(holeField(x, 0.3), holeField(x, 0.6)) > 0.6, cr = above && vn(x*70, h*70) > 0.62;   /* (crumbs fallen from the holes above) */
+      if (cr) return [vn(x*31, h*29) > 0.5 ? 'hrust' : 'hplas', 0.42 + 0.2*vn(x*90, h*90), 1, 0.85]; return ['hgrey', 0.24 + 0.08*vn(x*20, h*30) - 0.06*vn(x*90, h*90), 1, 0.5 + 0.3*vn(x*40, h*40)]; }
     if (door) {
       const dx = bay - 1.5, f = Math.abs(dx) > 0.5 || h > 2.37;
       if (f) return ['hwood', 0.22 + 0.06*vn(x*20, h*6), 1, 0.9];
@@ -88,19 +89,40 @@ export function paintFacade(){
     const st = stucco(x, h); st[1] = clamp(st[1] - drip, 0, 1); return st;
   });
 }
+/* (Nov 17, graphics pass; Aisling: the holes "look too..umm smooth … not very natural") where the stucco has fallen
+   away: the outline is chipped and ragged at three sizes; the stucco stands proud with a broken pale lip (its own
+   thickness showing) and casts a little shadow onto the brick under it; the brick behind is laid in courses, each brick
+   its own colour, edges worn round, a few cracked, a few gone (a dark hole); the mortar is sunk back and grey. */
+function holeField(x, h){ return fbm(x*0.9, h*1.3) + 0.11*(fbm(x*5.2 + 4, h*6.1) - 0.5) + 0.05*(vn(x*23, h*27) - 0.5) + 0.025*(vn(x*70, h*80) - 0.5); }
+function brick(x, h, f){
+  const row = Math.floor(h*12), off = (row & 1)*0.5, bxw = x*4 + off, col = Math.floor(bxw), bx = frac(bxw), by = frac(h*12);
+  const b = hsh(col, row), b2 = hsh(col + 31, row - 7), b3 = hsh(col - 5, row + 13);
+  const shade = sm(0.66, 0.705, f);   /* the lip's shadow, falling just inside the edge */
+  const mortar = bx < 0.05 || by < 0.11;
+  if (mortar) { const eroded = vn(x*40, h*40) > 0.6; return ['hgrey', clamp(0.3 - (eroded ? 0.08 : 0) - 0.12*(1 - shade) + 0.06*vn(x*90, h*90), 0, 1), 1, eroded ? 0.0 : 0.08, 0.95]; }
+  if (b2 > 0.955 && h > 0.25) return ['hblack', 0.12 + 0.1*vn(x*60, h*60), 1, -0.25, 1];   /* a brick gone: only the dark behind */
+  const ex = Math.min(bx - 0.05, 1 - bx)/0.95*4, ey = Math.min(by - 0.11, 1 - by)/0.89*12, edge = sm(0, 0.35, Math.min(ex*0.25, ey*0.083)*4);   /* worn round at its edges */
+  const crack = b3 > 0.82 && Math.abs((bx - 0.5) - (by - 0.5)*(b3 > 0.91 ? 1.2 : -0.9) + 0.06*(vn(x*80, h*80) - 0.5)) < 0.025;
+  const ramp = b > 0.9 ? 'hwood' : (b < 0.07 ? 'hplum' : 'hrust');   /* a few burnt dark, a few gone purplish, most red-brown */
+  let v = 0.4 + 0.18*b + 0.1*b2 - 0.06 + 0.07*vn(x*30, h*30) + 0.05*(vn(x*120, h*120) - 0.5) - 0.14*(1 - shade) - 0.07*(1 - edge);
+  if (crack) v -= 0.2;
+  return [ramp, clamp(v, 0, 1), 1, 0.3 + 0.12*edge + 0.06*vn(x*50, h*50) - (crack ? 0.2 : 0), 0.9];
+}
 function stucco(x, h){
-  const band = (h > 1.2 && h < 1.32) || (h > 2.6 && h < 2.72), bare = fbm(x*0.9, h*1.3) > 0.66 && h < 2.5;
-  const edge = fbm(x*0.9, h*1.3) > 0.64 && !bare;   /* the broken lip of the stucco round the bare patches */
-  if (bare) { const bx = frac(x*4 + (Math.floor(h*12) & 1)*0.5), by = frac(h*12), mortar = bx < 0.06 || by < 0.12, b = hsh(Math.floor(x*4 + (Math.floor(h*12) & 1)*0.5), Math.floor(h*12));
-    return ['hrust', mortar ? 0.26 : 0.46 + 0.12*b + 0.08*vn(x*30, h*30), 1, mortar ? 0.1 : 0.45 + 0.1*vn(x*40, h*40)]; }
+  const band = (h > 1.2 && h < 1.32) || (h > 2.6 && h < 2.72), f = holeField(x, h), bare = f > 0.66 && h < 2.5;
+  if (bare) return brick(x, h, f);
+  const lip = f > 0.645 && h < 2.5;   /* the broken edge: the stucco's own thickness, paler and crumbly */
+  if (lip) { const t = (f - 0.645)/0.015; return ['hplas', clamp(0.62 + 0.12*vn(x*80, h*80) - 0.1*t + 0.06*(vn(x*200, h*200) - 0.5), 0, 1), 1, 1.15 - 0.2*t + 0.1*vn(x*90, h*90), 1]; }
   const crack = Math.abs(frac(x*1.3 + fbm(x*1.5, h*2.2)*1.6) - 0.5) < 0.006 && fbm(x*0.6 + 9, h*0.7) > 0.58;
+  const near = sm(0.55, 0.645, f);   /* hairline cracks and lifting gather round the holes */
   const salt = (1 - sm(0.05, 0.7, h))*sm(0.5, 0.75, fbm(x*2.5 + 3, h*4));   /* salt bloom where the damp rises */
   const streak = vn(x*7, 1)*sm(3.4, 1.6, h)*0.12;
-  let v = (band ? 0.62 : 0.8) - 0.22*(1 - sm(0.1, 0.9, h))*vn(x*3, h*2) - 0.12*fbm(x*1.6, h*0.9) - streak + 0.05*(vn(x*60, h*60) - 0.5) + 0.04*(vn(x*140, h*140) - 0.5);
-  if (crack) v -= 0.22; v += salt*0.08;
-  return [band ? 'hgrey' : 'hcream', clamp(v, 0, 1), 1, (edge ? 1 : 0.8) + 0.12*vn(x*50, h*50) + 0.08*vn(x*150, h*150) - (crack ? 0.4 : 0) + (band ? 0.15 : 0)];
+  const crazed = near > 0.3 && Math.abs(frac(x*9 + fbm(x*7, h*7)*3) - 0.5) < 0.012*near;
+  let v = (band ? 0.62 : 0.8) - 0.22*(1 - sm(0.1, 0.9, h))*vn(x*3, h*2) - 0.12*fbm(x*1.6, h*0.9) - streak + 0.05*(vn(x*60, h*60) - 0.5) + 0.04*(vn(x*140, h*140) - 0.5) - 0.05*near;
+  if (crack || crazed) v -= 0.2; v += salt*0.08;
+  return [band ? 'hgrey' : 'hcream', clamp(v, 0, 1), 1, 0.8 + 0.12*vn(x*50, h*50) + 0.08*vn(x*150, h*150) - (crack || crazed ? 0.4 : 0) + (band ? 0.15 : 0)];
 }
-export function paintStucco(){ return paint(640, 544, 4, 3.4, (x, h) => stucco(x + 13.7, h)); }
+export function paintStucco(){ return paint(896, 762, 4, 3.4, (x, h) => stucco(x + 13.7, h)); }
 
 /* corrugated tin: real ribs in the relief, rust bleeding down from the nail lines, the odd lighter patched sheet; the
    clean metal is a little shiny, the rust is not */

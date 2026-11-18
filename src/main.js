@@ -137,7 +137,7 @@ function frame(now){
   camera.position.set(P.x, P.y + P.eye + (P.onGround ? Math.sin(t*7)*0.012*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z);
   camera.rotation.set(P.pitch, P.yaw, 0);
   MOUTH_D.value = Math.hypot(camera.position.x - TUN.x, camera.position.y - 1, camera.position.z - TUN.zc);
-  K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = gust(t);
+  K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = window.__gust != null ? window.__gust : gust(t);   /* (__gust: tests only) */
   tickLights(t); look.tick(dt); tickUI(now);
   try { soundTick(camera, P, t, K.wind.uGust.value, L.bulbs.slice(0, 5).map(b => b.intensity/(b.userData.base || 1)), surfaceAt(P.x, P.z, P.y)); } catch (e) {}
   if (!split) { camera.clearViewOffset(); look.draw(scene, camera, LOOKS[cur], 0, CW, CH, CW); }
