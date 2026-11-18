@@ -4,9 +4,9 @@
 import * as THREE from 'three';
 import { makeLook } from './look.js';
 import { buildStation, applyLook, tickLights, L, CLICK, tag, halo } from './station.js';
-import { buildTrain, trainTick, trainArrive, TR } from './train.js';
+import { buildTrain, trainTick, trainArrive, TR, onTrainFloor } from './train.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
-import { UI, initUI, say, tickUI, ccSay } from './ui.js';
+import { UI, initUI, say, tickUI, ccSay, VOID_LINE } from './ui.js';
 import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
 import { SOUND_FILES } from './sound-files.js';
 import { K } from './kit.js';
@@ -65,6 +65,11 @@ function start(){
   DETAIL.value = paintDetail();
   world = buildStation(scene);
   buildTrain(scene, tag, halo); world.rideSolids = TR.solids;   /* (the train: milestone 2's last part) */
+  /* (Nov 17) nobody gets onto the track, anywhere: the platform's edge (z 3) and the gravel past its ends stop you; only
+     the train's own floor, through its open doors, is allowed past it. Aisling's line, word for word */
+  let voidT = -1e9;
+  world.noGo = (x, z) => z < 3.12 && !onTrainFloor(x, z);
+  world.onNoGo = () => { const n = performance.now(); if (n - voidT > 20000) { voidT = n; say(VOID_LINE, 5200); } };
   giveMist(scene);
   setWorld(world);
   P.x = 33.2; P.z = 5.6; P.yaw = Math.PI/2 - 0.12; P.y = world.ground(P.x, P.z);   /* off the platform's east end, looking back along it, as in the Seam version */

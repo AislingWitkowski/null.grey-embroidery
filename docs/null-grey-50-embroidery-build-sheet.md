@@ -243,3 +243,11 @@ Aisling: *"it goes to Aldridge yes.. and I think drop the place on Aldridge plac
   - west: out of the tunnel, you on, into the fog, and Furusato's page is asked for (`train`);
   - arriving by train still puts you beside it.
 - **Later, with the story's puzzles:** whether the line opens stop by stop (doc 48).
+
+### Nov 17, 2026 (night, late) — the track can't be walked onto, and the void line
+Aisling: *"for safety, can you make it impossible to get on train tracks everywhere..? "you just can't go here, you feel the call of the void but can't truly follow it." suiicide is impossible in null grey i think unless i specify"*; then *"there will be areas where you can walk tracks, because i did this a lot growin up and as a early adult..but not where there are active trains.."* and *"there will be parts that feel dangerous in different areas, i will tell you to repeat this line probably..."*
+- **Missing Mile (Embroidery):** you could step off the platform onto the track before. Now an invisible stop holds you at the platform's edge, and along the gravel past its ends. Pushing against it gives **her line, word for word** (at most every 20 s).
+  - The only way past the edge is onto **the train's own floor**, through its open doors while it stands. Once it moves, you're riding.
+  - If you somehow stand on the track side, stepping back toward the platform is always allowed, so you can't get stuck.
+- The line is **`VOID_LINE`** (`src/ui.js`), for any other dangerous place, when she says so.
+- **Checked:** `t/walk.js` (off the edge: stopped at z 3.12); `t/train.js` (getting on, both ways, no errors); clicks unchanged.

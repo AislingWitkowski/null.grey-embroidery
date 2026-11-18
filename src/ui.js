@@ -7,6 +7,9 @@
    - ccSay(key, text, gap): a sound written down, in brackets, lowercase, above the story's line; each key at most
      once every few seconds (Seam's cc.js, same rules). Aisling (Nov 16): "Cc important".
    ================================================================ */
+/* the void line (Aisling, Nov 17): for any place that feels dangerous, where she says so. nothing in null.grey lets you
+   come to harm on purpose (suicide is impossible here unless she specifies); the way just isn't there */
+export const VOID_LINE = "you just can't go here, you feel the call of the void but can't truly follow it.";
 export const UI = { heard:false, cc:false, onChange:null, last:{}, hideAt:0 };
 try { UI.heard = localStorage.getItem('nullgrey.between.sound') === 'on'; UI.cc = localStorage.getItem('nullgrey.cc') === 'on'; } catch (e) {}
 

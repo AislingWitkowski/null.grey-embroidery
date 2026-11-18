@@ -112,6 +112,11 @@ export function stepPlayer(dt){
   /* standing up needs room overhead */
   const want = P.sit ? 1.12 : (P.crouch ? P.eyeCrouch : P.eyeStand); P.eye += clamp(want - P.eye, -dt*3, dt*3);
   [nx, nz] = pushOut(nx, nz, P.y);
+  /* (Nov 17, Aisling: "for safety, can you make it impossible to get on train tracks everywhere") the track is a place
+     you can't go: an invisible stop at the platform's edge, and along the gravel past its ends. only the train's own
+     floor (through its open doors) is allowed there */
+  if (W.noGo && !P.riding && W.noGo(nx, nz) && nz < P.z + 1e-6) {   /* (stepping out of it, away from the track, is always allowed) */
+    if (!W.noGo(nx, P.z)) nz = P.z; else if (!W.noGo(P.x, nz)) nx = P.x; else { nx = P.x; nz = P.z; } if (W.onNoGo) W.onNoGo(); }
   if (W.bounds && !P.riding) { nx = clamp(nx, W.bounds.x0, W.bounds.x1); nz = clamp(nz, W.bounds.z0, W.bounds.z1); }
   /* a step up only if it's low enough; a drop is fine (you fall) */
   const gh = standHeight(nx, nz, P.y, P.step);

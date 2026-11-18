@@ -338,3 +338,10 @@ export function trainTick(now, dt){
   for (const k in TR.sounds) { const H = TR.sounds[k]; if (H) soundAt(H, k === 'ride' ? P.x : cx(), 1, TR.ZC); }
   place();
 }
+
+/* is this spot on the train's floor (where you may stand on the track's side of the edge)? only while it stands with its
+   doors open, or while you're on it (while it stands; once it moves you're riding) */
+export function onTrainFloor(x, z){
+  if (TR.state !== 'stopped') return false;   /* (its doors' own solids keep you from walking through the wall) */
+  return x > trainRear() + 0.05 && x < TR.front - 0.05 && z > TR.ZC - TR.HW + 0.05;
+}
