@@ -48,7 +48,7 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
    z south, as Seam's map cells). `node t/walk.js` checks walking and collisions. `python3 t/bluescan.py /tmp/p_` checks for blue.
 4. Log it in doc 50 (nullgrey-lore `claude/`, copy in `docs/`, and the project).
 5. Commit and push every repo you touched (plain-language messages, with the session's attribution lines).
-6. Send Aisling the built page and pictures.
+6. Send Aisling the built page and pictures. Always send `dist/missing-mile-station.html` itself, on its own, so she can open it straight in a browser (Aisling, Nov 18), as well as any zip of the linked pages.
 
 ## Layout
 - `src/inks.js` the ramps and the ink tables · `src/look.js` the ink pass (glow, film roll-off, grain, ramps, dither)
