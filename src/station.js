@@ -70,6 +70,17 @@ function contact(x, z){
   if (Math.abs(z - TUN.zc) < TUN.hw + 0.6) o = Math.max(o, 0.95*sm(TUN.x - 0.6, TUN.x + 1.6, x));   /* (the track bed going into the tunnel: into the dark) */
   return Math.min(o > 0.6 ? o : 0.6, o);
 }
+/* (Nov 18, late; her photos: the leaf carpets under every tree, the leaves drifted along path edges, the dark prints
+   leaves leave on wet asphalt) a litter of leaves painted into the ground: thick under each tree, thinning outward */
+const TREES_AT = [[4.6, 6.0, 3.6], [36.8, 6.2, 3.4], [45.5, 15.5, 4], [14.0, 19.0, 4.2], [51.2, 23.4, 3.6], [50.6, 16.6, 4], [52.6, 19.8, 3.4]];
+function litter(x, z){ let a = 0; for (const [tx, tz, R] of TREES_AT) { const d = Math.hypot((x - tx)*0.9, z - tz); if (d < R) a = Math.max(a, sm(R, R*0.2, d)); } return a; }
+const LEAF_INK = ['hamber', 'hrust', 'hgold', 'hrust', 'hwood', 'hamber'];
+function leafSpeck(x, z, dens){   /* a leaf-sized fleck of colour, or null */
+  const cx = Math.floor(x*9), cz = Math.floor(z*9), h = frac(Math.sin(cx*127.1 + cz*311.7)*43758.5);
+  if (h > dens) return null; const ox = frac(h*13.7)*0.6 + 0.2, oz = frac(h*71.3)*0.6 + 0.2, dx = x*9 - cx - ox, dz = z*9 - cz - oz, a = h*40, rr = 0.24 + 0.14*frac(h*5.1);
+  const lx = dx*Math.cos(a) - dz*Math.sin(a), lz = dx*Math.sin(a) + dz*Math.cos(a); if (lx*lx/(rr*rr) + lz*lz/(rr*rr*0.45) > 1) return null;
+  return [LEAF_INK[Math.floor(frac(h*91.7)*6)], 0.38 + 0.26*frac(h*37.3) - 0.1*(lx/rr)];
+}
 function paintGround(){
   return paint(2253, 1911, TW, TD, (u, v) => {
     const x = TX0 + u, z = TZ0 + (TD - v);
@@ -92,12 +103,15 @@ function paintGround(){
       if (line) return r('hamber', 0.42 - 0.12*vn(x*40, z*6), 0.6, 0.7);
       const patch = fbm(x*0.9 + 7, z*0.4) > 0.63, edge = Math.min(x - ROAD[0], ROAD[1] - x) < 0.12 && vn(x*10, z*10) > 0.4;
       if (edge) return r('hgold', 0.3, 0.6, 1);
+      { const de = Math.min(x - ROAD[0], ROAD[1] - x), dr = sm(0.7, 0.05, de) + 0.08, sp = leafSpeck(x, z, dr*0.8); if (sp) return r(sp[0], sp[1]*0.85, 0.55, 0.85); }   /* (leaves drifted along its edges, a few out on it) */
+      { const pr = leafSpeck(x + 0.31, z + 0.17, 0.12); if (pr) return r('sstone', 0.16 + 0.04*fine, 0.5, 0.5); }   /* (the dark prints old leaves leave on wet asphalt) */
       const wet = sm(0.6, 0.7, fbm(x*0.7 + 2, z*0.5));
       return r('sstone', (patch ? 0.24 : 0.34) + 0.1*vn(x*30, z*30) + 0.05*(fine - 0.5) - 0.06*f - (crack ? 0.12 : 0) - 0.04*wet, 0.5 + 0.2*fine - (crack ? 0.4 : 0), 0.72 - 0.45*wet);
     }
     /* the fields: mud, dead grass, the odd puddle (puddles are smooth and shine) */
     { const pd = pathDist(x, z), wd = Math.hypot(x - 47.6, z - 20.4); if (pd < 0.62 || wd < 1.9) { const e = pd < 0.62 ? sm(0.62, 0.2, pd) : sm(1.9, 1.2, wd);   /* (Nov 18) the trodden path to the windmill: packed earth, two worn ruts, a few stones */
       if (e > 0.25) { const rut = pd < 0.62 && Math.abs(pd - 0.22) < 0.07; return r('hwood', 0.2 + 0.08*vn(x*12, z*12) + 0.05*fine - (rut ? 0.05 : 0) + (vn(x*40, z*40) > 0.86 ? 0.15 : 0), 0.4 + 0.3*fine, 0.85); } } }
+    { const lt = litter(x, z); if (lt > 0.02) { const sp = leafSpeck(x, z, lt*0.95) || leafSpeck(x + 0.05, z + 0.03, lt*0.6); if (sp) return r(sp[0], sp[1] + 0.05*fine, 0.6 + 0.2*fine, 0.9); if (lt > 0.5) return r('hwood', 0.16 + 0.06*n + 0.04*fine, 0.4, 0.95); } }   /* (leaf litter under the trees; dark damp earth showing between) */
     const pud = fbm(x*0.35 + 11, z*0.35);
     if (pud > 0.69) return r('hnight', 0.2 + 0.14*vn(x*4, z*4), 0.1, 0.08 + 0.2*sm(0.69, 0.75, pud)*0);
     const mud = f > 0.55 || (Math.abs(frac(x*0.9) - 0.5) < 0.12 && z > 11), rim = pud > 0.64;
@@ -383,7 +397,7 @@ export function buildStation(scene){
       g.fillStyle = 'rgba(234,228,216,0.78)'; g.font = 'italic 700 26px "Marker Felt","Comic Sans MS",cursive'; g.fillText('hello?', 52, 600);   /* (someone wrote on the coin box: a little graffiti) */
       const gr = g.createLinearGradient(0, 560, 0, 760); gr.addColorStop(0, 'rgba(58,38,28,0)'); gr.addColorStop(1, 'rgba(58,38,28,0.4)'); g.fillStyle = gr; g.fillRect(0, 0, W2, 760); });
     const side = SIDE.map, face = FACE.map;
-    const st = new THREE.MeshStandardMaterial({ map:side, bumpMap:SIDE.bump, bumpScale:1.2, roughnessMap:SIDE.rough, roughness:0.85, metalness:0.38, emissive:new THREE.Color(0.012, 0.01, 0.008) }), stIn = new THREE.MeshStandardMaterial({ map:IN.map, bumpMap:IN.bump, bumpScale:0.8, roughnessMap:IN.rough, color:0xf0ece6, roughness:0.85, metalness:0.36, emissive:new THREE.Color(0.012, 0.01, 0.008) });   /* (Nov 18: darker, more metal; at night: its own brushing, bumps and grime) */
+    const st = new THREE.MeshStandardMaterial({ map:side, bumpMap:SIDE.bump, bumpScale:1.2, roughnessMap:SIDE.rough, roughness:0.85, metalness:0.38, color:0xe6d6c2, emissive:new THREE.Color(0.012, 0.01, 0.008) }), stIn = new THREE.MeshStandardMaterial({ map:IN.map, bumpMap:IN.bump, bumpScale:0.8, roughnessMap:IN.rough, color:0xdcccb8, roughness:0.85, metalness:0.36, emissive:new THREE.Color(0.012, 0.01, 0.008) });   /* (Nov 18: darker, more metal; at night: its own brushing, bumps and grime) */
     const hd = new THREE.MeshStandardMaterial({ map:head, emissiveMap:head, emissive:new THREE.Color(1, 0.88, 0.7), emissiveIntensity:0.55, roughness:0.4 });
     const fc = new THREE.MeshStandardMaterial({ map:face, bumpMap:FACE.bump, bumpScale:1.4, roughnessMap:FACE.rough, roughness:0.75, metalness:0.45 }), blk = mat(null, { color:0x141211, rough:0.35 });
     const W = 9.0, B0 = 0.62, B1 = 1.62, D = 0.34, Z0 = 9.52, Z1 = 10.18;   /* on the west gable (x 9), facing west */
@@ -452,7 +466,7 @@ export function buildStation(scene){
     P(0.5, 159, 84.5, 160.4, 0.03, chrome);   /* the line over the kick plate */
     box(26.9, 27.96, 1.86, 1.9, 7.18, 7.97, chrome, { solid:false });   /* its top */
   }
-  L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.9); scene.add(L.vend);
+  L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.35);   /* (Nov 18, late: further out, so it lights the ground in front, not a hot spot on its own glass) */ scene.add(L.vend);
   const ab = spot(26.6, 2.42, 7.4, 1.2, 6, 0xffb070, 1024); ab.userData = { weak:false, ph:4 }; L.bulbs.push(ab);
   lathe([[0.01, 0.1], [0.06, 0.07], [0.12, 0.0]], shadeM, 26.6, 2.42, 7.4, 10, { cast:false });
   const ab2 = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), M.glass); ab2.position.set(26.6, 2.44, 7.4); scene.add(ab2); halo(26.6, 2.44, 7.4, 0.45, 0xffc890);
@@ -529,7 +543,7 @@ export function buildStation(scene){
     const LR = rnd(777), L = [];
     const put = (x, z, y) => L.push([x, y + 0.004 + LR()*0.004, z, 0.1 + LR()*0.07, LR()*6.3, Math.floor(LR()*4)]);
     for (let i = 0; i < 1400; i++) { const x = 9.2 + LR()*22.6, z = 3.3 + LR()*4.6, near = sm(5.5, 7.95, z) + (x > 24 && x < 29 ? 0.5 : 0); if (LR() < 0.25 + 0.6*near) put(x, z, 0); }   /* on the platform, drifted toward the building */
-    for (let i = 0; i < 900; i++) { const x = ROAD[0] - 0.6 + LR()*3.2, z = 9 + LR()*14; if (LR() < 0.6) put(x, z, groundAt(x, z)); }
+    for (let i = 0; i < 1500; i++) { const x = ROAD[0] - 0.6 + LR()*3.2, z = 9 + LR()*14, de = Math.min(Math.abs(x - ROAD[0]), Math.abs(ROAD[1] - x)); if (LR() < 0.18 + 0.7*sm(0.8, 0.05, de)) put(x, z, groundAt(x, z)); }   /* (Nov 18, late: drifted along the road's edges, a few out on it) */
     for (let i = 0; i < 700; i++) { const x = 8.5 + LR()*21, z = 13.05 + LR()*1.2; put(x, z, groundAt(x, z)); }
     const g = new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI/2);
     const lm = new THREE.MeshStandardMaterial({ map:paintLeafAtlas(), alphaTest:0.5, roughness:0.85, side:THREE.DoubleSide }); lm.userData.noDetail = true;
@@ -601,6 +615,7 @@ export function buildStation(scene){
     if (!verge && fbm(x*0.35, z*0.35) < 0.36 && R() < 0.7) continue;   /* bare patches */
     if (verge && R() < 0.35) continue;
     if (pathDist(x, z) < 0.5) continue;   /* (the path to the windmill) */
+    { const lt = litter(x, z); if (lt > 0.15 && R() < 0.35 + 0.6*lt) continue; }   /* (Nov 18, late: under the trees the ground is mostly fallen leaves, grass thin, as in her photos) */
     grass.push([x, groundAt(x, z) - 0.02, z, (verge ? 0.55 : 0.36) + R()*0.4, R()*6.3, Math.floor(R()*4), (verge ? 1.0 : 0.8)*(0.5 + R()*R()*1.3)]);   /* heights all different: no hay bales */
   }
   for (let i = 0; i < 700; i++) {   /* the gravel past the platform's ends, along the track */

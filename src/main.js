@@ -68,12 +68,23 @@ let YOU = null, look, world, cur = 0, split = false, resK = 1, frames = [], last
 function start(){
   look = makeLook(renderer);
   DETAIL.value = paintDetail();
+  /* (Nov 18, late; Aisling: "closer on the metal") metal needs something to reflect: a small soft picture of the dusk round
+     the station (dark ground, the grey fog, the warm west, a few lamp glows), blurred for rough metal. it's used only by
+     metal and glass (payphone, machine chrome, train), so nothing else changes */
+  { const c = document.createElement('canvas'); c.width = 256; c.height = 128; const g = c.getContext('2d');
+    const sky = g.createLinearGradient(0, 0, 0, 128); sky.addColorStop(0, '#4a4038'); sky.addColorStop(0.46, '#6e6052'); sky.addColorStop(0.52, '#2e2620'); sky.addColorStop(1, '#120e0b'); g.fillStyle = sky; g.fillRect(0, 0, 256, 128);
+    const w = g.createRadialGradient(64, 60, 2, 64, 60, 60); w.addColorStop(0, 'rgba(200,140,90,0.5)'); w.addColorStop(1, 'rgba(200,140,90,0)'); g.fillStyle = w; g.fillRect(0, 0, 256, 128);
+    for (const [x, y] of [[150, 48], [178, 50], [205, 47], [120, 52]]) { const l = g.createRadialGradient(x, y, 0, x, y, 9); l.addColorStop(0, 'rgba(255,214,160,0.9)'); l.addColorStop(1, 'rgba(255,214,160,0)'); g.fillStyle = l; g.fillRect(x - 9, y - 9, 18, 18); }
+    const et = new THREE.CanvasTexture(c); et.mapping = THREE.EquirectangularReflectionMapping; et.colorSpace = THREE.SRGBColorSpace;
+    const pm = new THREE.PMREMGenerator(renderer); K.env = pm.fromEquirectangular(et).texture; pm.dispose(); }
   world = buildStation(scene);
+  scene.traverse(o => { if (!o.isMesh) return; for (const m of [].concat(o.material)) if (m && m.isMeshStandardMaterial && m.metalness >= 0.3 && !m.envMap) { m.envMap = K.env; m.envMapIntensity = 0.35; m.needsUpdate = true; } });   /* (the station's metal) */
   { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 2, 32, 32, 32); gr.addColorStop(0, 'rgba(0,0,0,0.55)'); gr.addColorStop(0.6, 'rgba(0,0,0,0.25)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
     const m = new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false, polygonOffset:true, polygonOffsetFactor:-4, fog:true });
     YOU = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 0.75).rotateX(-Math.PI/2), m); YOU.renderOrder = 2; scene.add(YOU); }   /* (your shadow) */
   { const R = rootAll(scene, world.surfaceAt); window.__roots = R; }   /* (every pole, post and trunk gets its footing) */
-  buildTrain(scene, tag, halo); world.rideSolids = TR.solids;   /* (the train: milestone 2's last part) */
+  buildTrain(scene, tag, halo); world.rideSolids = TR.solids;
+  for (const G of TR.cars) G.traverse(o => { if (!o.isMesh) return; const m = o.material; if (m && m.isMeshStandardMaterial && (m.metalness >= 0.3 || m.transparent) && !m.envMap) { m.envMap = K.env; m.envMapIntensity = m.transparent ? 1.0 : 0.5; m.needsUpdate = true; } });   /* (the train's steel and glass) */   /* (the train: milestone 2's last part) */
   /* (Nov 17) nobody gets onto the track, anywhere: the platform's edge (z 3) and the gravel past its ends stop you; only
      the train's own floor, through its open doors, is allowed past it. Aisling's line, word for word */
   let voidT = -1e9;

@@ -50,14 +50,22 @@ export const trainRear = () => carX0(TR.N - 1);
 
 /* ---------------- pictures, painted in code ---------------- */
 function cv(w, h, draw){ const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return c; }
-function steel(){   /* stainless, an odd warm grey-white; faint streaks, a little grime low down */
-  return tex(cv(256, 256, (c, w, h) => { c.fillStyle = '#d2ccc1'; c.fillRect(0, 0, w, h);
-    for (let i = 0; i < 70; i++) { c.fillStyle = 'rgba(' + (Math.random() < 0.5 ? '255,250,240' : '90,80,70') + ',' + (0.03 + Math.random()*0.04) + ')'; c.fillRect(Math.random()*w, 0, 1 + Math.random()*3, h); }
-    const g = c.createLinearGradient(0, h*0.6, 0, h); g.addColorStop(0, 'rgba(70,58,48,0)'); g.addColorStop(1, 'rgba(70,58,48,0.18)'); c.fillStyle = g; c.fillRect(0, 0, w, h); }));
+function steel(){   /* (Nov 18, late; Aisling: "push the train too") real stainless: one panel per metre, its welded seam
+     and a row of rivet heads down it, fine brushing along the car, faint ripples where the sheet was pulled tight, rain
+     streaks running down and grime gathering low, a few scrapes. (one tile is one metre of car, true size) */
+  return tex(cv(512, 512, (c, w, h) => { c.fillStyle = '#d0cabf'; c.fillRect(0, 0, w, h);
+    for (let i = 0; i < 2600; i++) { const y = Math.random()*h, a = 0.025 + Math.random()*0.05; c.fillStyle = 'rgba(' + (Math.random() < 0.5 ? '255,252,244' : '84,74,64') + ',' + a + ')'; c.fillRect(Math.random()*w, y, 20 + Math.random()*160, 1); }   /* brushed along the car */
+    for (let i = 0; i < 5; i++) { const x = Math.random()*w, g = c.createLinearGradient(x - 30, 0, x + 30, 0); g.addColorStop(0, 'rgba(255,250,240,0)'); g.addColorStop(0.5, 'rgba(255,250,240,0.07)'); g.addColorStop(1, 'rgba(70,60,50,0.06)'); c.fillStyle = g; c.fillRect(x - 30, 0, 60, h); }   /* oil-canning ripples */
+    for (let i = 0; i < 26; i++) { const x = Math.random()*w, y0 = Math.random()*h*0.6, L = 60 + Math.random()*260, g = c.createLinearGradient(0, y0, 0, y0 + L); g.addColorStop(0, 'rgba(80,66,52,0)'); g.addColorStop(0.25, 'rgba(80,66,52,' + (0.05 + Math.random()*0.07) + ')'); g.addColorStop(1, 'rgba(80,66,52,0)'); c.fillStyle = g; c.fillRect(x, y0, 2 + Math.random()*5, L); }   /* rain streaks */
+    c.fillStyle = 'rgba(70,60,52,0.55)'; c.fillRect(0, 0, 2, h); c.fillStyle = 'rgba(255,250,240,0.35)'; c.fillRect(2, 0, 1, h); c.fillStyle = 'rgba(70,60,52,0.3)'; c.fillRect(w - 2, 0, 2, h);   /* the welded seam */
+    for (let y = 10; y < h; y += 26) { const g = c.createRadialGradient(9, y - 1, 0, 10, y, 4); g.addColorStop(0, '#f0ebe2'); g.addColorStop(1, '#7e766c'); c.fillStyle = g; c.beginPath(); c.arc(10, y, 3.4, 0, 7); c.fill(); c.fillStyle = 'rgba(80,60,40,0.18)'; c.fillRect(8, y + 3, 4, 8); }   /* rivets, a little rust weeping */
+    for (let i = 0; i < 7; i++) { const x = Math.random()*w, y = h*(0.5 + Math.random()*0.5); c.strokeStyle = 'rgba(255,252,246,0.35)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 30 + Math.random()*80, y + (Math.random() - 0.5)*6); c.stroke(); }   /* scrapes */
+    const g = c.createLinearGradient(0, h*0.55, 0, h); g.addColorStop(0, 'rgba(70,58,48,0)'); g.addColorStop(1, 'rgba(70,58,48,0.26)'); c.fillStyle = g; c.fillRect(0, 0, w, h); }));
 }
 function ribbed(){   /* the old stainless cars' ribs, low down */
   return tex(cv(256, 128, (c, w, h) => { c.fillStyle = '#c9c3b8'; c.fillRect(0, 0, w, h);
-    for (let x = 0; x < w; x += 8) { c.fillStyle = 'rgba(255,250,240,0.22)'; c.fillRect(x, 0, 2, h); c.fillStyle = 'rgba(60,50,42,0.22)'; c.fillRect(x + 5, 0, 2, h); }
+    for (let x = 0; x < w; x += 8) { c.fillStyle = 'rgba(255,250,240,0.26)'; c.fillRect(x, 0, 2, h); c.fillStyle = 'rgba(60,50,42,0.28)'; c.fillRect(x + 5, 0, 2, h); }
+    for (let i = 0; i < 18; i++) { const x = Math.random()*w; c.fillStyle = 'rgba(64,50,38,' + (0.06 + Math.random()*0.1) + ')'; c.fillRect(x, h*0.2 + Math.random()*h*0.3, 2 + Math.random()*6, h); }   /* (Nov 18, late) road dirt thrown up, running down the ribs */
     const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, 'rgba(60,48,40,0)'); g.addColorStop(1, 'rgba(60,48,40,0.35)'); c.fillStyle = g; c.fillRect(0, 0, w, h); }));
 }
 function stripe(){   /* the line's gold, a seigaiha wave pressed into it */
@@ -148,6 +156,7 @@ export function buildTrain(scene, tag, haloFn){
   const MT = {
     steel:std(steel(), { r:0.42, m:0.35 }), rib:std(ribbed(), { r:0.45, m:0.35 }), stripe:std(stripe(), { r:0.5 }), verm:std(null, { c:0x9a3826, r:0.6 }),
     roof:std(null, { c:0x7e7872, r:0.7 }), under:std(null, { c:0x221d1a, r:0.9 }), door:std(doorPic(), { r:0.45, m:0.3 }), crest:std(crest(), { cut:true }),
+    glass:outsideDark(new THREE.MeshStandardMaterial({ color:0x3a332c, roughness:0.06, metalness:0.1, transparent:true, opacity:0.2, depthWrite:false })),   /* (Nov 18, late) window glass: a faint tint, catching the lamps */
     cab:std(cabPic(false), { r:0.5 }), wheel:std(null, { c:0x2c2622, r:0.5, m:0.6 }),
     cream:lit(cream(), { c:0xffffff, k:0.32 }), floor:lit(slats(), { k:0.3 }), seat:lit(moquette(), { k:0.36 }), dark:lit(null, { c:0x3a322c, e:0x3a322c, k:0.2 }), gasket:new THREE.MeshStandardMaterial({ color:0x1d1816, roughness:0.85 }),
     pole:new THREE.MeshStandardMaterial({ color:0xc8c2b6, roughness:0.3, metalness:0.7, emissive:new THREE.Color(0x3a3630) }),
@@ -157,6 +166,17 @@ export function buildTrain(scene, tag, haloFn){
     tail:new THREE.MeshStandardMaterial({ color:0x6a1810, emissive:new THREE.Color(0.9, 0.12, 0.06), emissiveIntensity:1.1 }),   /* (kept low: brighter, the film roll-off turns it cream) */
     map:new THREE.MeshStandardMaterial({ map:mapPic(), roughness:0.8, emissive:new THREE.Color(0xffffff), emissiveIntensity:0.3 }),
   };
+  MT.steel.bumpMap = MT.steel.map; MT.steel.bumpScale = 0.6; MT.rib.bumpMap = MT.rib.map; MT.rib.bumpScale = 1.2;   /* (Nov 18, late: the seams, rivets and ribs stand out a little in the light) */
+  /* (Nov 18, late) the windows' light falling on the platform, a soft warm pool under each, only on the platform's
+     concrete (it ends at the platform's ends), steady */
+  const poolM = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, fog:true, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2,
+    uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { uK:{ value:1 } }]),
+    vertexShader:'varying vec3 vW; varying vec2 vU; varying float vD; void main(){ vU = uv; vec4 w = modelMatrix*vec4(position, 1.0); vW = w.xyz; vec4 mv = viewMatrix*w; vD = -mv.z; gl_Position = projectionMatrix*mv; }',
+    fragmentShader:'uniform float uK; uniform float fogNear, fogFar; varying vec3 vW; varying vec2 vU; varying float vD;\n' +
+      'void main(){ if (vW.x < 9.0 || vW.x > 32.0) discard; float ax = smoothstep(0.0, 0.3, vU.x)*smoothstep(1.0, 0.7, vU.x), ay = pow(vU.y, 1.8)*smoothstep(1.0, 0.95, vU.y);\n' +
+      ' float a = uK*0.14*ax*ay*(1.0 - smoothstep(fogNear, fogFar*1.1, vD)); gl_FragColor = vec4(vec3(1.0, 0.86, 0.62)*a, 1.0); }' });
+  TR.poolM = poolM;
+  MT.pool = poolM;
   MT.map.emissiveMap = MT.map.map; MT.cream.userData.noDetail = true;
   const L = TR.L, HW = TR.HW, ZC = 0;   /* (car-local: x along the car, z across it from the track's centre) */
   const sk = 0.012, inn = 0.06;   /* the skin, outside and in */
@@ -189,6 +209,8 @@ export function buildTrain(scene, tag, haloFn){
         if (y0 >= 0 && y1 <= TR.ROOF) add('cream', bgeo(Math.max(a, 0.052), Math.min(b, L - 0.052), Math.max(y0, TR.FL), y1, zi[0], zi[1], [1, 1]));   /* (kept behind the end plates: its edge used to show through on the car's end) */
       }
       for (const [a, b] of WINS) { add('dark', bgeo(a, b, WY0 - 0.02, WY0, Math.min(zo[0], zi[0]), Math.max(zo[1], zi[1]))); }   /* the sills */
+      for (const [a, b] of WINS) { const gg = new THREE.PlaneGeometry(b - a, WY1 - WY0); if (s < 0) gg.rotateY(Math.PI); gg.translate((a + b)/2, (WY0 + WY1)/2, s*(HW - 0.02)); add('glass', gg.toNonIndexed()); }   /* (Nov 18, late) glass in every window */
+      if (s > 0) for (const [a, b] of WINS.concat(TR.DOORS.map(d => [d - TR.DHW + 0.1, d + TR.DHW - 0.1]))) { const pg = new THREE.PlaneGeometry(b - a + 0.5, 1.5); pg.rotateX(-Math.PI/2); pg.translate((a + b)/2, 0.006, HW + 0.03 + 0.75); add('pool', pg.toNonIndexed()); }   /* (their light on the platform) */
       /* (Nov 18, Aisling: "there are like weird white gaps") every opening gets its frame: a dark rubber reveal from the
          outer skin to the inner one round each window and doorway, so you never see light through the wall's slit */
       { const za = Math.min(zo[0], zi[0]) - 0.002, zb = Math.max(zo[1], zi[1]) + 0.002, fr = (a, b, y0, y1, w) => {
@@ -271,7 +293,7 @@ export function buildTrain(scene, tag, haloFn){
     for (const [a, b, z0, z1] of [[2.6, 3.6, -0.55, 0.1], [3.9, 4.6, 0.15, 0.6], [4.9, 6.1, -0.5, 0.25]]) wg.push(bgeo(a, b, -0.3, -0.16, z0, z1));
     { const tk = new THREE.CylinderGeometry(0.13, 0.13, 0.9, 10); tk.rotateZ(Math.PI/2); tk.translate(6.6, -0.26, -0.3); wg.push(tk.toNonIndexed()); }
     for (const g of wg) add('wheel', g);
-    for (const m in B) { const me = new THREE.Mesh(mergeGeometries(B[m]), MT[m]); me.castShadow = m !== 'tube' && m !== 'map' && m !== 'head' && m !== 'tail'; me.receiveShadow = true; me.userData.kind = m; G.add(me);
+    for (const m in B) { const me = new THREE.Mesh(mergeGeometries(B[m]), MT[m]); me.castShadow = m !== 'tube' && m !== 'map' && m !== 'head' && m !== 'tail' && m !== 'pool' && m !== 'glass'; if (m === 'pool') me.renderOrder = 1; me.receiveShadow = true; me.userData.kind = m; G.add(me);
       if (m === 'map') TAG(me, hit => mapClick(hit)); if (m === 'seat') TAG(me, () => sit()); }
     /* the doors: two leaves each, sliding apart into the wall; only the platform side opens */
     G.userData.leaves = [];
