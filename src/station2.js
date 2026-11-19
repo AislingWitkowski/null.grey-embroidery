@@ -269,6 +269,7 @@ export function buildMore(C){
     const leafAt = (N, dir, sz) => { const y = dir.clone().normalize(); let x = new THREE.Vector3().crossVectors(UP, y); if (x.lengthSq() < 1e-4) x.set(1, 0, 0); x.normalize();
       const z = new THREE.Vector3().crossVectors(x, y).normalize(); const M = new THREE.Matrix4().makeBasis(x, y, z), qq = new THREE.Quaternion().setFromRotationMatrix(M);
       qq.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (Rt() - 0.5)*1.1));
+      qq.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler((Rt() - 0.5)*0.5, 0, (Rt() - 0.5)*0.4)));   /* (Nov 19, Aisling: "can the leaves all be turned to slightly different angles … more natural") each tips a little its own way */
       lv.push([N[0], N[1], N[2], sz, 0, 0, 0, Math.floor(Rt()*16), qq]); };
     const nUse = Math.min(sites.length, Math.round(sites.length*Math.min(1, Lf.n/86)));
     for (let t = 0; t < nUse; t++) { const S = sites[t], nt = ph >= 3 ? 1 : (ph === 2 ? 1 : 2);

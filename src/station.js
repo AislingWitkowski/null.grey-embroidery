@@ -447,7 +447,7 @@ export function buildStation(scene){
   /* (milestone 2) the old red machine, Seam's own picture of it (f3vm2: Drink Smile, the cream wave, four cans: chocolate
      creme, lemon cola, ultra violet, cherry cheer), its sides f3vmSide2 */
   const vmT = seamTex('f3vm2', 420, '#8e2a22'), vsT = seamTex('f3vmSide2', 300, '#8e2a22');
-  const vmF = new THREE.MeshStandardMaterial({ map:vmT, emissiveMap:vmT, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.22, roughness:0.55 });
+  const vmF = new THREE.MeshStandardMaterial({ map:vmT, emissiveMap:vmT, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.3, roughness:0.55 });
   const vmS = new THREE.MeshStandardMaterial({ map:vsT, roughness:0.6 });
   const vcT = seamTex('f3vmClip2', 420, '#8e2a22'), vmC = new THREE.MeshStandardMaterial({ map:vcT, roughness:0.75 });   /* (Nov 17: the east side carries the clippings, as in Seam) */
   vmF.userData.m = [1.02, 1.86]; vmS.userData.m = [0.75, 1.86]; vmC.userData.m = [0.75, 1.86];   /* (one picture per face, not tiled) */
@@ -464,11 +464,13 @@ export function buildStation(scene){
     frame(0.5, 0.5, 84.5, 181.5, 0.9, 0.012);   /* the chrome edging all round (Nov 18, late: flat to the face) */
     /* (Nov 18, late; Aisling: "soda machine looks really weird") the bezels and glass over the header and the label strip
        floated in front of the picture and didn't line up with it: gone. the picture carries them, as in Seam */
-    for (let k = 0; k < 4; k++) { const cx = 17 + k*17; P(cx - 3.5, 66, cx + 3.5, 72, 0.022, chrome); }   /* the buttons */
-    P(72, 82, 77, 90, 0.03, chrome); P(73.6, 83, 75.4, 88, 0.004, dark, 0.03);   /* the coin insert, its slot */
-    P(63.5, 83.5, 72, 87.5, 0.018, chrome);   /* the change return */
-    frame(10, 142, 75, 158, 1.0, 0.02); P(33, 145, 52, 155, 0.01, chrome);   /* the delivery bay and its flap */
-    P(0.5, 159, 84.5, 160.4, 0.03, chrome);   /* the line over the kick plate */
+    /* (Nov 19, Aisling: "buttons and such odd, all neon gone") the 3D buttons, coin slot and bay sat a little off the
+       picture's own: gone; the picture has them. instead the header and the label strip glow, as a lit machine's do */
+    { const glowM = new THREE.MeshBasicMaterial({ map:vmT, transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false, fog:true });
+      const lit = (px0, py0, px1, py1) => { const g = new THREE.PlaneGeometry(X(px0) - X(px1), Y(py0) - Y(py1)), uv = g.attributes.uv;
+        for (let i = 0; i < uv.count; i++) uv.setXY(i, 1 - (px0 + (1 - uv.getX(i))*(px1 - px0))/85, 1 - (py0 + (1 - uv.getY(i))*(py1 - py0))/182);
+        g.rotateY(Math.PI); g.translate((X(px0) + X(px1))/2, (Y(py0) + Y(py1))/2, Z0 - 0.002); const me = new THREE.Mesh(g, glowM); me.renderOrder = 2; scene.add(me); };
+      lit(5, 6, 80, 30); lit(5, 34, 80, 63); }
     box(26.9, 27.96, 1.86, 1.9, 7.18, 7.97, chrome, { solid:false });   /* its top */
   }
   L.vend = new THREE.PointLight(0xffe2c0, 1, 3.2, 2); L.vend.position.set(27.43, 1.3, 6.35);   /* (Nov 18, late: further out, so it lights the ground in front, not a hot spot on its own glass) */ scene.add(L.vend);

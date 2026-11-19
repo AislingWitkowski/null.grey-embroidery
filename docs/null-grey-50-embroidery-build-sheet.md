@@ -501,3 +501,9 @@ Aisling: *"spda machine looks really weird?? ok so trees are ok but the bump in 
 - **Ground leaves:** they were placed at the ground's exact height, but the ground mesh is flat between its points every 25 cm, so in dips they floated. Now they use the mesh's real surface (`groundSurf`, station.js), lie nearly flat, and the painted leaf litter under them is subtler.
 - **The drinks machine:** the 3D bezels and glass over its header and label strip floated in front of the picture and didn't line up with it: gone (only a slim chrome edge sits flat on it now). The dark vertical bar through *Smile* was Seam's painted rust streak, an even 2.4-wide line: redrawn as thin, wavering rust in Seam's picture (`f3vm2`, f03-3d2.js), so Seam's machine changes too (doc 32).
 - Checked: walking, clicks, the train both ways, the text check, no blue, no errors.
+
+### Nov 19 (after midnight) — trees paused; leaves tilted; the drinks machine lit again
+Aisling: *"ok trees are close, for now...lets pause those … the soda machine still...weird? buttons and such odd, all neon gone … can the leaves all be turned to slightly differnt angles? just all different anglkes more natural? just slightly?"*
+- **Trees paused** (her call), to come back to later. Last small change: every leaf now tips a little its own way (a few degrees forward or sideways), so the canopy reads less even.
+- **The drinks machine:** the 3D buttons, coin slot, change return, bay frame and kick-plate line sat a little off the picture's own and read as odd lumps: removed; the picture (Seam's, with every word) carries them. **The glow is back:** the header and the label strip are lit from inside again (a soft added glow on the picture's own lit parts), as the machine looked before.
+- Checked: clicks, the train, the text check, no blue, no errors.
