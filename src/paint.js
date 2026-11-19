@@ -302,7 +302,9 @@ export function paintCornAtlas(){
 
 /* the name board by the track: white enamel, ほんまち large, the line's green band, its rusted frame */
 export function paintNameBoard(){
-  const cv = document.createElement('canvas'); cv.width = 220; cv.height = 124; const c = cv.getContext('2d');
+  /* (Nov 19, detail pass: four times sharper; the enamel chipped to black iron with rust round each chip, rust from the
+     four bolts, dirt running down from the top edge. the same words, in the same places) */
+  const S = 4, W = 220*S, H = 124*S, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d'); c.scale(S, S);
   const col = (r, t) => 'rgb(' + inkRGB(r, t).map(Math.round).join(',') + ')';
   c.fillStyle = col('hrust', 0.45); c.fillRect(0, 0, 220, 124);
   c.fillStyle = col('pwhite', 0.85); c.fillRect(6, 6, 208, 112);
@@ -312,8 +314,17 @@ export function paintNameBoard(){
   c.font = '800 11px "Hiragino Sans","Noto Sans CJK JP",sans-serif'; c.fillText('本町 · MAIN STREET', 110, 68);
   c.fillStyle = col('pwhite', 0.9); c.font = '700 9px sans-serif'; c.textAlign = 'left'; c.fillText('← ふるさと', 12, 87); c.textAlign = 'right'; c.fillText('オールドリッジ →', 208, 87);
   c.fillStyle = col('hblack', 0.2); c.font = '600 8px sans-serif'; c.textAlign = 'center'; c.fillText('missing mile', 110, 108);
-  const im = c.getImageData(0, 0, 220, 124), d = im.data;   /* grime and rust bleeding from the frame, dirt in the lower half */
-  for (let j = 0; j < 124; j++) for (let i = 0; i < 220; i++) { const o = (j*220 + i)*4, g = fbm(i*0.06, j*0.06)*0.5 + (j/124)*0.3 + (i > 190 && j < 30 ? 0.3 : 0), k = 1 - 0.35*sm(0.45, 0.95, g); d[o] *= k; d[o + 1] *= k*0.97; d[o + 2] *= k*0.95; }
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  const chip = (x, y, r) => { const n = 9, pts = []; for (let k = 0; k < n; k++) { const a = k/n*Math.PI*2, rr = r*(0.6 + 0.8*hsh(Math.round(x*7 + k), Math.round(y*3))); pts.push([x + Math.cos(a)*rr, y + Math.sin(a)*rr*0.8]); }
+    c.fillStyle = 'rgba(120,62,34,0.45)'; c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(p[0]*1.25 - x*0.25, p[1]*1.25 - y*0.25) : c.moveTo(p[0]*1.25 - x*0.25, p[1]*1.25 - y*0.25)); c.fill();   /* the rust halo */
+    c.fillStyle = 'rgb(34,26,22)'; c.beginPath(); pts.forEach((p, k) => k ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.fill(); };
+  for (let k = 0; k < 26; k++) { const e = hsh(k, 41), x = e < 0.5 ? (hsh(k, 42) < 0.5 ? 30 + hsh(k, 43)*30 : W - 30 - hsh(k, 43)*30) : 30 + hsh(k, 44)*(W - 60), y = e < 0.5 ? 30 + hsh(k, 45)*(H - 60) : (hsh(k, 46) < 0.6 ? H - 30 - hsh(k, 47)*40 : 30 + hsh(k, 47)*30); chip(x, y, 3 + hsh(k, 48)*9); }   /* chips, most near the edges where it gets knocked */
+  for (const [x, y] of [[40, 40], [W - 40, 40], [40, H - 40], [W - 40, H - 40]]) {   /* the bolts, rust running from each */
+    const g = c.createLinearGradient(0, y, 0, y + 120); g.addColorStop(0, 'rgba(126,60,30,0.6)'); g.addColorStop(1, 'rgba(126,60,30,0)'); c.fillStyle = g; c.fillRect(x - 6, y, 12, 120);
+    c.fillStyle = 'rgb(58,44,36)'; c.beginPath(); c.arc(x, y, 9, 0, Math.PI*2); c.fill(); c.fillStyle = 'rgba(200,190,170,0.4)'; c.beginPath(); c.arc(x - 2, y - 2, 3, 0, Math.PI*2); c.fill(); }
+  for (let k = 0; k < 30; k++) { const x = 28 + hsh(k, 51)*(W - 56), l = 40 + hsh(k, 52)*180, g = c.createLinearGradient(0, 24, 0, 24 + l); g.addColorStop(0, 'rgba(70,58,46,0.28)'); g.addColorStop(1, 'rgba(70,58,46,0)'); c.fillStyle = g; c.fillRect(x, 24, 2 + hsh(k, 53)*4, l); }   /* dirt run down from the top */
+  const im = c.getImageData(0, 0, W, H), d = im.data;   /* grime and rust bleeding from the frame, dirt in the lower half */
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) { const o = (j*W + i)*4, ii = i/S, jj = j/S, g = fbm(ii*0.06, jj*0.06)*0.5 + (jj/124)*0.3 + (ii > 190 && jj < 30 ? 0.3 : 0) + 0.08*(vn(i*0.3, j*0.3) - 0.5), k = 1 - 0.35*sm(0.45, 0.95, g); d[o] *= k; d[o + 1] *= k*0.97; d[o + 2] *= k*0.95; }
   c.putImageData(im, 0, 0);
   return tex(cv, { clampEdge:true });
 }

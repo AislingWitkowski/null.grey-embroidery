@@ -105,7 +105,7 @@ const lumOf = c => { const f = v => { v /= 255; return v <= 0.03928 ? v/12.92 : 
   const LONG = 'someone left a newspaper on the bench, folded open. LOST & NEVER FOUND. you don\'t pick it up. it isn\'t yours, and it feels like it was left for someone.';
   const STATES = [
     ['walking', async () => {}],
-    ['caption + cc', async () => { await p.evaluate(L => { const c = document.getElementById('caption'), l = document.getElementById('ccline'); c.textContent = L; c.className = ''; l.textContent = '[a gust: the corn rustles, the wires sing]'; l.style.opacity = '1'; }, LONG); }],
+    ['caption + cc', async () => { await p.evaluate(L => { const c = document.getElementById('caption'), l = document.getElementById('ccline'); c.textContent = L; c.className = ''; l.textContent = '[a gust: the corn rustles, the wires sing]'; l.style.opacity = '1'; }, LONG); await p.waitForFunction(() => getComputedStyle(document.getElementById('caption')).opacity === '1', null, { timeout:5000 }).catch(() => {}); }],   /* (wait out the caption's half-second fade, or the picture catches it half there) */
     ['train voice', async () => { await p.evaluate(() => { const c = document.getElementById('caption'); c.textContent = 'ドアが閉まります。ご注意ください · the doors are closing. please be careful.'; c.className = 'v-train'; }); }],
     ['pocket', async () => { await p.evaluate(() => window.EG_SEAM.pocket.open && window.EG_SEAM.pocket.open()); await p.keyboard.press('KeyP'); await p.waitForTimeout(2500); }],
     ['pocket, a thing lifted', async () => { await p.keyboard.press('KeyP'); await p.waitForTimeout(2500); await p.evaluate(() => window.EG_SEAM.liftFirst()); await p.waitForTimeout(2500); }],

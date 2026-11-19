@@ -549,3 +549,15 @@ Aisling: "the people of mising mile...almost see..almost? and scratched in later
 - **Corrugated tin (shed and walls):** rust now runs down from the nails and the laps in streaks, instead of round blotches.
 - **A discarded snack box** by the bench (x 11.2, z 7.4): an off-brand caramel-corn box, "CRACKER JAKE", red and cream stripes, crushed flat and empty, torn flap. Stand-in name: hers to change. It isn't clickable yet; **its line is pending** (Aisling's words, if she wants one).
 - Still for later: the station door knobs' eye form is the brass one from the last round; other buildings get their own forms as they're built.
+
+### Nov 19 (afternoon) — six detail passes: walls, awning, signs, track, name board, the corner
+Aisling: *"Ok do next few details passes and I'll check next time I'm on Big Mac puter"*, then *"You can run the next three passes you want past that if you want"*. New pieces live in `src/details.js`.
+1. **The station's back and gables:** the wet comes up the walls' foot, a dark band with a wandering top edge, tide lines, rain splash and a little green near the ground. A louvred wooden vent sits high in each gable, five slats tipped down, one cracked and dropped on the west side.
+2. **The shed's awning:** four rafters and a purlin under the tin, a bent, rusted drip edge along the front, and the posts are old round pipe now with foot plates and knee braces up to the beam.
+3. **The road's signs:** both MISSING MILE 1 signs stand on galvanised steel channel posts (holes all the way up, rust low down, leaning a touch) with two bolts through the plate. The crossbuck's boards are aged: grime, crazed paint, rust running from the centre bolt.
+4. **The track:** the rails' heads are worn bright by wheels; their webs and feet are rusted, patchy along the line. Each sleeper is its own age, a few sunk or skewed. There are spikes by every tie plate and about 4,200 loose ballast stones in the round, rust-stained near the rails.
+5. **The name board ほんまち:** redrawn four times sharper, the same words in the same places. The enamel is chipped to black iron with rust round each chip (most near the edges), rust runs from its four bolts, and dirt runs down from the top.
+6. **The corner:** the tobacco window's glass is dusty now, wiped once by a hand, with a crack and a dead fly, and no more hard white shine. The bin with eyes has a proud rim on its hood, three cigarette butts stubbed out on top, and old wet and ash round its foot.
+- **The text check:** it failed once on a caption caught halfway through its half-second fade (the heavier scene made the first window size slower). The check now waits for the fade before measuring. Not a real readability problem.
+- Checked: walking, clicks, the train both ways, the text check (no must-fix), no blue, no errors.
+- Cost: about 4,700 more small pieces drawn as two instanced batches (stones and spikes), so only a couple more draw calls. Aisling to check smoothness on the Mac.

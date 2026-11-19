@@ -9,6 +9,7 @@ import { ROOTS } from './roots.js';
 import { pathDist } from './station2.js';
 import * as THREE from 'three';
 import { stationKnob, stationLock, shedDoor, snackBox } from './eyes.js';
+import { wallDetails, awningDetails, binDetails } from './details.js';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintPole, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
@@ -229,9 +230,26 @@ export function buildStation(scene){
   const sl = new THREE.InstancedMesh(new THREE.BoxGeometry(0.22, 0.1, 1.7), M.woodD, 90), m4 = new THREE.Matrix4();
   for (let i = 0; i < 90; i++) { m4.makeTranslation(-6 + i*0.6, -0.58, 2.0 + (hsh(i, 3) - 0.5)*0.04); sl.setMatrixAt(i, m4); }
   sl.receiveShadow = true; sl.castShadow = true; scene.add(sl);
+  /* (Nov 19, detail pass: each sleeper its own age, a few sunk or skewed; spikes by the plates; loose stones of ballast) */
+  { const c = new THREE.Color(); for (let i = 0; i < 90; i++) { const k = 0.72 + 0.4*hsh(i, 11), sunk = hsh(i, 12) < 0.12 ? 0.025 : 0, sk = (hsh(i, 13) - 0.5)*(hsh(i, 14) < 0.2 ? 0.12 : 0.03);
+      m4.makeRotationY(sk); m4.setPosition(-6 + i*0.6, -0.58 - sunk, 2.0 + (hsh(i, 3) - 0.5)*0.04); sl.setMatrixAt(i, m4); c.setRGB(k, k*0.96, k*0.9); sl.setColorAt(i, c); }
+    sl.instanceMatrix.needsUpdate = true; if (sl.instanceColor) sl.instanceColor.needsUpdate = true; }
+  const spk = new THREE.InstancedMesh(new THREE.BoxGeometry(0.018, 0.03, 0.018), new THREE.MeshStandardMaterial({ color:0x3a2a22, roughness:0.6, metalness:0.4 }), 360);
+  for (let i = 0; i < 90; i++) for (let k = 0; k < 4; k++) { const z = (k < 2 ? 1.55 : 2.45) + (k % 2 ? 0.085 : -0.085); m4.makeTranslation(-6 + i*0.6 + (k % 2 ? 0.05 : -0.05), -0.512, z); spk.setMatrixAt(i*4 + k, m4); }
+  scene.add(spk);
+  { const N = 4200, st = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.026, 0), new THREE.MeshStandardMaterial({ color:0x625c56, roughness:0.95 }), N), c = new THREE.Color(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+    for (let i = 0; i < N; i++) { const x = -2 + hsh(i, 21)*44, z = 1.05 + hsh(i, 22)*1.9, sz = 0.5 + hsh(i, 23)*0.9;
+      e.set(hsh(i, 24)*6, hsh(i, 25)*6, hsh(i, 26)*6); q.setFromEuler(e); v.set(x, -0.6 + (hsh(i, 27) - 0.5)*0.02, z); sc.set(sz, sz*(0.6 + hsh(i, 28)*0.4), sz); m4.compose(v, q, sc); st.setMatrixAt(i, m4);
+      const k = 0.45 + hsh(i, 29)*0.45, r = Math.abs(z - 1.55) < 0.12 || Math.abs(z - 2.45) < 0.12 ? 1.12 : 1; c.setRGB(k*r, k, k/r); st.setColorAt(i, c); }   /* (rust-stained near the rails) */
+    st.receiveShadow = true; scene.add(st); }
   /* the rails in their real shape (foot, web, head), on tie plates */
   const rs = new THREE.Shape(); [[-0.065, 0], [0.065, 0], [0.065, 0.012], [0.012, 0.03], [0.009, 0.11], [0.032, 0.12], [0.032, 0.15], [-0.032, 0.15], [-0.032, 0.12], [-0.009, 0.11], [-0.012, 0.03], [-0.065, 0.012]].forEach((p, i) => i ? rs.lineTo(p[0], p[1]) : rs.moveTo(p[0], p[1]));
-  const railG = new THREE.ExtrudeGeometry(rs, { depth:54, bevelEnabled:false }); railG.rotateY(Math.PI/2);
+  const railG = new THREE.ExtrudeGeometry(rs, { depth:54, bevelEnabled:false, steps:216 }); railG.rotateY(Math.PI/2);
+  { const p = railG.attributes.position, col = new Float32Array(p.count*3);   /* (Nov 19, detail pass: the head worn bright by the wheels, the web and foot rusted, patchy along the line) */
+    for (let i = 0; i < p.count; i++) { const y = p.getY(i), x = p.getX(i), r = vn(x*1.3, 4)*0.5 + vn(x*7, 9)*0.25;
+      const c = y > 0.135 ? [0.78, 0.76, 0.74] : (y > 0.118 ? [0.5, 0.42, 0.38] : [0.52 + 0.12*r, 0.3 + 0.06*r, 0.2 + 0.03*r]);
+      col[i*3] = c[0]; col[i*3 + 1] = c[1]; col[i*3 + 2] = c[2]; }
+    railG.setAttribute('color', new THREE.BufferAttribute(col, 3)); M.rail.vertexColors = true; M.rail.color.set(0xb0aaa4); M.rail.roughness = 0.55; }
   for (const z of [1.55, 2.45]) { const me = new THREE.Mesh(railG, M.rail); me.position.set(-6, -0.535, z); me.castShadow = me.receiveShadow = true; scene.add(me); }
   const tp = new THREE.InstancedMesh(new THREE.BoxGeometry(0.17, 0.016, 0.24), M.iron, 180);
   for (let i = 0; i < 90; i++) for (let k = 0; k < 2; k++) { m4.makeTranslation(-6 + i*0.6, -0.528, k ? 2.45 : 1.55); tp.setMatrixAt(i*2 + k, m4); }
@@ -290,6 +308,7 @@ export function buildStation(scene){
     for (const zs of [-1, 1]) { const g = new THREE.BoxGeometry(0.04, 0.16, Math.hypot(2.72, 1.73)); const me = new THREE.Mesh(g, M.woodD);
       me.position.set(x + s*0.21, (3.32 + 5.05)/2 - 0.02, 10.5 + zs*1.36); me.rotation.x = zs*Math.atan2(1.73, 2.72); me.castShadow = me.receiveShadow = true; scene.add(me); }
   }
+  wallDetails(scene, M);   /* (Nov 19, detail pass: the wet at the walls' foot, a vent in each gable; src/details.js) */
   box(24.2, 24.55, 2.0, 2.4, 7.9, 8.0, M.iron, { solid:false }); box(24.35, 24.4, 2.4, 3.15, 7.95, 7.99, M.iron, { solid:false, cast:false });   /* junction box, conduit up into the canopy */
   /* the canopy's rafters, from the beam back to the wall */
   for (const x of [10.5, 13.5, 16.5, 19.5, 22.5, 9.05, 24.95]) box(x - 0.05, x + 0.05, 2.98, 3.15, 4.21, 8, M.woodD, { solid:false });
@@ -341,7 +360,8 @@ export function buildStation(scene){
   snackBox(scene, 11.18, 0, 7.42, 0.7);   /* (Nov 19) an empty box of caramel corn, crushed, by the bench's west end */
   box(24.95, 29.05, 2.62, 2.7, 7, 9.7, [M.tinG, M.tinG, M.tin, M.tinG, M.tinG, M.tinG], { solid:false });
   box(25, 29, 2.48, 2.62, 6.98, 7.02, M.tin, { solid:false });
-  for (const x of [25.05, 28.9]) box(x, x + 0.05, 0, 2.62, 7.0, 7.05, M.iron);
+  for (const x of [25.05, 28.9]) K.solids.push({ x0:x, x1:x + 0.05, y0:0, y1:2.62, z0:7.0, z1:7.05 });
+  awningDetails(scene, M);   /* (Nov 19, detail pass: rafters, a purlin, the drip edge, pipe posts with braces; src/details.js) */
   /* (Nov 18, Aisling: "we need a pay phone … i dont think its a booth this time … i think its more the little box … we didnt
      have boxes in ohio … obviously not blue so maybe like silver is better choice? i like havign graffitit but not a crzy
      amount") an Ohio payphone of the 90s: a brushed steel shroud on the station's west gable, open at the front, its lit
@@ -458,7 +478,7 @@ export function buildStation(scene){
     ROOTS.add(W - 0.2, (Z0 + Z1)/2, 0.01, 'earth'); }
   { const bb = new THREE.MeshStandardMaterial({ map:seamTex('f3binBody', 400, '#7e7b74'), roughness:0.95 }), hf = new THREE.MeshStandardMaterial({ map:seamTex('f3binHoodF', 500, '#86837c'), roughness:0.95 }), hs = new THREE.MeshStandardMaterial({ map:seamTex('f3binHoodS', 300, '#86837c'), roughness:0.95 }), bt = mat(T.conc, { color:0x9a968e });
     bb.userData.m = [0.36, 0.6]; hf.userData.m = [0.42, 0.26]; hs.userData.m = [0.4, 0.26];   /* (Seam's bin with eyes: grey concrete gone grimy, a hood over it, its two eyes) */
-    tag(box(26.02, 26.38, 0, 0.6, 7.59, 7.95, [bb, bb, bt, bt, bb, bb]), 'bin'); tag(box(25.99, 26.41, 0.6, 0.86, 7.55, 7.95, [hs, hs, bt, bt, hs, hf], { solid:false }), 'bin'); }
+    tag(box(26.02, 26.38, 0, 0.6, 7.59, 7.95, [bb, bb, bt, bt, bb, bb]), 'bin'); tag(box(25.99, 26.41, 0.6, 0.86, 7.55, 7.95, [hs, hs, bt, bt, hs, hf], { solid:false }), 'bin');  binDetails(scene); }
   { const jf = new THREE.MeshStandardMaterial({ map:seamTex('f3jcF', 600, '#b8847a'), roughness:0.7, alphaTest:0.4 }), js = new THREE.MeshStandardMaterial({ map:seamTex('f3jcS', 600, '#b8847a'), roughness:0.7, alphaTest:0.4 }), jt = mat(null, { color:0xb8847a });
     jf.userData.m = [0.26, 0.36]; js.userData.m = [0.18, 0.36];   /* (Seam's faded pink kerosene can, 灯油 moulded faint on its side) */
     tag(box(26.42, 26.68, 0, 0.36, 7.77, 7.95, [js, js, jt, jt, jf, jf]), 'jerry');

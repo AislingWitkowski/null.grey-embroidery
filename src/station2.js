@@ -22,6 +22,7 @@ import { vn, fbm, frac, clamp, sm, tex, paint } from './paint.js';
 import { inkRGB } from './inks.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
 import { ROOTS } from './roots.js';
+import { signPost, signBolts, ageBoard, dustyGlass } from './details.js';
 
 /* Seam's deep reds (hblood, from null.grey-furusatostation's RAMP_SRC) for the leaves only: Embroidery's ink grade keeps its own ramps */
 const HBLOOD = ['#120202','#220404','#340606','#470909','#5b0b0b','#700e0d','#851211','#9a1715','#ae1f1a','#c22b22','#d4463a','#e47466'];
@@ -331,7 +332,7 @@ export function buildMore(C){
     const board = word => { const t = cvTex(480, 64, (c, w, h) => { c.fillStyle = '#e6e2d8'; c.fillRect(0, 0, w, h); c.strokeStyle = '#1c1511'; c.lineWidth = 5; c.strokeRect(5, 5, w - 10, h - 10);
         c.fillStyle = '#1c1511'; c.font = '900 36px Arial Black, Arial, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(word.split('').join(String.fromCharCode(8202)), w/2, h/2 + 2);
         c.globalAlpha = 0.5; c.strokeStyle = '#8a8378'; c.lineWidth = 2; for (const x of [60, 300, 400]) { c.beginPath(); c.moveTo(x, 6); c.lineTo(x + 6, 58); c.stroke(); }
-        c.globalAlpha = 0.18; c.fillStyle = '#6a6058'; c.fillRect(0, 44, w, 20); c.fillStyle = '#8a8378'; c.fillRect(208, 0, 64, 64); });   /* weathered: a grey wash at the bottom, cracks down the paint */
+        c.globalAlpha = 0.18; c.fillStyle = '#6a6058'; c.fillRect(0, 44, w, 20); c.fillStyle = '#8a8378'; c.fillRect(208, 0, 64, 64); c.globalAlpha = 1; ageBoard(c, w, h, word.length*7 + word.charCodeAt(0)); });   /* (Nov 19: aged) */   /* weathered: a grey wash at the bottom, cracks down the paint */
       const m = new THREE.MeshStandardMaterial({ map:t, roughness:0.8 }); m.userData.m = [1.2, 0.16]; return m; };
     tag(lathe([[0, 0], [0.055, 0], [0.05, 0.3], [0.045, 3.0], [0.03, 3.06], [0, 3.06]], mat(T.woodD), PX, gy, PZ, 10), 'xbuck');
     K.solids.push({ x0:PX - 0.06, x1:PX + 0.06, y0:gy, y1:gy + 3, z0:PZ - 0.06, z1:PZ + 0.06 });
@@ -348,7 +349,8 @@ export function buildMore(C){
   /* ================= out along the road: the mileage sign, and further down the same sign again; a mailbox ================= */
   const signF = picM('f3mile', 260, '#46603e', { cut:true, m:[0.92, 0.46] }), signB = picM('f3signBack', 140, '#8a8580', { cut:true, m:[0.92, 0.46] }), edge = mat(null, { color:0x6c6864 });
   [12.2, 34.6].forEach(z => { const gy = groundAt(28.54, z + 0.03);
-    tag(box(28.5, 28.58, gy - 0.1, gy + 2.05, z, z + 0.06, mat(T.woodD)), 'mile');
+    tag(signPost(scene, 28.54, z, gy, 2.15), 'mile'); K.solids.push({ x0:28.5, x1:28.58, y0:gy - 0.1, y1:gy + 2.05, z0:z, z1:z + 0.06 });   /* (Nov 19: a steel channel post, holes up it, leaning a touch) */
+    for (const b of signBolts(scene, 28.54, gy + 1.6, z)) tag(b, 'mile');
     tag(box(28.04, 28.96, gy + 1.6, gy + 2.06, z - 0.02, z, [edge, edge, edge, edge, signB, signF], { solid:false }), 'mile'); });
   (function mailbox(){
     const gy = groundAt(31.66, 20.24), bm = mat(T.tinG, { color:0x8a8682 });
@@ -468,7 +470,7 @@ export function buildMore(C){
   const g0 = mat(null, { color:0x6a6660 });
   tag(box(26.2, 27.6, 1.85, 2.4, 7.975, 7.995, [g0, g0, g0, g0, g0, picM('f3shedSign', 300, '#e2d6be', { m:[1.4, 0.55] })], { solid:false, cast:false }), 'shedsign');
   tag(box(25.15, 25.95, 1.53, 1.65, 7.975, 7.995, [g0, g0, g0, g0, g0, picM('f3tobacco', 320, '#9a2a22', { m:[0.8, 0.12] })], { solid:false, cast:false }), 'tobacco');
-  const winM = new THREE.MeshStandardMaterial({ color:0x1a1410, roughness:0.15, metalness:0.3 });
+  const winM = dustyGlass();   /* (Nov 19, detail pass: dusty, wiped once, a crack and a dead fly; no hard shine) */
   tag(box(25.22, 25.88, 0.9, 1.48, 7.985, 7.995, winM, { solid:false, cast:false }), 'tobacco');   /* the little window, shut */
   box(25.18, 25.92, 0.86, 0.9, 7.94, 8.0, M.woodD, { solid:false }); box(25.18, 25.92, 1.48, 1.52, 7.96, 8.0, M.woodD, { solid:false });
   const card = cvTex(64, 48, (c, w, h) => { c.fillStyle = col('paper', 0.75); c.fillRect(0, 0, w, h); c.strokeStyle = col('hwood', 0.2); c.lineWidth = 2.4; c.beginPath(); for (const y of [16, 30]) { c.moveTo(10, y); for (let x = 10; x < 54; x += 4) c.lineTo(x, y + Math.sin(x*0.9)*2.4); } c.stroke(); });   /* a hand-written card behind the glass */
