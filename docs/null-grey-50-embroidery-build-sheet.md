@@ -542,3 +542,10 @@ Aisling: *"i made a decision that all the doorknobs in missing mile have like ey
   - the relief and the colour are made from one height picture, so they always agree; clicking a knob or the padlock says the door's line as before.
 - **Pending, Aisling:** the other buildings' forms as they're built (the shed is next door: stamped tin or a scratched-in eye would suit it); whether the eyes mean anything in the lore.
 - Checked: walking, clicks, the train, the text check (no must-fix), no blue, no errors.
+
+### Nov 19, 2026 — the shed's eye, the tin, a snack box
+Aisling: "the people of mising mile...almost see..almost? and scratched in later is ok!"
+- **The shed (MAPLES & SONS) door:** a plank door, sage-grey paint flaking, with an eye **scratched in later by people** round the knob: rough lines gone over again and again, stray slips, the pupil jabbed in above the knob. The knob is a plain iron one sitting in the eye. Every door on the shed would carry the same eye (it has one).
+- **Corrugated tin (shed and walls):** rust now runs down from the nails and the laps in streaks, instead of round blotches.
+- **A discarded snack box** by the bench (x 11.2, z 7.4): an off-brand caramel-corn box, "CRACKER JAKE", red and cream stripes, crushed flat and empty, torn flap. Stand-in name: hers to change. It isn't clickable yet; **its line is pending** (Aisling's words, if she wants one).
+- Still for later: the station door knobs' eye form is the brass one from the last round; other buildings get their own forms as they're built.

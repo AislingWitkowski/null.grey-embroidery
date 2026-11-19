@@ -98,3 +98,67 @@ export function stationLock(scene, x, y, z){
   const sh = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.0055, 8, 20, Math.PI), dark); sh.position.set(x, y + 0.04, z); scene.add(sh); out.push(sh);   /* the shackle */
   return out;
 }
+
+/* - SHED (the feed, seed and bait shed): a plain plank door with a cheap iron knob, and an eye somebody scratched into
+     its paint round the knob, long after: lids cut over and over, a ring for the iris, a jab for the pupil, rough lashes.
+     the scratches show the pale wood under the paint and catch the light a little. (Aisling, Nov 19: "scratched in later
+     is ok!") */
+export function shedDoor(scene, x, z0, z1, h){
+  const W = z1 - z0, cw = 320, ch = Math.round(cw*h/W), C = document.createElement('canvas'), B = document.createElement('canvas'); C.width = B.width = cw; C.height = B.height = ch;
+  const g = C.getContext('2d'), b = B.getContext('2d'); SEED = 31;
+  b.fillStyle = grey(0.5); b.fillRect(0, 0, cw, ch);
+  const nP = 5, pw = cw/nP;
+  for (let i = 0; i < nP; i++) { const x0 = i*pw, tone = 96 + R()*22;
+    g.fillStyle = `rgb(${tone*0.78},${tone*0.84},${tone*0.66})`; g.fillRect(x0, 0, pw, ch);   /* sage-grey paint, each plank its own */
+    for (let k = 0; k < 220; k++) { const yy = R()*ch, L = 20 + R()*120; g.fillStyle = `rgba(${R() < 0.5 ? '60,52,40' : '200,196,170'},${0.05 + R()*0.08})`; g.fillRect(x0 + R()*pw, yy, 1, L); }   /* its grain under the paint */
+    for (let k = 0; k < 14; k++) { const px = x0 + R()*pw, py = R() < 0.6 ? ch*(0.7 + R()*0.3) : R()*ch, rw = 4 + R()*18, rh = 10 + R()*50;   /* paint flaking to bare grey wood, more low */
+      g.fillStyle = `rgb(${88 + R()*20},${80 + R()*16},${66 + R()*12})`; g.beginPath(); g.ellipse(px, py, rw, rh, R()*0.3, 0, TAU); g.fill(); b.fillStyle = grey(0.42); b.beginPath(); b.ellipse(px, py, rw, rh, 0, 0, TAU); b.fill(); }
+    g.fillStyle = 'rgba(28,22,16,0.85)'; g.fillRect(x0, 0, 3, ch); b.fillStyle = grey(0.1); b.fillRect(x0, 0, 3, ch); }   /* the gaps between planks */
+  for (const yy of [ch*0.12, ch*0.86]) { g.fillStyle = 'rgb(84,88,70)'; g.fillRect(0, yy - 14, cw, 28); b.fillStyle = grey(0.75); b.fillRect(0, yy - 14, cw, 28); for (let i = 0; i < nP; i++) for (const d of [-7, 7]) { g.fillStyle = '#2a2018'; g.beginPath(); g.arc(i*pw + pw/2, yy + d, 2.5, 0, TAU); g.fill(); } }   /* the ledges, nailed */
+  const grime = g.createLinearGradient(0, ch*0.6, 0, ch); grime.addColorStop(0, 'rgba(50,40,28,0)'); grime.addColorStop(1, 'rgba(50,40,28,0.45)'); g.fillStyle = grime; g.fillRect(0, 0, cw, ch);
+  /* the scratched eye, round where the knob is (knob at 0.78 across, 1.0 m up) */
+  const kx = cw*0.78, ky = ch*(1 - 1.0/h), ew = cw*0.42, eh = ew*0.36;
+  const scratch = (pts, n = 3) => { for (let r = 0; r < n; r++) { const j = () => (R() - 0.5)*5; g.strokeStyle = `rgba(${R() < 0.4 ? '190,176,146' : '150,136,108'},${0.22 + R()*0.3})`; g.lineWidth = 0.6 + R()*1.1;   /* (rough, gone over again and again, not neat) */ b.strokeStyle = grey(0.15); b.lineWidth = 2;
+      for (const c of [g, b]) { c.beginPath(); pts.forEach(([px, py], i) => i ? c.lineTo(px + j(), py + j()) : c.moveTo(px + j(), py + j())); c.stroke(); } } };
+  const lidPts = up => { const a = []; for (let i = 0; i <= 16; i++) { const t = i/16, xx = kx - ew/2 + ew*t; a.push([xx, ky + (up ? -1 : 1)*eh*Math.sin(t*Math.PI)*(up ? 1 : 0.85)]); } return a; };
+  scratch(lidPts(true), 6); scratch(lidPts(false), 5);
+  for (let k = 0; k < 4; k++) { const a = []; const t0 = R()*0.3, t1 = 0.6 + R()*0.4; for (let i = 0; i <= 8; i++) { const t = t0 + (t1 - t0)*i/8, xx = kx - ew/2 + ew*t; a.push([xx, ky - eh*Math.sin(t*Math.PI)*(0.9 + R()*0.25)]); } scratch(a, 1); }   /* stray strokes where the knife slipped */
+  g.fillStyle = 'rgba(40,30,20,0.8)'; for (let k = 0; k < 6; k++) { g.beginPath(); g.arc(kx + (R() - 0.5)*10, ky - eh*0.55 + (R() - 0.5)*8, 1.5 + R()*2, 0, TAU); g.fill(); }   /* the pupil: jabbed in above the knob */
+  { const a = []; for (let i = 0; i <= 20; i++) { const t = i/20*TAU; a.push([kx + Math.cos(t)*eh*0.82, ky + Math.sin(t)*eh*0.82]); } scratch(a, 3); }   /* the iris, cut round the knob */
+  for (let i = 0; i < 9; i++) { const t = 0.1 + i/8*0.8, xx = kx - ew/2 + ew*t, yy = ky - eh*Math.sin(t*Math.PI); scratch([[xx, yy - 2], [xx + (t - 0.5)*14, yy - 14 - R()*8]], 2); }   /* lashes, rough */
+  const map = new THREE.CanvasTexture(C); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8; const bump = new THREE.CanvasTexture(B);
+  const m = new THREE.MeshStandardMaterial({ map, bumpMap:bump, bumpScale:1.4, roughness:0.85 });
+  const out = [], door = new THREE.Mesh(new THREE.PlaneGeometry(W, h), m); door.rotation.y = Math.PI/2; door.position.set(x + 0.012, h/2, (z0 + z1)/2); door.receiveShadow = true; scene.add(door); out.push(door);
+  const iron = new THREE.MeshStandardMaterial({ color:0x2e2620, roughness:0.6, metalness:0.6 }), fr = new THREE.MeshStandardMaterial({ color:0x3a3024, roughness:0.9 });
+  const kz = z1 - W*0.78;   /* (seen from +x the picture runs from z1 to z0) */
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.028, 14, 10), iron); knob.scale.set(0.8, 1, 1); knob.position.set(x + 0.06, 1.0, kz); knob.castShadow = true; scene.add(knob); out.push(knob);
+  const nk = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.012, 0.04, 8), iron); nk.rotation.z = Math.PI/2; nk.position.set(x + 0.03, 1.0, kz); scene.add(nk); out.push(nk);
+  const rose = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.006, 16), iron); rose.rotation.z = Math.PI/2; rose.position.set(x + 0.015, 1.0, kz); scene.add(rose); out.push(rose);
+  for (const [a, bb, c, d] of [[z0 - 0.05, z0, 0, h + 0.05], [z1, z1 + 0.05, 0, h + 0.05], [z0 - 0.05, z1 + 0.05, h, h + 0.06]]) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.03, d - c, bb - a), fr); f.position.set(x + 0.015, (c + d)/2, (a + bb)/2); f.castShadow = true; scene.add(f); out.push(f); }   /* its frame */
+  return { meshes:out, uv:door.material.map };
+}
+
+/* (Nov 19, Aisling: "a abandoned off brand empty cracker jack box discarded somewher on the station") an empty box of
+   caramel corn and peanuts, crushed and thrown down. a pre-2002 trademark, so its shape, stripes and era stay and the
+   name is one step off (CRACKER JAKE, a stand-in: hers to rename); its blue is warmed to plum (no blue); no mascot face. */
+export function snackBox(scene, x, y, z, ry){
+  const mk = (w, h, f) => { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+  const face = mk(192, 384, (g, w, h) => { g.fillStyle = '#e8dcc2'; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 9; i++) if (i % 2 === 0) { g.fillStyle = '#a42a22'; g.fillRect(i*w/9, 0, w/9, h); }   /* the red and white stripes */
+    g.fillStyle = '#e8dcc2'; g.fillRect(14, 70, w - 28, 150); g.strokeStyle = '#4a2438'; g.lineWidth = 5; g.strokeRect(14, 70, w - 28, 150);
+    g.fillStyle = '#a42a22'; g.textAlign = 'center'; g.font = '900 34px "Cooper Black","Georgia",serif'; g.fillText('CRACKER', w/2, 116); g.fillText('JAKE', w/2, 156);
+    g.fillStyle = '#4a2438'; g.font = '700 13px "Helvetica Neue",Arial,sans-serif'; g.fillText('CARAMEL CORN', w/2, 182); g.fillText('& PEANUTS', w/2, 198);
+    g.fillStyle = '#4a2438'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = k/10*TAU - Math.PI/2, r = k % 2 ? 9 : 20; g.lineTo(w/2 + Math.cos(a)*r, 290 + Math.sin(a)*r); } g.fill();
+    g.fillStyle = '#4a2438'; g.fillRect(30, 312, w - 60, 34);   /* a plum band so the words read */
+    g.fillStyle = '#e8dcc2'; g.font = '800 11px Arial,sans-serif'; g.fillText('A PRIZE', w/2, 326); g.fillText('IN EVERY BOX', w/2, 340);
+    for (let i = 0; i < 260; i++) { g.fillStyle = `rgba(60,44,30,${0.04 + Math.random()*0.12})`; g.fillRect(Math.random()*w, Math.random()*h, 1 + Math.random()*5, 1 + Math.random()*3); }   /* dirt, damp */
+    const st = g.createRadialGradient(w*0.3, h*0.8, 4, w*0.3, h*0.8, 90); st.addColorStop(0, 'rgba(70,50,30,0.35)'); st.addColorStop(1, 'rgba(70,50,30,0)'); g.fillStyle = st; g.fillRect(0, 0, w, h); });
+  const side = mk(64, 384, (g, w, h) => { g.fillStyle = '#a42a22'; g.fillRect(0, 0, w, h); g.fillStyle = '#e8dcc2'; g.fillRect(0, 0, w, 40); for (let i = 0; i < 80; i++) { g.fillStyle = `rgba(60,44,30,${0.06 + Math.random()*0.1})`; g.fillRect(Math.random()*w, Math.random()*h, 2, 2); } });
+  const cb = new THREE.MeshStandardMaterial({ color:0x8a7458, roughness:0.95 }), fm = new THREE.MeshStandardMaterial({ map:face, roughness:0.85 }), sm = new THREE.MeshStandardMaterial({ map:side, roughness:0.85 });
+  const geo = new THREE.BoxGeometry(0.068, 0.125, 0.03, 2, 4, 2), p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) { const yy = p.getY(i), k = Math.max(0, yy/0.065); p.setZ(i, p.getZ(i)*(1 - 0.7*k) + Math.sin(yy*40)*0.002); p.setX(i, p.getX(i)*(1 - 0.12*k)); }   /* crushed at its top end */
+  geo.computeVertexNormals();
+  const me = new THREE.Mesh(geo, [sm, sm, cb, cb, fm, sm]); me.rotateY(ry); me.rotateX(-Math.PI/2 + 0.04); me.position.set(x, y + 0.016, z);   /* (lying face up) */ me.castShadow = true; me.receiveShadow = true; scene.add(me);
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(0.06, 0.04), cb); fl.rotation.set(-Math.PI/2 + 0.5, ry, 0); fl.position.set(x + Math.cos(ry)*0.075, y + 0.012, z - Math.sin(ry)*0.075); scene.add(fl);   /* its torn-open flap */
+  return me;
+}

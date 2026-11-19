@@ -8,7 +8,7 @@
 import { ROOTS } from './roots.js';
 import { pathDist } from './station2.js';
 import * as THREE from 'three';
-import { stationKnob, stationLock } from './eyes.js';
+import { stationKnob, stationLock, shedDoor, snackBox } from './eyes.js';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintPole, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
@@ -337,6 +337,8 @@ export function buildStation(scene){
 
   /* ---- the corner: the shed, its awning, the phone, the bin, the jerry can, the drinks machine ---- */
   tag(box(25, 28.9, -0.3, 2.62, 8, 9.6, M.tinG), () => F3_WALL.back[1]);
+  for (const me of shedDoor(scene, 28.9, 8.45, 9.25, 2.0).meshes) tag(me, () => F3_WALL.back[1]);   /* (Nov 19) the shed's door on its east side, its eye scratched in (src/eyes.js) */
+  snackBox(scene, 11.18, 0, 7.42, 0.7);   /* (Nov 19) an empty box of caramel corn, crushed, by the bench's west end */
   box(24.95, 29.05, 2.62, 2.7, 7, 9.7, [M.tinG, M.tinG, M.tin, M.tinG, M.tinG, M.tinG], { solid:false });
   box(25, 29, 2.48, 2.62, 6.98, 7.02, M.tin, { solid:false });
   for (const x of [25.05, 28.9]) box(x, x + 0.05, 0, 2.62, 7.0, 7.05, M.iron);

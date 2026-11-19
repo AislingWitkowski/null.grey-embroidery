@@ -133,13 +133,23 @@ export function paintStucco(){ return paint(896, 762, 4, 3.4, (x, h) => stucco(x
 /* corrugated tin: real ribs in the relief, rust bleeding down from the nail lines, the odd lighter patched sheet; the
    clean metal is a little shiny, the rust is not */
 export function paintTin(rusty){
-  return paint(192, 384, 1, 2, (x, y) => {
-    const rib = Math.sin(x*2*Math.PI*10)*0.5 + 0.5, sheet = Math.floor(y/1.0), nail = Math.abs(frac(y) - 0.08) < 0.012 && frac(x*10) < 0.15;
-    const run = sm(0.4, 0, frac(y) - 0.08)*vn(x*12, sheet)*(frac(y) > 0.08 ? 1 : 0);
-    const rust = fbm(x*3 + sheet*7, y*1.2) + (rusty ? 0.18 : 0) + 0.3*run > 0.7;
-    if (nail) return ['hblack', 0.4, 1, rib + 0.3, 0.6];
-    if (rust) return ['hrust', clamp(0.32 + 0.16*rib + 0.08*vn(x*30, y*30) + 0.05*vn(x*120, y*120), 0, 1), 1, rib*0.9 + 0.08*vn(x*60, y*60), 0.95];
-    return ['hgrey', clamp(0.36 + 0.2*rib - 0.08*fbm(x*5, y*3) + (hsh(sheet, 3) > 0.7 ? 0.06 : 0), 0, 1), 1, rib, 0.5 + 0.2*fbm(x*4, y*4)];
+  /* (Nov 19, detail pass) old corrugated galvanised tin, twice the detail: the zinc's faint spangle; each sheet's lap
+     line, darker; nail heads along it, each weeping a thin rust streak straight down, darker in the ribs' valleys where
+     water runs; rust blooming at the laps and low where splash and damp sit; pale white oxide in patches. (it was round
+     rust blobs) */
+  return paint(384, 768, 1, 2, (x, y) => {
+    const rib = Math.sin(x*2*Math.PI*10)*0.5 + 0.5, valley = 1 - rib, sheet = Math.floor(y), fy = frac(y), lap = fy > 0.06 && fy < 0.09;
+    const nail = Math.abs(fy - 0.075) < 0.01 && Math.abs(frac(x*10) - 0.92) < 0.03;
+    const col = Math.floor(x*10 + 0.08), below = frac(0.075 - fy + 1), streakOn = hsh(col, sheet*3 + 1) > (rusty ? 0.25 : 0.45);
+    const streak = streakOn ? sm(0.55 + 0.35*hsh(col, sheet), 0, below)*sm(0.06, 0.0, Math.abs(frac(x*10) - 0.92 + 0.02*Math.sin(y*9 + col)))*(0.6 + 0.4*valley) : 0;
+    const low = sm(0.5, 0.0, y)*0.5, lapR = sm(0.12, 0.0, Math.abs(fy - 0.075))*0.35;
+    const bloom = fbm(x*5 + sheet*7, y*0.7) + 0.12*vn(x*20, y*3) + (rusty ? 0.1 : 0) + low + lapR;   /* (stretched up and down: rust runs, it doesn't spread in rounds) */
+    const spangle = vn(Math.floor(x*90), Math.floor(y*90)*1.3), ox = fbm(x*6 + 11, y*4) > 0.72 && bloom < 0.7;
+    if (nail) return ['hblack', 0.36, 1, rib + 0.4, 0.6];
+    if (bloom > 0.84 || streak > 0.45) return ['hrust', clamp(0.26 + 0.14*rib + 0.1*vn(x*40, y*40) - 0.08*streak + 0.06*vn(x*140, y*140), 0, 1), 1, rib*0.85 + 0.1*vn(x*70, y*70), 0.95];
+    if (streak > 0.15 || bloom > 0.78) return ['hrust', clamp(0.36 + 0.14*rib, 0, 1), 1, rib, 0.8];
+    if (ox) return ['hgrey', clamp(0.5 + 0.14*rib, 0, 1), 1, rib, 0.85];
+    return ['hgrey', clamp(0.35 + 0.2*rib - 0.06*fbm(x*5, y*3) + 0.03*(spangle - 0.5) - (lap ? 0.08 : 0) + (hsh(sheet, 3) > 0.7 ? 0.05 : 0), 0, 1), 1, rib, 0.45 + 0.2*fbm(x*4, y*4)];
   }, { nrm:1.6 });
 }
 /* the canopy's ceiling: boards running across, weathered dark, black between */
