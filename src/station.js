@@ -8,6 +8,7 @@
 import { ROOTS } from './roots.js';
 import { pathDist } from './station2.js';
 import * as THREE from 'three';
+import { stationKnob, stationLock } from './eyes.js';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintPole, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
@@ -270,13 +271,10 @@ export function buildStation(scene){
       box(x - 0.09, x, 0, 2.55, z0, z1, M.woodD, { solid:false }); box(x + 1.1, x + 1.19, 0, 2.55, z0, z1, M.woodD, { solid:false });
       box(x - 0.12, x + 1.22, 2.45, 2.6, s < 0 ? zf - 0.09 : zf, s < 0 ? zf : zf + 0.09, M.woodD, { solid:false });
       if (s > 0) box(x - 0.2, x + 1.3, -0.42, -0.02, 13, 13.4, mat(T.face, { color:0xb8b0a8 }));   /* the step */
-      { const kn = new THREE.MeshStandardMaterial({ color:0x6a5440, roughness:0.35, metalness:0.75 });   /* (Nov 18, Aisling: "no doornobs on doors") old brass knobs, dulled, one on each leaf, and their plates */
-        for (const kx of [x + 0.44, x + 0.66]) { const g = new THREE.SphereGeometry(0.032, 12, 8); const k = new THREE.Mesh(g, kn); k.position.set(kx, 1.0, zf + s*0.045); k.castShadow = true; scene.add(k);
-          const st = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.012, 0.04, 8), kn); st.rotation.x = Math.PI/2; st.position.set(kx, 1.0, zf + s*0.02); scene.add(st);
-          box(kx - 0.022, kx + 0.022, 0.93, 1.11, s < 0 ? zf - 0.008 : zf, s < 0 ? zf : zf + 0.008, kn, { solid:false, cast:false }); } }
+      for (const kx of [x + 0.44, x + 0.66]) for (const me of stationKnob(scene, kx, 1.0, zf, s)) tag(me, wallSay);   /* (Nov 19: the station's eye knobs, cast brass; src/eyes.js) */
       if (s < 0) {   /* the chain across, and its lock */
         wire([x + 0.25, 1.15, 7.975], [x + 0.85, 1.15, 7.975], 0.12, M.iron, 0.012);
-        box(x + 0.52, x + 0.6, 0.92, 1.02, 7.95, 7.985, M.iron, { solid:false, cast:false });
+        for (const me of stationLock(scene, x + 0.55, 1.0, 7.97)) tag(me, wallSay);   /* (its padlock: rusted iron, an eye among leaves and flowers) */
       }
     }
     for (const x of winsX) {
