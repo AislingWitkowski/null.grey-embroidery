@@ -192,7 +192,8 @@ export function buildStation(scene){
     wood: sized(paintWood(false), 0.25, 1), woodD: sized(paintWood(true), 0.25, 1), conc: sized(paintConcrete(), 23, 5), strip: sized(paintStrip(), 1, 0.5), face: sized(paintFace(), 4, 1),
   };
   const M = {
-    facade: mat(T.facade), stucco: mat(T.stucco), tin: mat(T.tin, { rough:0.7, metal:0.3 }), tinG: mat(T.tinG, { rough:0.7, metal:0.3 }), boards: mat(T.boards),
+    facade: mat(T.facade), stucco: mat(T.stucco), tin: mat(T.tin, { rough:0.7, metal:0.3 }), tinG: mat(T.tinG, { rough:0.7, metal:0.3 }), boards: mat(T.boards, { emit:0x18120c }),   /* (Nov 19: the ceiling holds a little of the bulbs' warmth, not a void) */
+   
     fascia: mat(T.fascia, { cut:0.5, two:true }), iron: mat(T.iron, { rough:0.6, metal:0.2 }), wood: mat(T.wood), woodD: mat(T.woodD), conc: mat(T.conc, { rough:0.85 }),
     strip: mat(T.strip), face: mat(T.face), dark: mat(null, { color:0x1b1411 }), wire: mat(null, { color:0x120d0b }),
     rail: new THREE.MeshStandardMaterial({ color:0x4e4844, roughness:0.45, metalness:0.6 }),
@@ -312,7 +313,7 @@ export function buildStation(scene){
     L.bulbs.push(s); halo(x, 2.67, 5.9, 0.42, 0xffc890);
   });
   /* the hanging sign, lit from inside, on two rods */
-  const hs = paintHangSign(); const hsM = new THREE.MeshStandardMaterial({ map:hs, emissiveMap:hs, emissive:new THREE.Color(1, 0.86, 0.62), emissiveIntensity:1.1, roughness:0.8 });
+  const hs = paintHangSign(); const hsM = new THREE.MeshStandardMaterial({ map:hs, emissiveMap:hs, emissive:new THREE.Color(1, 0.86, 0.62), emissiveIntensity:1.1, roughness:0.8 }); hsM.userData.m = [2.2, 0.48];   /* (Nov 19: one picture over the whole face) */
   tag(box(15.2, 17.4, 2.18, 2.66, 5.9, 5.96, [M.dark, M.dark, M.dark, M.dark, hsM, hsM], { solid:false, cast:false }), 'sign');
   for (const x of [15.5, 17.1]) box(x, x + 0.02, 2.66, C, 5.92, 5.94, M.wire, { solid:false, cast:false });
 
@@ -499,8 +500,26 @@ export function buildStation(scene){
     pm.transparent = false; pm.alphaTest = 0; pm.color.set(0xd8c0a8);
     const pit = new THREE.Mesh(pg, pm); pit.position.set(12.66, 0.456, 7.73); pit.rotation.set(0.15, 0.6, 0.1); pit.castShadow = true; pit.receiveShadow = true; scene.add(pit); tag(pit, 'pit'); L.pit = pit; }
   const dF = seamTex('f3dumpF', 260, '#30261d'), dS = seamTex('f3dumpS', 260, '#30261d');
-  const dmF = new THREE.MeshStandardMaterial({ map:dF, roughness:0.8 }), dmS = new THREE.MeshStandardMaterial({ map:dS, roughness:0.8 }); dmF.userData.m = [1.9, 1.6]; dmS.userData.m = [1.1, 1.6];
+  /* (Nov 19, the texture pass) the dumpster's sides and lid in steel, painted: old brown-black paint over pressed ribs,
+     scraped and dented, rust blooming at the welds and running down from the lid's lip, a lighter band where the lid has
+     rubbed, grime low. (its front stays Seam's picture, NO DUMPING · ゴミ捨て禁止) */
+  const dSide = paint(440, 640, 1.1, 1.6, (x, y) => { const rib = frac(x*4.5), rb = sm(0.0, 0.08, rib)*sm(0.24, 0.16, rib), top = y > 1.48, lip = Math.abs(y - 1.46) < 0.02;
+      const rust = fbm(x*5, y*3) + 0.3*sm(1.3, 1.6, y)*vn(x*20, 1) + 0.25*sm(0.4, 0, y) > 0.86, run = vn(x*28, 2) > 0.72 && y > 1.6 - 1.2*vn(x*28, 5), scrape = Math.abs(frac(x*1.3 + y*0.2 + vn(x, y)*0.8) - 0.5) < 0.006 && vn(x*3 + 7, y*3) > 0.6;
+      if (lip) return ['hblack', 0.36, 1, 1, 0.6];
+      if (scrape) return ['metal', 0.42, 1, 0.3, 0.5];
+      if (rust || (run && !top)) return ['hrust', clamp(0.24 + 0.14*vn(x*40, y*40), 0, 1), 1, 0.4 + 0.3*vn(x*60, y*60), 0.95];
+      return [vn(x*2, y*2) > 0.5 ? 'hwood' : 'hrust', clamp(0.27 + 0.08*vn(x*30, y*30) + 0.08*rb - 0.06*sm(0.5, 0, y), 0, 1), 1, 0.5 + 0.4*rb, 0.72 - 0.2*rb]; }, { nrm:1.6 });
+  const dmF = new THREE.MeshStandardMaterial({ map:dF, roughness:0.8, bumpMap:dSide.userData.normal ? null : null, color:new THREE.Color(1.6, 1.5, 1.4) }), dmS = mat(dSide, { rough:0.8, metal:0.2 }); dmF.userData.m = [1.9, 1.6]; dmS.userData.m = [1.1, 1.6];
   tag(box(14.1, 16.0, -0.3, 1.3, 13.12, 14.22, [dmS, dmS, mat(T.iron, { color:0x6a5040 }), dmS, dmF, dmS]), 'dump');
+  /* (Nov 19) in the round: the lid, a little open and overhanging with a rolled lip; pressed ribs down the sides and
+     front; the lifting pockets on the sides; squat feet; a rust-dark band along its foot */
+  { const st = mat(dSide, { rough:0.75, metal:0.25 }), dk = mat(null, { color:0x241a14, rough:0.9 });
+    const lid = new THREE.Mesh(new THREE.BoxGeometry(1.98, 0.05, 1.18), st); lid.position.set(15.05, 1.36, 13.67); lid.rotation.x = -0.07; lid.castShadow = lid.receiveShadow = true; scene.add(lid); tag(lid, 'dump');
+    box(14.06, 16.04, 1.27, 1.33, 14.2, 14.27, st, { solid:false });   /* the front lip */
+    for (const x of [14.3, 15.8]) box(x - 0.04, x + 0.04, 0.02, 1.2, 14.22, 14.26, st, { solid:false, cast:false });   /* ribs on the front */
+    for (const xs of [14.06, 15.98]) { for (const z of [13.42, 13.92]) box(xs, xs + 0.06, 0.02, 1.2, z - 0.04, z + 0.04, st, { solid:false, cast:false });
+      box(xs - (xs < 15 ? 0.1 : -0.06), xs + (xs < 15 ? 0.0 : 0.16), 0.75, 0.95, 13.3, 14.04, dk, { solid:false }); }   /* side ribs, the lifting pockets */
+    for (const [x, z] of [[14.25, 13.25], [15.85, 13.25], [14.25, 14.1], [15.85, 14.1]]) box(x - 0.08, x + 0.08, -0.3, 0.04, z - 0.07, z + 0.07, dk, { solid:false }); }
   { const skT = seamTex('f3sky', 600, null); const sk = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.2325), new THREE.MeshStandardMaterial({ map:skT, transparent:true, alphaTest:0.4, roughness:0.85 }));
     sk.position.set(16.004, 0.716, 13.67); sk.rotation.y = Math.PI/2; sk.receiveShadow = true; scene.add(sk); tag(sk, 'dump'); }   /* (Nov 17) "sky", the Columbus tag, on the dumpster's east side: Seam's own picture of it */
   const msT = seamTex('f3miss', 900, '#dcd4c4');

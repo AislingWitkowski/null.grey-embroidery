@@ -71,10 +71,16 @@ export function paintFacade(){
       if (Math.abs(dx) < 0.012) return ['hblack', 0.2, 1, 0.0];
       if ((Math.abs(h - 0.45) < 0.03 || Math.abs(h - 1.95) < 0.03) && Math.abs(dx) > 0.2) { const bolt = frac(dx*8) < 0.12; return ['hblack', 0.5 + (vn(x*40, h*40) > 0.6 ? 0.2 : 0) + (bolt ? 0.15 : 0), 1, bolt ? 1 : 0.85, 0.55]; }
       const bd = frac(dx*10 + 0.5), joint = bd < 0.06, gr = vn(x*60, h*3) + 0.3*vn(x*200, h*8), wet = 1 - sm(0, 0.6, h);
-      const paintLeft = fbm(x*3, h*1.5) > 0.56, below = Math.min(Math.abs(h - 0.45), Math.abs(h - 1.95));
+      /* (Nov 19, the texture pass) the paint is sage, flaking off in ragged patches, more toward the boards' edges and low
+         down where the wet gets at it; under it the wood is weathered silver-grey with its grain (it used to be blotches) */
+      const be = Math.min(frac(dx*10 + 0.5), 1 - frac(dx*10 + 0.5)), lose = 0.62 - 0.22*sm(0.2, 0, be) - 0.18*sm(1.0, 0.1, h) + 0.08*vn(x*2, h*0.7);
+      const paintLeft = fbm(x*9 + 3, h*4) + 0.18*vn(x*60, h*30) < lose + 0.12, below = Math.min(Math.abs(h - 0.45), Math.abs(h - 1.95));
+      const flakeEdge = Math.abs(fbm(x*9 + 3, h*4) + 0.18*vn(x*60, h*30) - lose - 0.12) < 0.012;
       const rustRun = h < 1.95 && h > 0.45 && below < 0.5*vn(x*30, 3) && vn(x*30, 3) > 0.6 && Math.abs(dx) > 0.2;   /* rust run down from the straps */
       const t = clamp((joint ? 0.15 : 0.42 + 0.14*gr) - 0.14*wet - (rustRun ? 0.06 : 0), 0, 1);
-      return [rustRun ? 'hrust' : (paintLeft ? 'hsage' : 'hwood'), t, 1, joint ? 0.1 : 0.55 + 0.25*gr + (paintLeft ? 0.08 : 0)];
+      if (flakeEdge && !joint) return ['hcream', 0.44, 1, 0.75, 0.9];   /* (the lifted rim of the paint, catching light) */
+      if (!paintLeft && !joint && !rustRun) return ['hgrey', clamp(0.3 + 0.18*gr - 0.12*wet, 0, 1), 1, 0.4 + 0.35*gr, 0.95];   /* bare weathered wood */
+      return [rustRun ? 'hrust' : 'hsage', t + (paintLeft ? 0.04 : 0), 1, joint ? 0.1 : 0.62 + 0.2*gr, 0.8];
     }
     if (win) {
       if (Math.abs(bay - 1.5) > 0.4 || h < 1.03 || h > 2.17) return ['hwood', 0.3, 1, 0.95];
@@ -138,9 +144,14 @@ export function paintTin(rusty){
 }
 /* the canopy's ceiling: boards running across, weathered dark, black between */
 export function paintBoards(){
-  return paint(128, 512, 0.5, 2, (x, y) => {
-    const b = frac(y*7), joint = b < 0.08, k = Math.floor(y*7), gr = vn(x*30, y*4 + k) + 0.4*vn(x*120, y*20 + k);
-    return joint ? ['hblack', 0.3, 1, 0] : ['hwood', clamp(0.3 + 0.12*hsh(k, 9) + 0.1*gr - 0.08*fbm(x*4, y), 0, 1), 1, 0.6 + 0.2*gr + 0.2*sm(0.08, 0.2, b)*sm(1, 0.85, b)];
+  /* (Nov 19, the texture pass) the canopy's board ceiling, painted long ago a pale cream and peeling back to grey wood
+     in flakes, the joints dark, water stains spreading from the joints, soot over each bulb's place */
+  return paint(256, 1024, 0.5, 2, (x, y) => {
+    const b = frac(y*7), joint = b < 0.07, k = Math.floor(y*7), gr = vn(x*30, y*4 + k) + 0.4*vn(x*120, y*20 + k);
+    if (joint) return ['hblack', 0.22, 1, 0];
+    const peel = fbm(x*5 + k*3, y*9) + 0.25*vn(x*40, y*60) > 0.78, stain = sm(0.25, 0.0, Math.min(b, 1 - b))*sm(0.45, 0.7, fbm(x*3, y*2 + 7));
+    if (peel) return ['hwood', clamp(0.26 + 0.1*gr, 0, 1), 1, 0.45 + 0.2*gr, 0.95];
+    return ['hcream', clamp(0.5 + 0.05*gr - 0.18*stain - 0.06*fbm(x*4, y*1.5), 0, 1), 1, 0.7 + 0.1*gr + 0.2*sm(0.07, 0.15, b)*sm(1, 0.9, b), 0.9];
   });
 }
 /* the scalloped fascia: tall boards, each with a fully rounded tongue and a hole through it, hairline gaps, grey and
@@ -164,18 +175,24 @@ export function paintWood(dark){ return paint(96, 384, 0.25, 1, (x, y) => { cons
   return ['hwood', clamp((dark ? 0.24 : 0.36) + 0.12*g + 0.08*vn(x*20, y*20) - (knot ? 0.12 : 0) - (split ? 0.15 : 0), 0, 1), 1, 0.5 + 0.35*g - (split ? 0.5 : 0) - (knot ? 0.2 : 0)]; }, { nrm:1.4 }); }
 /* the platform: concrete slabs, cracks, damp patches, the worn tactile strip near the edge (painted on its own mesh) */
 export function paintConcrete(){
-  return paint(1380, 300, 23, 5, (x, y) => {
-    const sx = frac(x/1.5), sy = frac(y/1.5), seam = sx < 0.012 || sy < 0.012;
-    const crack = Math.abs(frac(x*0.7 + fbm(x*2, y*2)*0.9) - 0.5) < 0.009 && fbm(x*0.8, y*0.8) > 0.55;
-    const dmp = fbm(x*0.45 + 4, y*0.6), damp = dmp > 0.66, wet = sm(0.6, 0.72, dmp);   /* damp patches: darker, and they shine under the bulbs */
-    const pit = vn(x*80, y*80) > 0.82, agg = vn(x*160, y*160);
-    /* (Nov 17, later; Aisling: the platform was "a little too umm 'italy' ... too orange") plain grey concrete now: the
-       station's neutral grey ink instead of the warm one, so only the bulbs warm it */
-    if (seam || crack) return ['pwhite', 0.1, 1, 0.1, 0.6];
-    if (pit) return ['pwhite', 0.24, 1, 0.3, 0.9];
-    const worn = sm(1.4, 2.6, y)*sm(4.6, 3.4, y)*0.06;   /* the middle, worn paler by feet */
-    return ['pwhite', clamp(0.36 + worn + 0.1*vn(x*30, y*30) - 0.1*fbm(x*1.5, y*1.5) + 0.05*(agg - 0.5) + (vn(x*60, y*60) > 0.9 ? 0.08 : 0) - 0.06*wet, 0, 1), 1, 0.65 + 0.15*agg, 0.92 - 0.6*wet];
-  });
+  /* (Nov 19, the texture pass) old platform concrete, twice the detail: poured slabs 1.5 m square, each its own grey;
+     a broom finish across each; the joints sunk and dark with grit, their edges chipped; fine aggregate; a few hairline
+     cracks wandering across; old oil and water stains, darker where it's damp (those shine under the bulbs); the middle
+     worn paler and smoother by feet; grime gathering toward the building. (the station's neutral grey ink) */
+  return paint(2760, 600, 23, 5, (x, y) => {
+    const ix = Math.floor(x/1.5), iy = Math.floor(y/1.5), sx = frac(x/1.5), sy = frac(y/1.5), ed = Math.min(sx, 1 - sx, sy, 1 - sy)*1.5;
+    const chip = vn(x*14, y*14), joint = ed < 0.008 + 0.012*sm(0.55, 0.85, chip);
+    const tone = (hsh(ix, iy*7 + 3) - 0.5)*0.06, brush = 0.025*Math.sin((x*2.2 + hsh(ix, iy)*3)*40 + vn(x*3, y*3)*4)*sm(0.4, 0.9, vn(x*0.8 + ix, y*0.8));
+    const crack = Math.abs(frac(x*0.55 + fbm(x*1.6, y*1.6)*1.1) - 0.5) < 0.004 + 0.003*vn(x*30, y*30) && fbm(x*0.7 + 9, y*0.7) > 0.58;
+    const dmp = fbm(x*0.45 + 4, y*0.6), wet = sm(0.6, 0.72, dmp), oil = sm(0.7, 0.78, fbm(x*0.9 + 21, y*0.9 + 5));
+    const agg = vn(x*170, y*170), pit = vn(x*95, y*95) > 0.86, fleck = vn(x*240, y*240) > 0.88;
+    const worn = sm(1.2, 2.4, y)*sm(4.7, 3.6, y), grime = sm(3.8, 5.0, y)*0.08 + sm(0.6, 0.0, y)*0.05;
+    if (joint) return ['pwhite', 0.08 + 0.05*chip, 1, 0.05, 0.75];
+    if (crack) return ['pwhite', 0.14, 1, 0.2, 0.7];
+    let t = 0.37 + tone + brush*(1 - worn*0.7) + 0.05*worn + 0.07*vn(x*30, y*30) - 0.08*fbm(x*1.5, y*1.5) + 0.05*(agg - 0.5) - grime - 0.06*wet - 0.07*oil;
+    if (pit) t -= 0.1; if (fleck) t += 0.07;
+    return ['pwhite', clamp(t, 0, 1), 1, 0.6 + 0.15*agg + 0.05*brush*10 - (pit ? 0.25 : 0), clamp(0.92 - 0.55*wet - 0.25*oil - 0.12*worn, 0.2, 1)];
+  }, { nrm:1.3 });
 }
 export function paintStrip(){ return paint(64, 32, 1, 0.5, (x, y) => { const dot = frac(x*10) < 0.5 && frac(y*10) < 0.5; return ['hamber', clamp(0.42 + (dot ? 0.06 : -0.04) - 0.18*fbm(x*4, y*8), 0, 1)]; }); }
 /* the platform's face, down to the track: old concrete, stained dark green-black where water runs */
@@ -255,11 +272,18 @@ export function paintNameBoard(){
 }
 /* the hanging sign under the canopy: a lit box, ほんまち large, MAIN STREET under it */
 export function paintHangSign(){
-  const cv = document.createElement('canvas'); cv.width = 220; cv.height = 48; const c = cv.getContext('2d');
+  /* (Nov 19, the texture pass) four times sharper, and the whole board (it used to cover only its left part): a lit
+     white enamel sign in a grey frame, ほんまち large, 本町 · MAIN STREET · F03 under it, the line's band along the
+     foot; a little grime gathered at the frame and a few dead insects inside, lit from behind. (same words as Seam's) */
+  const W = 1100, H = 240, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
   const col = (r, t) => 'rgb(' + inkRGB(r, t).map(Math.round).join(',') + ')';
-  c.fillStyle = col('hgrey', 0.4); c.fillRect(0, 0, 220, 48); c.fillStyle = col('glowc', 0.85); c.fillRect(2, 2, 216, 44);
-  c.fillStyle = col('hblack', 0.15); c.textAlign = 'center'; c.font = '900 20px "Hiragino Sans","Noto Sans CJK JP",sans-serif'; c.fillText('ほんまち', 110, 24);
-  c.font = '800 8px sans-serif'; c.fillText('本町 · MAIN STREET · F03', 110, 39);
+  c.fillStyle = col('hgrey', 0.36); c.fillRect(0, 0, W, H); c.fillStyle = col('glowc', 0.86); c.fillRect(12, 12, W - 24, H - 24);
+  const g = c.createRadialGradient(W/2, H/2, 40, W/2, H/2, W*0.6); g.addColorStop(0, 'rgba(255,250,235,0.0)'); g.addColorStop(1, 'rgba(90,70,50,0.22)'); c.fillStyle = g; c.fillRect(12, 12, W - 24, H - 24);
+  c.fillStyle = col('hamber', 0.5); c.fillRect(12, H - 46, W - 24, 10);   /* the line's band */
+  c.fillStyle = col('hblack', 0.14); c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = '900 104px "Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans CJK JP",sans-serif'; c.fillText('ほんまち', W/2, 92);
+  c.font = '700 38px "Hiragino Sans","Noto Sans CJK JP","Helvetica Neue",Arial,sans-serif'; c.fillText('本町 · MAIN STREET · F03', W/2, 166);
+  for (let i = 0; i < 9; i++) { c.fillStyle = 'rgba(40,30,20,' + (0.25 + Math.random()*0.3) + ')'; c.beginPath(); c.ellipse(30 + Math.random()*(W - 60), 20 + Math.random()*30, 2 + Math.random()*3, 1.5, Math.random()*3, 0, 7); c.fill(); }   /* dead insects caught inside */
   return tex(cv, { clampEdge:true });
 }
 /* the drinks machine's front: off-white, its lit display of four bottles (flavours come in milestone 2, with the close-up) */
