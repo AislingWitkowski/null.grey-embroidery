@@ -456,3 +456,22 @@ Aisling: *"is there anything you can run without me right now while I put wren b
 - **From her field photo:** four young saplings out in the fields (thin, leafy, small leaves on short twigs) and one **dead white snag**: bleached barkless wood, two crooked broken limbs, no leaves. Same tree builder (`tree()` in `station2.js` now takes `{sc}` for size and `{snag:true}`). All are solid, out of the walk paths.
 - Checked: walking, clicks, the train, the text check (no must-fix), no blue, no errors.
 - **For Aisling:** look at the snag and saplings (east field, towards the windmill); the Embroidery columns in the Sheet are blank until each thing gets its 3D look.
+
+### Nov 18 (night, later) — the older trees, more natural; the payphone's surfaces
+Aisling: *"the tree near tunnel looks pretty good but the other older trees maybe can we make them a little more natural shaped still they are close it's mostly the trunk and branch shape I like creepy but they are still a little too low res looking? I guess just a small upgrade? … look at the phone textures again and try to upgrade those as well?"*
+- **Trees** (all of them, from the same builder; the full one by the tunnel keeps its look):
+  - **the trunk** bows a little along its height and tapers properly, about half as thick at the fork as at its foot, so the leaders grow out of it instead of a notch. Its foot spreads into four or five buttresses, and its roots arch out of them down into the earth (they were straight cones);
+  - **uneven sides:** every thick limb and trunk is slightly knobbly, changing slowly along its length, so nothing is a pipe. Rounder too (more sides on every branch and twig);
+  - **branches** each have one steady bend and much less jitter: arcs, not noodles. Thin twigs curve too (they were straight sticks);
+  - **the barer trees** now get the full fine net of twigs (it's what shows on them);
+  - **the leaf twigs** are short and a little crooked (on the barer trees they were long straight sticks);
+  - **real bark**, painted: furrowed plates running up, broken across now and then, deep dark grooves, a few small pale lichen patches; it wraps without a seam.
+  - Still a little crooked and spiky. Cost: about 15% more triangles in the heaviest view (about 487k). Aisling to check smoothness.
+- **The payphone's surfaces**, each painted at its true shape and twice the detail, with a bump and a roughness picture:
+  - **the steel:** fine brushing, dents, scratches cut to brighter metal, rusty tamper-proof screws with rust running down under them, water stains, grime gathering low, the sheen dull in patches. Darker and less mirror-like, so the metal shows;
+  - **the phone's face:** raised steel keys, with the numbers worn on the ones used most (5, 0, 1, 9); fingerprints round the keypad; the steps card; a raised coin slot and coin release; a stained instruction card (the same words); the coin box's chrome door with its lock; the coin return gone dark; *hello?* still written on it;
+  - **the header:** crisper, with dust and dead flies inside the lens and its dimmer patch;
+  - **the side:** the same marker tag (now with a drip), the scratch-tag cut into the steel, the 迷子 · lost cat sticker with a peeled corner, the glue of a sticker long torn off.
+  - **Fixed:** the tag and sticker also showed, mirrored, on the inside of the shroud. They're on the outside only now.
+  - **The phone book's pages:** old and grimy edge-on (they were plain white).
+- Checked: walking, clicks, the train, the text check (no must-fix), no blue, no errors.

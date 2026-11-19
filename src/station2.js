@@ -73,8 +73,19 @@ function picM(name, ppu, fb, o = {}){
 export function buildMore(C){
   const { scene, M, T, tag, groundAt, halo, L } = C;
   const R = rnd(9177);
-  const barkT = T.woodD.clone(); barkT.repeat.set(3, 1.2); barkT.needsUpdate = true;
-  barkT.userData = {}; if (T.woodD.userData.normal) { const n = T.woodD.userData.normal.clone(); n.userData = {}; n.repeat.set(3, 1.2); n.needsUpdate = true; barkT.userData.normal = n; }   /* (a texture's clone turns its userData into plain copies: give it real ones) */
+  /* (Nov 18, night; Aisling: the older trees "still a little too low res looking") real bark, painted: furrowed plates
+     that run up the trunk, broken across now and then, dark deep grooves, a few pale lichen patches. it tiles both ways. */
+  const barkAt = (x, y) => { const w = 0.09*fbm(x*3, y*1.1) + 0.03*vn(x*14, y*4), q = frac((x + w)*6), col = Math.floor((x + w)*6),
+      d = Math.abs(q - 0.5)*2, brk = Math.abs(frac(y*1.6 + vn(col*3.1, 0.5)*2 + 0.25*vn(x*9, y*2)) - 0.5) < 0.035 && d < 0.8,
+      gro = sm(0.62, 0.98, d) + (brk ? 0.7 : 0), fine = vn(x*60, y*14), lich = fbm(x*5 + 9, y*3.5) > 0.71 && vn(x*30, y*30) > 0.4 && gro < 0.4;
+    return [clamp(1 - gro, 0, 1)*0.85 + 0.15*fine, lich ? 1 : 0, gro]; };
+  const barkT = paint(256, 512, 1, 2, (x, y) => { const fx = x, fy = y/2, S = (a, b) => barkAt(a, b*2);
+      const A = S(fx, fy), B = S(fx - 1, fy), C = S(fx, fy - 1), D = S(fx - 1, fy - 1), mx = (u, v, t) => u.map((e, k) => e + (v[k] - e)*t);
+      const r = mx(mx(A, B, fx), mx(C, D, fx), fy), h = r[0];
+      if (r[1] > 0.5) return ['hsage', clamp(0.36 + 0.1*vn(x*40, y*40), 0, 1), 1, h + 0.05, 0.95];
+      return ['hwood', clamp(0.2 + 0.36*h + 0.07*fbm(x*8, y*3), 0, 1), 1, h, 0.92]; }, { nrm:1.6 });
+  barkT.repeat.set(2, 0.5); barkT.needsUpdate = true; if (barkT.userData.normal) { barkT.userData.normal.repeat.set(2, 0.5); barkT.userData.normal.needsUpdate = true; }
+  if (barkT.userData.rough) { barkT.userData.rough.repeat.set(2, 0.5); }
   const bark = mat(barkT, { color:0xe6d8cc }), snagM = mat(barkT, { color:0xfff8f0, rough:0.95 }); snagM.emissive = new THREE.Color(0.05, 0.048, 0.045);   /* (a snag: bleached, barkless wood) */   /* (Nov 18: lighter, so its bark shows instead of a black cut-out) */ bark.userData.m = [1, 1];
   const ironR = mat(T.iron, { color:0x9a6a50 }), greyP = mat(null, { color:0x8a857e }); greyP.userData.m = [1, 1];
   const earth = mat(paint(256, 256, 2, 2, (x, y) => [fbm(x*2, y*2) > 0.55 ? 'hwood' : 'hrust', 0.14 + 0.08*vn(x*12, y*12) + 0.04*vn(x*40, y*40), 1, null, 1], { nrm:1 }));
@@ -161,14 +172,20 @@ export function buildMore(C){
     const knuckle = (P, r) => { const g = new THREE.SphereGeometry(r, 8, 6); g.translate(P[0], P[1], P[2]); geos.push(g); };
     /* (Nov 18, later; Aisling: "trees a little too bumpy still") each limb is one smooth tube now: its path bends as before,
        smoothed into a curve, and its thickness tapers all along it to a spike. no balls at the joints. */
-    const tube = (pts, r0, r1, rs, capStart) => { const n = pts.length, pos = [], idx = [], uv = []; let N = null, run = 0;
-      const V = pts.map(p => new THREE.Vector3(...p)), acc = [0]; for (let i = 1; i < n; i++) acc.push(acc[i - 1] + V[i].distanceTo(V[i - 1])); const tot = acc[n - 1] || 1;
+    /* (Nov 18, night) the tube: one more column so the bark wraps without a seam; uneven, knobbly sides on the thick
+       parts (slowly changing up its length), so no limb is a pipe; an optional radius along its length (rf) */
+    const tube = (pts, r0, r1, rs, capStart, rf) => { const n = pts.length, pos = [], idx = [], uv = [], C = rs + 1; let N = null, run = 0;
+      const p1 = Rt()*6.283, p2 = Rt()*6.283, V = pts.map(p => new THREE.Vector3(...p)), acc = [0]; for (let i = 1; i < n; i++) acc.push(acc[i - 1] + V[i].distanceTo(V[i - 1])); const tot = acc[n - 1] || 1;
       for (let i = 0; i < n; i++) { const T = (i < n - 1 ? V[i + 1].clone().sub(V[i]) : V[i].clone().sub(V[i - 1])).normalize();
         if (!N) { N = new THREE.Vector3(0, 1, 0).cross(T); if (N.lengthSq() < 1e-6) N.set(1, 0, 0); N.normalize(); } else { N.sub(T.clone().multiplyScalar(N.dot(T))).normalize(); }
-        const Bn = new THREE.Vector3().crossVectors(T, N), f = acc[i]/tot, r = (r0 + (r1 - r0)*Math.pow(f, 0.85))*(i === 0 && capStart ? 0.35 : 1);
-        if (i) run += V[i].distanceTo(V[i - 1]); for (let k = 0; k < rs; k++) { const a = k/rs*Math.PI*2, w = 1 + 0.06*Math.sin(a*3 + i*0.7); uv.push(k/rs, run*1.2); pos.push(V[i].x + (N.x*Math.cos(a) + Bn.x*Math.sin(a))*r*w, V[i].y + (N.y*Math.cos(a) + Bn.y*Math.sin(a))*r*w, V[i].z + (N.z*Math.cos(a) + Bn.z*Math.sin(a))*r*w); } }
-      for (let i = 0; i < n - 1; i++) for (let k = 0; k < rs; k++) { const a = i*rs + k, b = i*rs + (k + 1)%rs, c = a + rs, d = b + rs; idx.push(a, c, b, b, c, d); }
-      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return g; };
+        const Bn = new THREE.Vector3().crossVectors(T, N), f = acc[i]/tot, r = rf ? rf(f) : (r0 + (r1 - r0)*Math.pow(f, 0.85))*(i === 0 && capStart ? 0.35 : 1);
+        if (i) run += V[i].distanceTo(V[i - 1]);
+        for (let k = 0; k <= rs; k++) { const a = k/rs*Math.PI*2, w = r > 0.035 ? 1 + 0.075*Math.sin(a*2 + p1 + run*1.1) + 0.045*Math.sin(a*5 + p2 - run*2.3) + 0.02*Math.sin(a*9 + run*5) : 1 + 0.05*Math.sin(a*3 + p1 + run*4);
+          uv.push(k/rs, run*1.2); pos.push(V[i].x + (N.x*Math.cos(a) + Bn.x*Math.sin(a))*r*w, V[i].y + (N.y*Math.cos(a) + Bn.y*Math.sin(a))*r*w, V[i].z + (N.z*Math.cos(a) + Bn.z*Math.sin(a))*r*w); } }
+      for (let i = 0; i < n - 1; i++) for (let k = 0; k < rs; k++) { const a = i*C + k, b = a + 1, c = a + C, d = b + C; idx.push(a, c, b, b, c, d); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+      const nm = g.attributes.normal; for (let i = 0; i < n; i++) { const a = i*C, b = a + rs, x = nm.getX(a) + nm.getX(b), y = nm.getY(a) + nm.getY(b), z = nm.getZ(a) + nm.getZ(b), l = Math.hypot(x, y, z) || 1; nm.setXYZ(a, x/l, y/l, z/l); nm.setXYZ(b, x/l, y/l, z/l); }   /* (the seam's two columns share one normal: no line down the bark) */
+      return g; };
     let lastDir = null;
     const limb = (A, len, lx, lz, r0, r1, into) => {
       const seg = len > 0.7 ? 4 : 3, bend = (Rt() - 0.35)*0.9, twist = (Rt() - 0.5)*0.8;
@@ -193,11 +210,11 @@ export function buildMore(C){
       /* the branch's own path: a few bends, a crook now and then, drooping more the longer and thinner it is */
       const n = Math.max(3, Math.round(len*4)), pts = [], d = dir.clone().normalize();
       const start = buried ? P.clone().sub(d.clone().multiplyScalar(r0*2.5)) : P.clone(); pts.push(start.toArray()); let Q = P.clone(); pts.push(Q.toArray());
-      const sag = (depth >= 2 ? 0.05 : 0.0)*(len/1.6), crook = Rt() < 0.3 ? (Rt() - 0.5)*0.9 : 0;
-      for (let i = 1; i <= n; i++) { const f = i/n; d.add(V3((Rt() - 0.5)*0.22, -sag + (depth <= 1 ? 0.03 : 0), (Rt() - 0.5)*0.22)); if (i === Math.round(n/2) && crook) d.applyAxisAngle(perp(d), crook); d.normalize(); Q = Q.clone().add(d.clone().multiplyScalar(len/n)); pts.push(Q.toArray()); }
+      const sag = (depth >= 2 ? 0.05 : 0.0)*(len/1.6), crook = Rt() < 0.3 ? (Rt() - 0.5)*0.9 : 0, bendV = perp(d).applyAxisAngle(d, Rt()*6.283).multiplyScalar(0.035 + Rt()*0.04);   /* (Nov 18, night: one steady bend per branch, less jitter: arcs, not noodles) */
+      for (let i = 1; i <= n; i++) { const f = i/n; d.add(V3((Rt() - 0.5)*0.12, -sag + (depth <= 1 ? 0.03 : 0), (Rt() - 0.5)*0.12)).add(bendV); if (i === Math.round(n/2) && crook) d.applyAxisAngle(perp(d), crook); d.normalize(); Q = Q.clone().add(d.clone().multiplyScalar(len/n)); pts.push(Q.toArray()); }
       const r1 = r0*(depth >= maxD ? 0.15 : 0.55);
-      const cv = new THREE.CatmullRomCurve3(pts.map(p => V3(...p))), sm = cv.getPoints(r0 > 0.03 ? n*3 : n + 1).map(v => [v.x, v.y, v.z]);   /* (thin twigs: fewer rings, they're too small to show bends) */
-      geos.push(tube(sm, r0, r1 < 0.006 ? 0.0015 : r1, r0 > 0.08 ? 12 : (r0 > 0.03 ? 8 : (r0 > 0.012 ? 5 : 3)), buried));
+      const cv = new THREE.CatmullRomCurve3(pts.map(p => V3(...p))), sm = cv.getPoints(r0 > 0.03 ? n*3 : n*2).map(v => [v.x, v.y, v.z]);   /* (Nov 18, night: thin twigs curve too, not straight sticks) */
+      geos.push(tube(sm, r0, r1 < 0.006 ? 0.0015 : r1, r0 > 0.08 ? 14 : (r0 > 0.03 ? 10 : (r0 > 0.012 ? 6 : 4)), buried));
       if (depth >= maxD - 1) for (const f of [0.45, 0.75, 1.0]) { const s = cv.getPoint(f); sites.push([s.x, s.y, s.z]); }   /* the outer net: where the leaves go */
       if (depth >= maxD) return;
       /* its children: one carries on (the leader), one to three leave at the side along its outer half */
@@ -210,18 +227,23 @@ export function buildMore(C){
         grow(at, out, len*(0.5 + Rt()*0.25), r1*(0.75 + Rt()*0.15), depth + 1, maxD, true); }
     };
     /* the trunk, straight a long way, flaring at its foot; then it forks into two or three leaders */
-    const TH = (2.1 + Rt()*1.0)*(o.snag ? 1.2 : SC), maxD = o.snag ? 2 : (SC < 0.6 ? 4 : (ph >= 3 ? 5 : 6));
-    { const tp = []; for (let i = 0; i <= 14; i++) { const f = i/12; tp.push([tx + tlx*TH*f + Math.sin(f*3 + seed)*0.04, gy - 0.1 + (TH + 0.1)*f, tz + tlz*TH*f + Math.cos(f*2.6 + seed)*0.04]); }   /* (on a little past the fork, closing inside the leaders: no cut end) */
-      const tg = tube(tp, 0.3*(o.snag ? 0.7 : Math.pow(SC, 0.9)), 0.06*SC, 16), q = tg.attributes.position;
-      for (let i = 0; i < q.count; i++) { const y = q.getY(i) - gy, fl = 1 + 0.5*Math.max(0, 1 - y/0.6)**2; q.setX(i, tx + (q.getX(i) - tx)*fl); q.setZ(i, tz + (q.getZ(i) - tz)*fl); }
+    const TH = (2.1 + Rt()*1.0)*(o.snag ? 1.2 : SC), maxD = o.snag ? 2 : (SC < 0.6 ? 4 : 6);   /* (the barer trees get the full fine net of twigs too: it's what shows on them) */
+    /* (Nov 18, night) the trunk bows a little, tapers properly into its fork (about half as thick there as at its foot),
+       then closes inside the leaders; its foot spreads into buttresses, not a round flare */
+    const bA = Rt()*6.283, bow = (0.08 + Rt()*0.1)*TH/2.6, R0 = 0.3*(o.snag ? 0.7 : Math.pow(SC, 0.9)), FK = 12/14;
+    { const tp = []; for (let i = 0; i <= 20; i++) { const f = i/20*14/12, bw = Math.sin(Math.min(f, 1)*Math.PI)*bow; tp.push([tx + tlx*TH*f + Math.cos(bA)*bw + Math.sin(f*3 + seed)*0.03, gy - 0.1 + (TH + 0.1)*f, tz + tlz*TH*f + Math.sin(bA)*bw + Math.cos(f*2.6 + seed)*0.03]); }
+      const rf = f => f < FK ? R0*(1 - 0.47*Math.pow(f/FK, 0.8)) : R0*0.53*(1 - 0.85*(f - FK)/(1 - FK));
+      const tg = tube(tp, R0, 0.06*SC, 22, false, rf), q = tg.attributes.position, nb = 4 + Math.floor(Rt()*2), bp = Rt()*6.283;
+      for (let i = 0; i < q.count; i++) { const y = q.getY(i) - gy, an = Math.atan2(q.getZ(i) - tz, q.getX(i) - tx), lo = Math.max(0, 1 - y/0.75)**2, fl = 1 + lo*(0.35 + 0.55*Math.max(0, Math.cos(an*nb + bp))**2); q.setX(i, tx + (q.getX(i) - tx)*fl); q.setZ(i, tz + (q.getZ(i) - tz)*fl); }
       tg.computeVertexNormals(); geos.push(tg); }
     const top = V3(tx + tlx*TH, gy + TH - 0.1, tz + tlz*TH), nLead = 2 + (Rt() < 0.5 ? 1 : 0), a0 = Rt()*6.283;
     for (let i = 0; i < nLead; i++) { const ang = a0 + i*6.283/nLead + (Rt() - 0.5)*0.5, lean = 0.28 + Rt()*0.22;
-      grow(top.clone().add(V3(0, (-0.35 - i*0.2)*SC, 0)), V3(Math.cos(ang)*lean*(o.snag ? 1.6 : 0.8), 1, Math.sin(ang)*lean*(o.snag ? 1.6 : 0.8)), (1.7 + Rt()*0.6)*(o.snag ? 0.7 : SC), (0.15 - i*0.012)*(o.snag ? 0.8 : Math.pow(SC, 0.9)), 1, maxD, true); }   /* (starting well down inside the trunk, so the fork has no notch) */
+      grow(top.clone().add(V3(Math.cos(bA)*0, (-0.35 - i*0.2)*SC, 0)), V3(Math.cos(ang)*lean*(o.snag ? 1.6 : 0.8), 1, Math.sin(ang)*lean*(o.snag ? 1.6 : 0.8)), (1.7 + Rt()*0.6)*(o.snag ? 0.7 : SC), (0.13 - i*0.011)*(o.snag ? 0.9 : Math.pow(SC, 0.9)), 1, maxD, true); }   /* (starting well down inside the trunk, so the fork has no notch) */
     const H1 = TH;
     ROOTS.add(tx, tz, 0.3, 'earth');   /* (its foot in the earth: roots.js) */
     for (let k = 0; k < 5; k++) { const a = Rt()*6.283 + k*1.25, L = 0.75 + Rt()*0.4;   /* (Nov 18) its roots flaring into the ground, so it doesn't stand like a pipe */
-      geos.push(rodGeo([tx + Math.cos(a)*0.12, gy + 0.14, tz + Math.sin(a)*0.12], [tx + Math.cos(a)*L, gy - 0.04, tz + Math.sin(a)*L], 0.11, 0.03, 8)); }
+      const ca = Math.cos(a), sa = Math.sin(a), rp = [[0.05, 0.34], [0.2, 0.2], [0.38, 0.09], [L*0.75, 0.02], [L, -0.07]].map(([d, h]) => [tx + ca*d*SC, gy + h*SC, tz + sa*d*SC]);
+      geos.push(tube(new THREE.CatmullRomCurve3(rp.map(p => V3(...p))).getPoints(10).map(v => [v.x, v.y, v.z]), 0.12*SC, 0.02*SC, 8, false)); }   /* (arching out of the buttresses and down into the earth) */
     if (o.snag) { tag(meshOf(geos, snagM), say); K.solids.push({ x0:tx - 0.2, x1:tx + 0.2, y0:gy - 1, y1:gy + H1, z0:tz - 0.2, z1:tz + 0.2 }); return; }   /* (dead: no leaves) */
     tag(meshOf(geos, bark), say); { const w = 0.28*Math.pow(SC, 0.9); K.solids.push({ x0:tx - w, x1:tx + w, y0:gy - 1, y1:gy + H1, z0:tz - w, z1:tz + w }); }
     for (let k = sites.length - 1; k > 0; k--) { const s = Math.floor(Rt()*(k + 1)); [sites[k], sites[s]] = [sites[s], sites[k]]; }   /* (which sites get leaves: at random, so no two trees match) */
@@ -234,8 +256,8 @@ export function buildMore(C){
       lv.push([N[0], N[1], N[2], sz, 0, 0, 0, Math.floor(Rt()*16), qq]); };
     const nUse = Math.min(sites.length, Math.round(sites.length*Math.min(1, Lf.n/86)));
     for (let t = 0; t < nUse; t++) { const S = sites[t], nt = ph >= 3 ? 1 : (ph === 2 ? 1 : 2);
-      for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = ((ph >= 2 ? 0.4 : 0.25) + Rt()*0.4)*Math.max(SC, 0.4), d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
-        const B = [S[0] + d.x*len, S[1] + d.y*len, S[2] + d.z*len]; tw.push(rodGeo(S, B, 0.009, 0.004, 3));
+      for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = ((ph >= 2 ? 0.16 : 0.2) + Rt()*(ph >= 2 ? 0.2 : 0.3))*Math.max(SC, 0.4), d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
+        const B = [S[0] + d.x*len, S[1] + d.y*len, S[2] + d.z*len]; { const M2 = [(S[0] + B[0])/2 + (Rt() - 0.5)*len*0.25, (S[1] + B[1])/2 + len*0.12, (S[2] + B[2])/2 + (Rt() - 0.5)*len*0.25]; tw.push(rodGeo(S, M2, 0.007, 0.005, 3), rodGeo(M2, B, 0.005, 0.0025, 3)); }   /* (Nov 18, night: short, a little crooked, not straight sticks) */
         for (const f of (ph >= 2 ? [1.0] : [0.35, 0.68, 1.0])) {   /* (the barer trees keep their last leaves out at the twig ends, not clinging at the joints) */ const N = [S[0] + d.x*len*f, S[1] + d.y*len*f, S[2] + d.z*len*f], nl = f === 1 ? 4 + Math.floor(Rt()*3) : 2 + Math.floor(Rt()*2);
           for (let l = 0; l < nl; l++) { const sp = (l - (nl - 1)/2)*0.75 + (Rt() - 0.5)*0.4, ca = Math.cos(sp), sa = Math.sin(sp);
             const dir = new THREE.Vector3(d.x*ca - d.z*sa, d.y*0.4 - 0.25 + Rt()*0.35, d.x*sa + d.z*ca);   /* fanning out from the shoot, drooping a little */

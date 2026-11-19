@@ -308,33 +308,88 @@ export function buildStation(scene){
      header (電話 · PHONE, warm, no blue), inside the black phone with its chrome face (keypad, coin slot, coin return, the
      card of instructions), the handset on its hook, the armoured cord hanging; a little marker and a sticker on the steel */
   { const cvT = (w, h, f) => { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
-    const RR = rnd(712), brushed = (g, w, h, base) => { g.fillStyle = base; g.fillRect(0, 0, w, h); for (let i = 0; i < 900; i++) { const y = RR()*h, l = 0.08 + RR()*0.25; g.fillStyle = RR() < 0.5 ? 'rgba(255,250,240,0.06)' : 'rgba(30,25,22,0.07)'; g.fillRect(RR()*w, y, w*l, 1); }
-      for (let i = 0; i < 26; i++) { g.strokeStyle = 'rgba(40,34,30,0.18)'; g.lineWidth = 0.8; g.beginPath(); const x = RR()*w, y = RR()*h; g.moveTo(x, y); g.lineTo(x + (RR() - 0.5)*40, y + (RR() - 0.5)*14); g.stroke(); }   /* scratches */
-      const gr = g.createLinearGradient(0, h*0.7, 0, h); gr.addColorStop(0, 'rgba(60,40,30,0)'); gr.addColorStop(1, 'rgba(60,40,30,0.35)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); };   /* grime gathering low */
-    const side = cvT(256, 512, (g, w, h) => { brushed(g, w, h, '#7d7974');
-      g.strokeStyle = 'rgba(26,20,18,0.8)'; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(60, 300); g.bezierCurveTo(90, 250, 120, 330, 150, 280); g.lineTo(170, 320); g.moveTo(130, 270); g.lineTo(140, 340); g.stroke();   /* a marker tag, not anyone's in particular */
-      g.strokeStyle = 'rgba(232,226,214,0.7)'; g.lineWidth = 2; g.beginPath(); g.moveTo(80, 380); g.lineTo(110, 372); g.lineTo(104, 392); g.lineTo(140, 384); g.stroke();   /* a white scratch-tag */
-      g.save(); g.translate(170, 150); g.rotate(-0.12); g.fillStyle = '#e8dcc0'; g.fillRect(-28, -14, 56, 28); g.fillStyle = '#9a2a22'; g.font = '700 11px sans-serif'; g.textAlign = 'center'; g.fillText('迷子', 0, -1); g.font = '700 7px sans-serif'; g.fillText('lost cat', 0, 9); g.restore(); });   /* a sticker */
-    const head = cvT(512, 96, (g, w, h) => { g.fillStyle = '#efe6d2'; g.fillRect(0, 0, w, h); g.fillStyle = '#3a2a1c'; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = '800 40px "Hiragino Sans","Noto Sans CJK JP","Yu Gothic",sans-serif'; g.fillText('電話', w*0.3, h/2 + 2); g.font = '800 44px "Helvetica Neue",Arial,sans-serif'; g.fillText('PHONE', w*0.66, h/2 + 3);
-      g.fillStyle = 'rgba(90,60,40,0.25)'; g.fillRect(0, h - 10, w, 10); g.fillRect(380, 0, 40, h); });   /* (warm cream, never blue; a dead patch where the tube behind it is going) */
-    const face = cvT(256, 512, (g, w, h) => { g.fillStyle = '#1a1716'; g.fillRect(0, 0, w, h);
-      const cg = g.createLinearGradient(0, 0, w, 0); cg.addColorStop(0, '#8e8b86'); cg.addColorStop(0.5, '#d6d3cc'); cg.addColorStop(1, '#8e8b86'); g.fillStyle = cg; g.fillRect(18, 16, w - 36, 300);   /* the chrome face */
-      g.fillStyle = '#9a3826'; g.fillRect(28, 26, 64, 34); g.fillStyle = '#efe6d2'; g.font = '800 9px Arial,sans-serif'; g.textAlign = 'left'; g.fillText('1 LIFT', 32, 38); g.fillText('2 LISTEN', 32, 48); g.fillText('3 COINS', 32, 58);   /* the steps, in an old orange-red */
-      g.fillStyle = '#2a2624'; g.fillRect(150, 28, 8, 30); g.fillStyle = '#bab6ae'; g.fillRect(186, 32, 40, 14);   /* the coin slot, the coin release */
-      g.fillStyle = '#efe6d2'; g.fillRect(28, 72, w - 56, 52); g.fillStyle = '#3a2a1c'; g.font = '700 10px Arial,sans-serif'; g.fillText('LOCAL CALLS  25¢', 36, 88); g.fillText('市内通話  ·  dial 0 for operator', 36, 104); g.fillStyle = '#9a3826'; g.fillRect(28, 112, w - 56, 4);   /* the instruction card */
-      for (let r = 0; r < 4; r++) for (let c = 0; c < 3; c++) { const x = 80 + c*36, y = 150 + r*36; const kg = g.createRadialGradient(x + 12, y + 10, 2, x + 14, y + 14, 18); kg.addColorStop(0, '#f2f0ea'); kg.addColorStop(1, '#8e8b86'); g.fillStyle = kg; g.fillRect(x, y, 28, 28);
-        g.fillStyle = '#2a2624'; g.font = '800 14px Arial,sans-serif'; g.textAlign = 'center'; g.fillText('123456789*0#'[r*3 + c], x + 14, y + 19); }   /* the keypad */
-      g.textAlign = 'left'; g.fillStyle = '#101010'; g.fillRect(18, 330, w - 36, 160); const bg = g.createLinearGradient(0, 350, 0, 470); bg.addColorStop(0, '#cfccc6'); bg.addColorStop(1, '#7e7b76'); g.fillStyle = bg; g.fillRect(40, 350, 130, 110);   /* the coin box, its chrome door */
-      g.fillStyle = '#2a2624'; g.fillRect(100, 400, 10, 14); g.fillStyle = '#bab6ae'; g.fillRect(188, 360, 34, 90); g.fillStyle = '#1a1716'; g.fillRect(194, 380, 22, 50);   /* the lock, the coin return */
-      g.fillStyle = 'rgba(232,226,214,0.75)'; g.font = 'italic 700 13px "Marker Felt","Comic Sans MS",cursive'; g.fillText('hello?', 60, 440); });   /* (someone wrote on the coin box: a little graffiti) */
-    const st = new THREE.MeshStandardMaterial({ map:side, roughness:0.34, metalness:0.55, emissive:new THREE.Color(0.022, 0.02, 0.018) }), stIn = new THREE.MeshStandardMaterial({ color:0x8a8680, roughness:0.38, metalness:0.5, emissive:new THREE.Color(0.025, 0.022, 0.02) });   /* (Nov 18: darker, more metal) */   /* (brushed steel in shade: little to reflect out here, so it carries its own pale grey) */
+    /* (Nov 18, night; Aisling: "look at the phone textures again and try to upgrade those") every steel surface is painted
+       at its true shape and twice the detail, each with a bump picture and a roughness picture beside its colour: fine
+       brushing, dents, scratches, rust blooming round the screws and running down under them, grime gathering low,
+       fingerprints round the keys, the key numbers worn on the ones used most, a stained instruction card. */
+    const RR = rnd(712);
+    const trio = (w, h, f) => { const mk = () => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }, C = mk(), Bm = mk(), Rg = mk();
+      const g = C.getContext('2d'), b = Bm.getContext('2d'), r = Rg.getContext('2d'); b.fillStyle = '#808080'; b.fillRect(0, 0, w, h); r.fillStyle = '#5a5a5a'; r.fillRect(0, 0, w, h);
+      f(g, b, r, w, h); const T = c => { const t = new THREE.CanvasTexture(c); t.anisotropy = 8; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; };
+      const t = T(C); t.colorSpace = THREE.SRGBColorSpace; return { map:t, bump:T(Bm), rough:T(Rg) }; };
+    const brushed = (g, b, r, w, h, base, k = 1) => { g.fillStyle = base; g.fillRect(0, 0, w, h);
+      for (let i = 0; i < 5200*k; i++) { const y = RR()*h, l = (0.04 + RR()*0.3)*w, x = RR()*w, a = 0.06 + RR()*0.1;   /* the brushing: thousands of fine strokes one way */
+        g.fillStyle = RR() < 0.5 ? `rgba(255,250,240,${a})` : `rgba(28,24,22,${a})`; g.fillRect(x, y, l, 1 + (RR() < 0.15 ? 1 : 0));
+        if (RR() < 0.3) { b.fillStyle = `rgba(${RR() < 0.5 ? 150 : 110},128,128,0.25)`; b.fillRect(x, y, l, 1); } }
+      for (let i = 0; i < 4*k; i++) { const x = RR()*w, y = RR()*h, rr = 10 + RR()*30, gd = b.createRadialGradient(x, y, 0, x, y, rr); gd.addColorStop(0, 'rgba(60,60,60,0.6)'); gd.addColorStop(1, 'rgba(128,128,128,0)'); b.fillStyle = gd; b.fillRect(x - rr, y - rr, rr*2, rr*2);   /* dents */
+        const gl = g.createRadialGradient(x - rr*0.3, y - rr*0.3, 0, x, y, rr); gl.addColorStop(0, 'rgba(255,250,240,0.06)'); gl.addColorStop(0.6, 'rgba(20,16,14,0.07)'); gl.addColorStop(1, 'rgba(20,16,14,0)'); g.fillStyle = gl; g.fillRect(x - rr, y - rr, rr*2, rr*2); }
+      for (let i = 0; i < 46*k; i++) { const x = RR()*w, y = RR()*h, dx = (RR() - 0.5)*w*0.3, dy = (RR() - 0.5)*h*0.04;   /* scratches, cut through to brighter metal */
+        g.strokeStyle = `rgba(230,226,218,${0.12 + RR()*0.2})`; g.lineWidth = 0.7 + RR()*0.8; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + dx/2 + (RR() - 0.5)*8, y + dy/2, x + dx, y + dy); g.stroke();
+        b.strokeStyle = 'rgba(70,70,70,0.7)'; b.lineWidth = 1; b.beginPath(); b.moveTo(x, y); b.quadraticCurveTo(x + dx/2, y + dy/2, x + dx, y + dy); b.stroke();
+        r.strokeStyle = 'rgba(30,30,30,0.6)'; r.lineWidth = 1.2; r.beginPath(); r.moveTo(x, y); r.lineTo(x + dx, y + dy); r.stroke(); }
+      for (let i = 0; i < 140*k; i++) { const x = RR()*w, y = h*(0.55 + RR()*0.45), rr = 3 + RR()*14; g.fillStyle = `rgba(${70 + RR()*30},${48 + RR()*20},34,${0.04 + RR()*0.08})`; g.beginPath(); g.arc(x, y, rr, 0, 7); g.fill(); r.fillStyle = 'rgba(200,200,200,0.12)'; r.beginPath(); r.arc(x, y, rr, 0, 7); r.fill(); }   /* grime, rougher */
+      for (let i = 0; i < 18*k; i++) { const x = RR()*w, y0 = RR()*h*0.5, L = h*(0.2 + RR()*0.5), wd = 3 + RR()*10, sg = g.createLinearGradient(0, y0, 0, y0 + L); sg.addColorStop(0, 'rgba(50,40,32,0)'); sg.addColorStop(0.3, `rgba(50,40,32,${0.08 + RR()*0.1})`); sg.addColorStop(1, 'rgba(50,40,32,0)'); g.fillStyle = sg; g.fillRect(x, y0, wd, L); r.fillStyle = 'rgba(200,200,200,0.15)'; r.fillRect(x, y0, wd, L); }   /* water stains run down it */
+      for (let i = 0; i < 10*k; i++) { const x = RR()*w, y = RR()*h, rr = 30 + RR()*80, rg = r.createRadialGradient(x, y, 0, x, y, rr); rg.addColorStop(0, 'rgba(160,160,160,0.25)'); rg.addColorStop(1, 'rgba(160,160,160,0)'); r.fillStyle = rg; r.fillRect(x - rr, y - rr, rr*2, rr*2); }   /* (the sheen patchy: dull where hands and weather have been) */
+      const gr = g.createLinearGradient(0, h*0.6, 0, h); gr.addColorStop(0, 'rgba(60,40,30,0)'); gr.addColorStop(1, 'rgba(58,38,28,0.42)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); };
+    const screw = (g, b, r, x, y, s) => { const gd = g.createRadialGradient(x - s*0.3, y - s*0.3, 0, x, y, s); gd.addColorStop(0, '#d8d4cc'); gd.addColorStop(1, '#5e5a54'); g.fillStyle = gd; g.beginPath(); g.arc(x, y, s, 0, 7); g.fill();
+      g.strokeStyle = '#2a2624'; g.lineWidth = s*0.25; g.beginPath(); g.moveTo(x - s*0.6, y); g.lineTo(x + s*0.6, y); g.moveTo(x, y - s*0.6); g.lineTo(x, y + s*0.6); g.stroke();   /* a tamper-proof head */
+      b.fillStyle = '#c8c8c8'; b.beginPath(); b.arc(x, y, s, 0, 7); b.fill();
+      for (let k = 0; k < 3; k++) { const rl = s*(4 + RR()*14); const rg = g.createLinearGradient(x, y, x, y + rl); rg.addColorStop(0, 'rgba(120,58,30,0.55)'); rg.addColorStop(1, 'rgba(120,58,30,0)'); g.fillStyle = rg; g.fillRect(x - s*0.5 + (RR() - 0.5)*s*0.8, y, s*(0.3 + RR()*0.5), rl); }   /* the rust running down under it */
+      const rb = g.createRadialGradient(x, y, s*0.8, x, y, s*2); rb.addColorStop(0, 'rgba(130,64,32,0.5)'); rb.addColorStop(1, 'rgba(130,64,32,0)'); g.fillStyle = rb; g.fillRect(x - s*2, y - s*2, s*4, s*4); r.fillStyle = 'rgba(230,230,230,0.5)'; r.beginPath(); r.arc(x, y, s*1.8, 0, 7); r.fill(); };
+    /* the shroud's sides: 0.34 m deep by 1.0 m tall */
+    const SIDE = trio(348, 1024, (g, b, r, w, h) => { brushed(g, b, r, w, h, '#625b52', 1.2);
+      for (let y = 60; y < h; y += 150) screw(g, b, r, w - 14, y, 6);   /* screws along its front edge */
+      g.strokeStyle = 'rgba(26,20,18,0.82)'; g.lineWidth = 7; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(70, 600); g.bezierCurveTo(115, 510, 160, 660, 200, 570); g.lineTo(232, 640); g.moveTo(172, 548); g.lineTo(186, 690); g.stroke();   /* a marker tag, not anyone's in particular */
+      g.strokeStyle = 'rgba(26,20,18,0.35)'; g.lineWidth = 3; g.beginPath(); g.moveTo(200, 575); g.lineTo(203, 612); g.stroke();   /* (its drip) */
+      g.strokeStyle = 'rgba(236,230,220,0.75)'; g.lineWidth = 2; g.beginPath(); g.moveTo(96, 770); g.lineTo(140, 756); g.lineTo(132, 786); g.lineTo(186, 772); g.stroke(); b.strokeStyle = '#404040'; b.lineWidth = 2; b.beginPath(); b.moveTo(96, 770); b.lineTo(140, 756); b.lineTo(132, 786); b.lineTo(186, 772); b.stroke();   /* a white scratch-tag, cut into it */
+      g.save(); g.translate(200, 300); g.rotate(-0.12); g.fillStyle = '#e6d9bc'; g.beginPath(); g.moveTo(-56, -28); g.lineTo(56, -28); g.lineTo(56, 18); g.lineTo(40, 28); g.lineTo(-56, 28); g.closePath(); g.fill();   /* a sticker, one corner peeled */
+      g.fillStyle = 'rgba(120,90,60,0.25)'; g.fillRect(-56, 10, 112, 18); g.fillStyle = '#d2c4a4'; g.beginPath(); g.moveTo(56, 18); g.lineTo(40, 28); g.lineTo(52, 32); g.closePath(); g.fill();
+      g.fillStyle = '#922820'; g.font = '700 26px "Hiragino Sans","Noto Sans CJK JP",sans-serif'; g.textAlign = 'center'; g.fillText('迷子', 0, -2); g.font = '700 15px "Helvetica Neue",Arial,sans-serif'; g.fillText('lost cat', 0, 19); g.restore();
+      b.save(); b.translate(200, 300); b.rotate(-0.12); b.fillStyle = '#909090'; b.fillRect(-56, -28, 112, 56); b.restore();
+      g.fillStyle = 'rgba(190,180,160,0.35)'; g.fillRect(40, 860, 70, 44); g.fillStyle = 'rgba(70,60,50,0.25)'; for (let k = 0; k < 30; k++) g.fillRect(40 + RR()*70, 860 + RR()*44, 2 + RR()*5, 1 + RR()*3);   /* the glue of a sticker long torn off */ });
+    const IN = trio(256, 512, (g, b, r, w, h) => brushed(g, b, r, w, h, '#665f56', 1.6));   /* the inside of the shroud */
+    for (const t of [IN.map, IN.bump, IN.rough]) t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    /* the header: 0.62 m by 0.12 m, lit from behind */
+    const head = (() => { const c = document.createElement('canvas'); c.width = 1024; c.height = 198; const g = c.getContext('2d'), w = c.width, h = c.height;
+      const gb = g.createLinearGradient(0, 0, w, 0); gb.addColorStop(0, '#d9ccb2'); gb.addColorStop(0.45, '#f2e9d6'); gb.addColorStop(0.62, '#efe4cc'); gb.addColorStop(0.75, '#a89a82'); gb.addColorStop(0.82, '#c4b79e'); gb.addColorStop(1, '#e6dcc6'); g.fillStyle = gb; g.fillRect(0, 0, w, h);   /* (the tube behind it going at one end: a dimmer patch) */
+      for (let i = 0; i < 60; i++) { g.fillStyle = `rgba(70,50,36,${0.05 + RR()*0.1})`; g.beginPath(); g.arc(RR()*w, RR()*h, 2 + RR()*10, 0, 7); g.fill(); }   /* dead flies and dust inside the lens */
+      g.fillStyle = 'rgba(80,56,40,0.35)'; g.fillRect(0, h - 22, w, 22); g.fillRect(0, 0, w, 8);
+      g.fillStyle = '#35261a'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 82px "Hiragino Sans","Noto Sans CJK JP","Yu Gothic",sans-serif'; g.fillText('電話', w*0.3, h/2 - 2);
+      g.font = '800 88px "Helvetica Neue",Arial,sans-serif'; g.fillText('PHONE', w*0.66, h/2);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; })();
+    /* the phone's face: 0.29 m wide by 0.76 m tall, drawn in millimetres */
+    const FACE = trio(464, 1216, (g, b, r, w, h) => { const S = w/290; g.scale(S, S); b.scale(S, S); r.scale(S, S); const W2 = 290;
+      g.fillStyle = '#191615'; g.fillRect(0, 0, W2, 760); r.fillStyle = '#9a9a9a'; r.fillRect(0, 0, W2, 760);   /* the black painted housing */
+      for (const [x, y] of [[10, 10], [280, 10], [10, 750], [280, 750], [10, 370], [280, 370]]) screw(g, b, r, x, y, 3.2);
+      const cg = g.createLinearGradient(0, 0, W2, 0); cg.addColorStop(0, '#85827c'); cg.addColorStop(0.35, '#cfccc4'); cg.addColorStop(0.55, '#e0ddd6'); cg.addColorStop(1, '#827f79'); g.fillStyle = cg; g.fillRect(20, 22, 250, 336);   /* the chrome face */
+      r.fillStyle = '#303030'; r.fillRect(20, 22, 250, 336); b.fillStyle = '#a0a0a0'; b.fillRect(20, 22, 250, 336);
+      for (let i = 0; i < 900; i++) { g.fillStyle = RR() < 0.5 ? 'rgba(255,255,250,0.05)' : 'rgba(30,26,24,0.05)'; g.fillRect(20 + RR()*240, 22 + RR()*336, 4 + RR()*40, 0.4); }
+      g.fillStyle = '#93331f'; g.fillRect(32, 34, 92, 56); g.fillStyle = '#efe6d2'; g.font = '800 13px "Helvetica Neue",Arial,sans-serif'; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillText('1 LIFT', 40, 52); g.fillText('2 LISTEN', 40, 68); g.fillText('3 COINS', 40, 84);   /* the steps, in an old orange-red */
+      g.fillStyle = '#9d9a94'; g.fillRect(180, 34, 70, 26); g.fillStyle = '#141211'; g.fillRect(196, 44, 38, 5); b.fillStyle = '#d0d0d0'; b.fillRect(180, 34, 70, 26); b.fillStyle = '#202020'; b.fillRect(196, 44, 38, 5);   /* the coin slot, raised */
+      g.fillStyle = '#bcb8b0'; g.fillRect(196, 66, 40, 18); b.fillStyle = '#c0c0c0'; b.fillRect(196, 66, 40, 18); g.fillStyle = '#3a3430'; g.font = '700 7px Arial,sans-serif'; g.fillText('COIN RELEASE', 194, 94);
+      g.fillStyle = '#ebe2cc'; g.fillRect(30, 104, 230, 74); g.fillStyle = 'rgba(140,110,70,0.25)'; g.beginPath(); g.ellipse(220, 160, 40, 18, 0.3, 0, 7); g.fill(); g.fillStyle = 'rgba(140,110,70,0.18)'; g.fillRect(30, 104, 230, 6);   /* the instruction card, stained */
+      g.fillStyle = '#35261a'; g.font = '700 15px "Helvetica Neue",Arial,sans-serif'; g.fillText('LOCAL CALLS  25¢', 40, 126); g.font = '700 13px "Hiragino Sans","Noto Sans CJK JP",sans-serif'; g.fillText('市内通話  ·  dial 0 for operator', 40, 148); g.fillStyle = '#93331f'; g.fillRect(30, 164, 230, 5); r.fillStyle = '#c0c0c0'; r.fillRect(30, 104, 230, 74);
+      const worn = { '5':0.55, '0':0.5, '1':0.35, '9':0.3 };
+      for (let rr = 0; rr < 4; rr++) for (let c = 0; c < 3; c++) { const x = 92 + c*40, y = 192 + rr*40, ch = '123456789*0#'[rr*3 + c];   /* the keypad: raised steel keys, the most-used ones worn */
+        const kg = g.createLinearGradient(x, y, x + 32, y + 32); kg.addColorStop(0, '#f0eee8'); kg.addColorStop(1, '#7c7974'); g.fillStyle = kg; g.fillRect(x, y, 32, 32); g.fillStyle = 'rgba(20,16,14,0.5)'; g.fillRect(x, y + 32, 32, 2.5); g.fillRect(x + 32, y, 2.5, 34);
+        b.fillStyle = '#e8e8e8'; b.fillRect(x, y, 32, 32); b.fillStyle = '#404040'; b.fillRect(x - 1.5, y - 1.5, 35, 1.5); b.fillRect(x - 1.5, y, 1.5, 33);
+        g.globalAlpha = 1 - (worn[ch] || 0); g.fillStyle = '#26211e'; g.font = '800 19px "Helvetica Neue",Arial,sans-serif'; g.textAlign = 'center'; g.fillText(ch, x + 16, y + 23); g.globalAlpha = 1; g.textAlign = 'left';
+        r.fillStyle = '#202020'; r.fillRect(x, y, 32, 32); }
+      for (let i = 0; i < 26; i++) { const x = 90 + RR()*120, y = 190 + RR()*160; g.fillStyle = 'rgba(60,46,36,0.07)'; g.beginPath(); g.ellipse(x, y, 5 + RR()*4, 7 + RR()*4, RR()*3, 0, 7); g.fill(); r.fillStyle = 'rgba(180,180,180,0.2)'; r.beginPath(); r.ellipse(x, y, 7, 9, 0, 0, 7); r.fill(); }   /* fingerprints round the keys */
+      const bg = g.createLinearGradient(0, 400, 0, 650); bg.addColorStop(0, '#cbc8c2'); bg.addColorStop(1, '#77746f'); g.fillStyle = bg; g.fillRect(32, 400, 160, 250); b.fillStyle = '#a8a8a8'; b.fillRect(32, 400, 160, 250); b.fillStyle = '#505050'; b.fillRect(32, 400, 160, 3); b.fillRect(32, 400, 3, 250);   /* the coin box's chrome door */
+      for (let i = 0; i < 300; i++) { g.fillStyle = RR() < 0.5 ? 'rgba(255,255,250,0.05)' : 'rgba(30,26,24,0.06)'; g.fillRect(32 + RR()*150, 400 + RR()*250, 3 + RR()*30, 0.4); }
+      g.fillStyle = '#2a2624'; g.beginPath(); g.arc(112, 470, 10, 0, 7); g.fill(); g.fillStyle = '#8c8882'; g.fillRect(108, 462, 8, 16); b.fillStyle = '#303030'; b.beginPath(); b.arc(112, 470, 10, 0, 7); b.fill();   /* its lock */
+      g.fillStyle = '#b4b0a8'; g.fillRect(212, 410, 50, 150); g.fillStyle = '#141211'; g.fillRect(220, 440, 34, 80); g.fillStyle = 'rgba(120,64,34,0.4)'; g.fillRect(220, 512, 34, 8); b.fillStyle = '#d0d0d0'; b.fillRect(212, 410, 50, 150); b.fillStyle = '#202020'; b.fillRect(220, 440, 34, 80);   /* the coin return, its flap gone dark */
+      g.fillStyle = 'rgba(234,228,216,0.78)'; g.font = 'italic 700 26px "Marker Felt","Comic Sans MS",cursive'; g.fillText('hello?', 52, 600);   /* (someone wrote on the coin box: a little graffiti) */
+      const gr = g.createLinearGradient(0, 560, 0, 760); gr.addColorStop(0, 'rgba(58,38,28,0)'); gr.addColorStop(1, 'rgba(58,38,28,0.4)'); g.fillStyle = gr; g.fillRect(0, 0, W2, 760); });
+    const side = SIDE.map, face = FACE.map;
+    const st = new THREE.MeshStandardMaterial({ map:side, bumpMap:SIDE.bump, bumpScale:1.2, roughnessMap:SIDE.rough, roughness:0.85, metalness:0.38, emissive:new THREE.Color(0.012, 0.01, 0.008) }), stIn = new THREE.MeshStandardMaterial({ map:IN.map, bumpMap:IN.bump, bumpScale:0.8, roughnessMap:IN.rough, color:0xf0ece6, roughness:0.85, metalness:0.36, emissive:new THREE.Color(0.012, 0.01, 0.008) });   /* (Nov 18: darker, more metal; at night: its own brushing, bumps and grime) */
     const hd = new THREE.MeshStandardMaterial({ map:head, emissiveMap:head, emissive:new THREE.Color(1, 0.88, 0.7), emissiveIntensity:0.55, roughness:0.4 });
-    const fc = new THREE.MeshStandardMaterial({ map:face, roughness:0.35, metalness:0.45 }), blk = mat(null, { color:0x141211, rough:0.35 });
+    const fc = new THREE.MeshStandardMaterial({ map:face, bumpMap:FACE.bump, bumpScale:1.4, roughnessMap:FACE.rough, roughness:0.75, metalness:0.45 }), blk = mat(null, { color:0x141211, rough:0.35 });
     const W = 9.0, B0 = 0.62, B1 = 1.62, D = 0.34, Z0 = 9.52, Z1 = 10.18;   /* on the west gable (x 9), facing west */
     st.userData.m = [D, B1 - B0]; side.wrapS = side.wrapT = THREE.ClampToEdgeWrapping;
     tag(box(W - 0.02, W, B0, B1, Z0, Z1, stIn, { solid:false }), 'phone');   /* its back plate */
-    for (const z of [Z0, Z1 - 0.012]) tag(box(W - D, W, B0, B1, z, z + 0.012, [stIn, stIn, stIn, stIn, st, st], { solid:false }), 'phone');   /* the sides, brushed steel */
+    for (const z of [Z0, Z1 - 0.012]) tag(box(W - D, W, B0, B1, z, z + 0.012, z === Z0 ? [stIn, stIn, stIn, stIn, stIn, st] : [stIn, stIn, stIn, stIn, st, stIn], { solid:false }), 'phone');   /* the sides, brushed steel (the tags and sticker on the outside only: Nov 18, night, they showed through mirrored inside) */
     for (const z of [Z0, Z1]) { const rg = new THREE.CylinderGeometry(0.012, 0.012, B1 - B0, 8); const r = new THREE.Mesh(rg, stIn); r.position.set(W - D, (B0 + B1)/2, z + (z === Z0 ? 0.006 : -0.006)); scene.add(r); }   /* their rolled front edges */
     tag(box(W - D, W, B1 - 0.15, B1, Z0, Z1, [hd, stIn, stIn, stIn, stIn, stIn], { solid:false }), 'phone');   /* the canopy with its lit header */
     { const hp = new THREE.Mesh(new THREE.PlaneGeometry(Z1 - Z0 - 0.04, 0.12), hd); hp.rotation.y = -Math.PI/2; hp.position.set(W - D - 0.002, B1 - 0.075, (Z0 + Z1)/2); scene.add(hp); tag(hp, 'phone'); }
@@ -350,7 +405,9 @@ export function buildStation(scene){
       const cord = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, 0.008, 6), new THREE.MeshStandardMaterial({ color:0xb8b4ac, roughness:0.3, metalness:0.85 })); cord.castShadow = true; scene.add(cord); tag(cord, 'phone'); }
     /* (Nov 18) the phone book, beat up, in its black binder, hanging on a steel cable off the shroud's side; swollen with
        damp, its pages fanned and yellow. (it'll open later: Aisling's) */
-    { const bk = new THREE.Group(), cover = mat(null, { color:0x1e1a18, rough:0.7 }), pages = new THREE.MeshStandardMaterial({ color:0xcfc2a2, roughness:0.95 });
+    { const bk = new THREE.Group(), cover = mat(null, { color:0x1e1a18, rough:0.7 }), pages = new THREE.MeshStandardMaterial({ map:(() => { const c = document.createElement('canvas'); c.width = 128; c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#9c8e70'; g.fillRect(0, 0, 128, 256);   /* (Nov 18, night) old pages edge-on: swollen, grimy, the edges darker */
+        for (let y = 0; y < 256; y += 2) { g.fillStyle = `rgba(${60 + RR()*40},${50 + RR()*30},36,${0.15 + RR()*0.3})`; g.fillRect(0, y, 128, 1); } for (let i = 0; i < 30; i++) { g.fillStyle = 'rgba(70,52,34,0.2)'; g.beginPath(); g.arc(RR()*128, RR()*256, 2 + RR()*7, 0, 7); g.fill(); }
+        const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })(), roughness:0.95 });
       const c1 = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.23), cover); bk.add(c1);
       const pg = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.285, 0.215), pages); pg.position.set(-0.016, 0, 0.012); pg.rotation.z = 0.04; bk.add(pg);
       const sw = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.2), pages); sw.position.set(-0.012, -0.152, 0.01); sw.rotation.x = 0.15; bk.add(sw);   /* a swollen corner */
