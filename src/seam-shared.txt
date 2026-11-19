@@ -117,7 +117,7 @@ var F3_SAYS = {
     s += '<rect x="64" y="84" width="8" height="3" fill="#c7c6c3"/><rect x="10" y="82" width="20" height="12" fill="#e8dcc0" opacity="0.8"/>' + fTx('故障の時は', 20, 87, '#3a2a1c', 1.7, { w:800 }) + fTx('2-1137', 20, 91.4, '#3a2a1c', 2.2, { f:F_EN, w:800 });   /* a sticker: if it breaks, call */
     s += '<rect x="10" y="142" width="65" height="16" fill="#c7c6c3"/><rect x="10" y="142" width="65" height="1.2" fill="#ecebe8"/><rect x="13" y="145" width="18" height="10" fill="#2a2220"/><rect x="33" y="145" width="19" height="10" fill="#e2ded4"/><rect x="54" y="145" width="18" height="10" fill="#2a2220"/>';   /* the delivery bay: chrome, its flap in the middle */
     for (var v = 0; v < 6; v++) s += '<rect x="8" y="' + (162 + v*3) + '" width="69" height="1.6" fill="#5a1a14"/>';   /* the grille */
-    s += '<path d="M30,4 L31,40 M70,74 L71,140 M12,140 L13,180" stroke="#5a1a14" stroke-width="2.4" opacity="0.6"/><rect x="0" y="176" width="85" height="6" fill="#3a1410"/>';   /* rust running */
+    s += '<path d="M29.2,4 Q30.6,14 29.9,24 Q30.4,32 30.3,38 L30.0,38 Q29.6,30 29.4,22 Q29.8,12 28.4,4 Z M69.4,74 Q70.8,95 70.1,118 Q70.6,130 70.4,138 L70.1,138 Q69.6,124 69.5,110 Q70,90 68.6,74 Z M11.4,140 Q12.6,155 12.1,168 L12.9,180 L11.7,180 Q11.6,166 11.0,152 Z" fill="#5a1a14" opacity="0.42"/><rect x="0" y="176" width="85" height="6" fill="#3a1410"/>';   /* rust running */
     return s;
   });
   fpic('f3vmSide2', 0.75, 1.86, 120, 75, 186, '', function(){ return '<rect width="75" height="186" fill="#8e2a22"/><rect width="75" height="4" fill="#e8dcc0"/><path d="M10,0 L12,186 M50,40 L52,150" stroke="#5a1a14" stroke-width="3" opacity="0.5"/>'; });

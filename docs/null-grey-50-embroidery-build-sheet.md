@@ -493,3 +493,11 @@ Aisling: *"closer on trees, closer on te metal...closer on all let push all thos
   - its windows' light falls on the platform: a soft warm pool along the edge under each window and door, only on the platform's concrete, steady.
 - Checked: walking, clicks, the train both ways, the text check, no blue, no errors.
 - Cost: the heaviest view is about 520k triangles (from about 487k). Aisling to check smoothness on her Mac.
+
+### Nov 18–19 (midnight) — the trunk goes all the way up; roots; leaves lie on the ground; the drinks machine cleaned up
+Aisling: *"spda machine looks really weird?? ok so trees are ok but the bump in the middle of every tree is weird.. if we could get rid of that? and maybe try but close have that go all the way up and sprout and i think we got it?maybe all up and out a little more?lewave all floating again not flat or stil on ground? … the roots of trees not correct? really weird"*
+- **Trees:** the trunk no longer stops at a fork with its end showing as a spike between the limbs. It carries on all the way up as the main stem, thinning, and the big limbs sprout off it at different heights, rising up and out further.
+- **Roots:** the separate root pieces (they read as stacked plates) and the dark mound round the foot are gone. The trunk's own foot now spreads smoothly into low root lobes running down into the earth, on dug earth.
+- **Ground leaves:** they were placed at the ground's exact height, but the ground mesh is flat between its points every 25 cm, so in dips they floated. Now they use the mesh's real surface (`groundSurf`, station.js), lie nearly flat, and the painted leaf litter under them is subtler.
+- **The drinks machine:** the 3D bezels and glass over its header and label strip floated in front of the picture and didn't line up with it: gone (only a slim chrome edge sits flat on it now). The dark vertical bar through *Smile* was Seam's painted rust streak, an even 2.4-wide line: redrawn as thin, wavering rust in Seam's picture (`f3vm2`, f03-3d2.js), so Seam's machine changes too (doc 32).
+- Checked: walking, clicks, the train both ways, the text check, no blue, no errors.

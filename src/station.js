@@ -111,7 +111,7 @@ function paintGround(){
     /* the fields: mud, dead grass, the odd puddle (puddles are smooth and shine) */
     { const pd = pathDist(x, z), wd = Math.hypot(x - 47.6, z - 20.4); if (pd < 0.62 || wd < 1.9) { const e = pd < 0.62 ? sm(0.62, 0.2, pd) : sm(1.9, 1.2, wd);   /* (Nov 18) the trodden path to the windmill: packed earth, two worn ruts, a few stones */
       if (e > 0.25) { const rut = pd < 0.62 && Math.abs(pd - 0.22) < 0.07; return r('hwood', 0.2 + 0.08*vn(x*12, z*12) + 0.05*fine - (rut ? 0.05 : 0) + (vn(x*40, z*40) > 0.86 ? 0.15 : 0), 0.4 + 0.3*fine, 0.85); } } }
-    { const lt = litter(x, z); if (lt > 0.02) { const sp = leafSpeck(x, z, lt*0.95) || leafSpeck(x + 0.05, z + 0.03, lt*0.6); if (sp) return r(sp[0], sp[1] + 0.05*fine, 0.6 + 0.2*fine, 0.9); if (lt > 0.5) return r('hwood', 0.16 + 0.06*n + 0.04*fine, 0.4, 0.95); } }   /* (leaf litter under the trees; dark damp earth showing between) */
+    { const lt = litter(x, z); if (lt > 0.02) { const sp = leafSpeck(x, z, lt*0.95) || leafSpeck(x + 0.05, z + 0.03, lt*0.6); if (sp) return r(sp[0], sp[1]*0.62 + 0.04*fine, 0.6 + 0.2*fine, 0.9); if (lt > 0.5) return r('hwood', 0.16 + 0.06*n + 0.04*fine, 0.4, 0.95); } }   /* (leaf litter under the trees; dark damp earth showing between) */
     const pud = fbm(x*0.35 + 11, z*0.35);
     if (pud > 0.69) return r('hnight', 0.2 + 0.14*vn(x*4, z*4), 0.1, 0.08 + 0.2*sm(0.69, 0.75, pud)*0);
     const mud = f > 0.55 || (Math.abs(frac(x*0.9) - 0.5) < 0.12 && z > 11), rim = pud > 0.64;
@@ -119,6 +119,11 @@ function paintGround(){
     return r(n > 0.62 ? 'hsage' : 'hgold', 0.24 + 0.14*g + 0.06*n + 0.05*fine, 0.5 + 0.4*fine, 1);
   }, { nrm:1.2 });
 }
+/* (Nov 18, late; Aisling: "leaves all floating again") the ground's real surface: the mesh is a grid of groundAt's heights
+   every 0.25 m, flat between them, so anything laid on the ground uses this, not groundAt, and lies right on it */
+export function groundSurf(x, z){ const S = 0.25, u = (x - TX0)/S, v = (z - TZ0)/S, ix = Math.floor(u), iz = Math.floor(v), fx = u - ix, fz = v - iz;
+  const H = (i, j) => groundAt(TX0 + i*S, TZ0 + j*S), ha = H(ix, iz), hb = H(ix, iz + 1), hc = H(ix + 1, iz + 1), hd = H(ix + 1, iz);
+  return fx + fz <= 1 ? ha + (hd - ha)*fx + (hb - ha)*fz : hc + (hb - hc)*(1 - fx) + (hd - hc)*(1 - fz); }
 function groundMesh(){
   const g = new THREE.PlaneGeometry(TW, TD, TW*4, TD*4); g.rotateX(-Math.PI/2);
   const p = g.attributes.position;
@@ -456,13 +461,13 @@ export function buildStation(scene){
     const glass = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.55, metalness:0, transparent:true, opacity:0.08, depthWrite:false });   /* (Nov 18: a softer glass, so the machine's own lamp doesn't flare off it) */
     const P = (px0, py0, px1, py1, d, m, z = 0) => box(X(px1), X(px0), Y(py1), Y(py0), Z0 - d - z, Z0 - z, m, { solid:false });
     const frame = (px0, py0, px1, py1, w, d) => { P(px0 - w, py0 - w, px1 + w, py0, d, chrome); P(px0 - w, py1, px1 + w, py1 + w, d, chrome); P(px0 - w, py0, px0, py1, d, chrome); P(px1, py0, px1 + w, py1, d, chrome); };
-    frame(0.5, 0.5, 84.5, 181.5, 0.9, 0.025);   /* the chrome edging all round */
-    frame(5, 6, 80, 33, 1.1, 0.035); P(5, 6, 80, 33, 0.002, glass, 0.03);   /* the header's bezel and its glass */
-    frame(5, 34, 80, 63, 1.0, 0.05); P(5, 34, 80, 63, 0.002, glass, 0.045);   /* the label strip */
+    frame(0.5, 0.5, 84.5, 181.5, 0.9, 0.012);   /* the chrome edging all round (Nov 18, late: flat to the face) */
+    /* (Nov 18, late; Aisling: "soda machine looks really weird") the bezels and glass over the header and the label strip
+       floated in front of the picture and didn't line up with it: gone. the picture carries them, as in Seam */
     for (let k = 0; k < 4; k++) { const cx = 17 + k*17; P(cx - 3.5, 66, cx + 3.5, 72, 0.022, chrome); }   /* the buttons */
     P(72, 82, 77, 90, 0.03, chrome); P(73.6, 83, 75.4, 88, 0.004, dark, 0.03);   /* the coin insert, its slot */
     P(63.5, 83.5, 72, 87.5, 0.018, chrome);   /* the change return */
-    frame(10, 142, 75, 158, 1.2, 0.06); P(33, 145, 52, 155, 0.025, chrome);   /* the delivery bay and its flap */
+    frame(10, 142, 75, 158, 1.0, 0.02); P(33, 145, 52, 155, 0.01, chrome);   /* the delivery bay and its flap */
     P(0.5, 159, 84.5, 160.4, 0.03, chrome);   /* the line over the kick plate */
     box(26.9, 27.96, 1.86, 1.9, 7.18, 7.97, chrome, { solid:false });   /* its top */
   }
@@ -543,8 +548,8 @@ export function buildStation(scene){
     const LR = rnd(777), L = [];
     const put = (x, z, y) => L.push([x, y + 0.004 + LR()*0.004, z, 0.1 + LR()*0.07, LR()*6.3, Math.floor(LR()*4)]);
     for (let i = 0; i < 1400; i++) { const x = 9.2 + LR()*22.6, z = 3.3 + LR()*4.6, near = sm(5.5, 7.95, z) + (x > 24 && x < 29 ? 0.5 : 0); if (LR() < 0.25 + 0.6*near) put(x, z, 0); }   /* on the platform, drifted toward the building */
-    for (let i = 0; i < 1500; i++) { const x = ROAD[0] - 0.6 + LR()*3.2, z = 9 + LR()*14, de = Math.min(Math.abs(x - ROAD[0]), Math.abs(ROAD[1] - x)); if (LR() < 0.18 + 0.7*sm(0.8, 0.05, de)) put(x, z, groundAt(x, z)); }   /* (Nov 18, late: drifted along the road's edges, a few out on it) */
-    for (let i = 0; i < 700; i++) { const x = 8.5 + LR()*21, z = 13.05 + LR()*1.2; put(x, z, groundAt(x, z)); }
+    for (let i = 0; i < 1500; i++) { const x = ROAD[0] - 0.6 + LR()*3.2, z = 9 + LR()*14, de = Math.min(Math.abs(x - ROAD[0]), Math.abs(ROAD[1] - x)); if (LR() < 0.18 + 0.7*sm(0.8, 0.05, de)) put(x, z, groundSurf(x, z)); }   /* (Nov 18, late: drifted along the road's edges, a few out on it) */
+    for (let i = 0; i < 700; i++) { const x = 8.5 + LR()*21, z = 13.05 + LR()*1.2; put(x, z, groundSurf(x, z)); }
     const g = new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI/2);
     const lm = new THREE.MeshStandardMaterial({ map:paintLeafAtlas(), alphaTest:0.5, roughness:0.85, side:THREE.DoubleSide }); lm.userData.noDetail = true;
     lm.onBeforeCompile = sh => { sh.vertexShader = 'attribute float aVar;\n' + sh.vertexShader.replace('#include <uv_vertex>', '#include <uv_vertex>\n vMapUv.x = vMapUv.x*0.25 + aVar*0.25;'); };
@@ -604,7 +609,7 @@ export function buildStation(scene){
   L.hemi = new THREE.HemisphereLight(0x9a8a84, 0x4e4036, 1);   /* (the ground colour: light bouncing up off the platform and the fields, so ceilings aren't a void) */ scene.add(L.hemi);
   L.west = new THREE.DirectionalLight(0xc89a70, 0.2); L.west.position.set(-30, 8, 4); scene.add(L.west);
 
-  TKM = buildMore({ scene, M, T, tag, groundAt, halo, L });   /* (Nov 17, evening) everything else the Seam version has */
+  TKM = buildMore({ scene, M, T, tag, groundAt, groundSurf, halo, L });   /* (Nov 17, evening) everything else the Seam version has */
 
   /* ---- grass, weeds and corn ---- */
   const R = rnd(4242), grass = [], corn = [];

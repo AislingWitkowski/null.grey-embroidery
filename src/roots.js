@@ -65,7 +65,7 @@ export function rootAll(scene, surfaceAt){
   const decalM = new THREE.MeshStandardMaterial({ map:atlas, transparent:true, depthWrite:false, roughness:0.95, polygonOffset:true, polygonOffsetFactor:-3, polygonOffsetUnits:-3 });
   decalM.userData.noDetail = true;
   const g = new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI/2);
-  const decals = [...all.map(r => ({ x:r.x, z:r.z, s:r.kind === 'earth' ? r.r*2.4 + 0.7 + R()*0.3 : r.r*2.4 + 0.3 + R()*0.1, k:r.kind === 'earth' ? 0 : 1 })),
+  const decals = [...all.map(r => ({ x:r.x, z:r.z, s:r.kind === 'earth' || r.kind === 'tree' ? r.r*2.4 + 0.7 + R()*0.3 : r.r*2.4 + 0.3 + R()*0.1, k:r.kind === 'earth' || r.kind === 'tree' ? 0 : 1 }))   /* ('tree': the dug earth, but no mound: the trunk's own root lobes do that) */,
     ...ROOTS.moss.map(m => ({ x:m.x, z:m.z, s:m.r*2, k:2 }))];
   if (decals.length) {
     const im = new THREE.InstancedMesh(g, decalM, decals.length), M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
