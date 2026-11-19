@@ -517,3 +517,15 @@ Aisling: *"ok go with first texture pass? go as deep as you feel we can?"* (Tree
 - **The dumpster** was a flat dark box. Its sides and lid are painted steel now (brown-black paint, pressed ribs, scrapes, rust at the welds and running from the lid's lip), and it's in the round: a lid a little open with a rolled lip, ribs at the front's edges and down the sides, the lifting pockets, squat feet. Its front is still Seam's picture (NO DUMPING · ゴミ捨て禁止), lit a little brighter so it reads.
 - Checked: walking, clicks, the train, the text check, no blue, no errors.
 - **Next in the texture pass:** the shed and its awning, the bench, the bin with eyes and the jerry can, the station's back and gables, the road's poles and signs.
+
+### Nov 19 (morning) — the texture pass, part 2: the ground up close, the road, poles, wood, the bench, puddles, the jerry can
+Aisling: *"ok do next texture, you can do several texture passes and ill look you can do about an hour of work"*.
+- **The ground up close:** the big painted ground picture is too coarse at your feet (about 34 pixels a metre), so a fine detail picture now tiles over it at true size: on the road, asphalt's stones and tar; everywhere else, crumbs of earth, pebbles and bits of twig. It has its own small relief and fades out with distance, so there's no repeating pattern far off.
+- **The blurry painted leaves are gone** from the road, the verges and under the trees (the ground picture couldn't hold them, so they read as soft squares and dark blotches). The real 3D fallen leaves do that job.
+- **Puddles** in the fields were near-black holes; they're pale now, holding the dusk sky. The field's mud is a little lighter, closer to the grass, so it reads as earth.
+- **Telephone poles and the lamp post** have their own picture, painted at their true size (they used the general wood picture stretched over 7.7 m, so they looked plain): creosote-dark at the foot fading up to weathered grey-brown, long checks split down them, the grain running up, clusters of old staples and torn paper corners at eye height, nail heads, a little moss low on one side.
+- **All the old wood** (the bench's legs, frames, fascia brackets, beams, the canopy's rafters) has a better grain: long grain lines with darker latewood wavering round a knot, checks, nail holes with rust stains under them, grime low.
+- **The bench** is real slats now, with gaps (three on the seat, two on the back, a rail under the seat), and its grain runs along the slats.
+- **The jerry can** has a grip handle with the gap under it, a ribbed grey cap on its spout, and a moulded rim round its shoulders.
+- **Honest note:** the field near the back of the station still has some darker patches with hard edges. They're the field's painted mud and furrows, and were there before; up close the new detail makes them read as wet earth. A finer field picture would fix them properly; it costs memory, so it's for later if she notices.
+- Checked: walking, clicks, the train, the text check (no must-fix), no blue, no errors.

@@ -387,7 +387,7 @@ export function buildMore(C){
      cut one, so the cross stands on its own) */
   (function newer(){
     const x = 32.38, z = 20.45, gy = groundAt(x, z);
-    tag(cyl(0.1, 0.085, 7.4, M.woodD, x, gy - 0.2, z, 14), 'pole'); K.solids.push({ x0:x - 0.09, x1:x + 0.09, y0:-0.5, y1:7, z0:z - 0.09, z1:z + 0.09 });
+    tag(cyl(0.1, 0.085, 7.4, M.pole, x, gy - 0.2, z, 16), 'pole'); K.solids.push({ x0:x - 0.09, x1:x + 0.09, y0:-0.5, y1:7, z0:z - 0.09, z1:z + 0.09 });
     box(x - 0.5, x + 0.5, 6.1, 6.22, z - 0.05, z + 0.05, M.woodD, { solid:false });
     for (const s of [-1, 1]) meshOf([rodGeo([x + s*0.05, 5.55, z], [x + s*0.36, 6.1, z], 0.014, 0.014, 4)], ironR);
     const ins = mat(null, { color:0x6e675e, rough:0.4 }); for (const o of [-0.42, 0.42]) cyl(0.028, 0.022, 0.09, ins, x + o, 6.22, z, 6, { cast:false });

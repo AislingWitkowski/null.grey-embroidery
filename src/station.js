@@ -9,7 +9,7 @@ import { ROOTS } from './roots.js';
 import { pathDist } from './station2.js';
 import * as THREE from 'three';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
-import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
+import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintPole, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
 import { SRC } from './sound.js';
@@ -103,19 +103,16 @@ function paintGround(){
       if (line) return r('hamber', 0.42 - 0.12*vn(x*40, z*6), 0.6, 0.7);
       const patch = fbm(x*0.9 + 7, z*0.4) > 0.63, edge = Math.min(x - ROAD[0], ROAD[1] - x) < 0.12 && vn(x*10, z*10) > 0.4;
       if (edge) return r('hgold', 0.3, 0.6, 1);
-      { const de = Math.min(x - ROAD[0], ROAD[1] - x), dr = sm(0.7, 0.05, de) + 0.08, sp = leafSpeck(x, z, dr*0.8); if (sp) return r(sp[0], sp[1]*0.85, 0.55, 0.85); }   /* (leaves drifted along its edges, a few out on it) */
-      { const pr = leafSpeck(x + 0.31, z + 0.17, 0.12); if (pr) return r('sstone', 0.16 + 0.04*fine, 0.5, 0.5); }   /* (the dark prints old leaves leave on wet asphalt) */
       const wet = sm(0.6, 0.7, fbm(x*0.7 + 2, z*0.5));
       return r('sstone', (patch ? 0.24 : 0.34) + 0.1*vn(x*30, z*30) + 0.05*(fine - 0.5) - 0.06*f - (crack ? 0.12 : 0) - 0.04*wet, 0.5 + 0.2*fine - (crack ? 0.4 : 0), 0.72 - 0.45*wet);
     }
     /* the fields: mud, dead grass, the odd puddle (puddles are smooth and shine) */
     { const pd = pathDist(x, z), wd = Math.hypot(x - 47.6, z - 20.4); if (pd < 0.62 || wd < 1.9) { const e = pd < 0.62 ? sm(0.62, 0.2, pd) : sm(1.9, 1.2, wd);   /* (Nov 18) the trodden path to the windmill: packed earth, two worn ruts, a few stones */
       if (e > 0.25) { const rut = pd < 0.62 && Math.abs(pd - 0.22) < 0.07; return r('hwood', 0.2 + 0.08*vn(x*12, z*12) + 0.05*fine - (rut ? 0.05 : 0) + (vn(x*40, z*40) > 0.86 ? 0.15 : 0), 0.4 + 0.3*fine, 0.85); } } }
-    { const lt = litter(x, z); if (lt > 0.02) { const sp = leafSpeck(x, z, lt*0.95) || leafSpeck(x + 0.05, z + 0.03, lt*0.6); if (sp) return r(sp[0], sp[1]*0.62 + 0.04*fine, 0.6 + 0.2*fine, 0.9); if (lt > 0.5) return r('hwood', 0.16 + 0.06*n + 0.04*fine, 0.4, 0.95); } }   /* (leaf litter under the trees; dark damp earth showing between) */
     const pud = fbm(x*0.35 + 11, z*0.35);
-    if (pud > 0.69) return r('hnight', 0.2 + 0.14*vn(x*4, z*4), 0.1, 0.08 + 0.2*sm(0.69, 0.75, pud)*0);
-    const mud = f > 0.55 || (Math.abs(frac(x*0.9) - 0.5) < 0.12 && z > 11), rim = pud > 0.64;
-    if (mud || rim) return r('hwood', 0.22 + 0.12*n + 0.06*g + 0.04*fine, 0.3 + 0.3*g + 0.2*fine, rim ? 0.45 : 0.75);
+    if (pud > 0.69 + 0.025*vn(x*5, z*5)) return r('hgrey', 0.36 + 0.06*sm(0.69, 0.8, pud) + 0.03*vn(x*2, z*2), 0.1, 0.04);   /* (Nov 19) puddles hold the dusk sky, pale and still, not black holes */
+    const mud = f + 0.08*vn(x*6, z*6) > 0.6 || (Math.abs(frac(x*0.9) - 0.5) < 0.12 && z > 11), rim = pud > 0.64;
+    if (mud || rim) return r('hwood', 0.27 + 0.1*n + 0.06*g + 0.04*fine, 0.3 + 0.3*g + 0.2*fine, rim ? 0.45 : 0.75);   /* (Nov 19: lighter, closer to the grass, so mud reads as earth, not black blotches) */
     return r(n > 0.62 ? 'hsage' : 'hgold', 0.24 + 0.14*g + 0.06*n + 0.05*fine, 0.5 + 0.4*fine, 1);
   }, { nrm:1.2 });
 }
@@ -130,7 +127,26 @@ function groundMesh(){
   for (let i = 0; i < p.count; i++) { const x = p.getX(i) + TX0 + TW/2, z = p.getZ(i) + TZ0 + TD/2; p.setXYZ(i, x, groundAt(x, z), z); }
   g.computeVertexNormals();
   const t = paintGround(); t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
-  const me = new THREE.Mesh(g, mat(t)); me.receiveShadow = true; K.scene.add(me); tag(me, hit => groundSay(hit, ROAD));
+  const gm = mat(t);
+  /* (Nov 19, the texture pass) the ground up close: the big painted picture is too coarse at your feet, so a fine detail
+     picture tiles over it at true size: asphalt's stones and tar on the road, crumbs of earth, grit and bits of twig
+     everywhere else. it fades out with distance (so no repeating pattern far off) */
+  const GD = paint(512, 512, 2, 2, (x, y) => { const st = vn(x*40, y*40), st2 = vn(x*90 + 7, y*90), cr = vn(x*14, y*14), tw = Math.abs(frac(x*3 + 0.3*vn(x*2, y*6)) - 0.5) < 0.01 && vn(x*1.5, y*3) > 0.7;
+      return ['hgrey', clamp(0.5 + 0.22*(st - 0.5) + 0.16*(st2 - 0.5) + (st2 > 0.8 ? 0.12 : 0) - (tw ? 0.25 : 0), 0, 1), 1, 0.5 + 0.3*st + 0.2*st2 - (tw ? 0.3 : 0) + 0.1*cr]; }, { nrm:2.5 });
+  const GE = paint(512, 512, 2, 2, (x, y) => { const cl = vn(x*22, y*22), cr2 = vn(x*70, y*70), pb = vn(x*55 + 3, y*55) > 0.83, tw = Math.abs(frac(x*2.2 + y*0.4 + 0.4*vn(x*2, y*3)) - 0.5) < 0.012 && vn(x*1.2 + 9, y*2) > 0.72;
+      return ['hgrey', clamp(0.5 + 0.24*(cl - 0.5) + 0.12*(cr2 - 0.5) + (pb ? 0.14 : 0) - (tw ? 0.22 : 0), 0, 1), 1, 0.5 + 0.35*cl + 0.15*cr2 + (pb ? 0.3 : 0)]; }, { nrm:2.2 });
+  for (const tt of [GD, GE, GD.userData.normal, GE.userData.normal]) { tt.wrapS = tt.wrapT = THREE.RepeatWrapping; tt.needsUpdate = true; }
+  gm.userData.noDetail = true;
+  gm.onBeforeCompile = sh => { sh.uniforms.uGD = { value:GD }; sh.uniforms.uGE = { value:GE }; sh.uniforms.uGDn = { value:GD.userData.normal }; sh.uniforms.uGEn = { value:GE.userData.normal }; sh.uniforms.uRoad = { value:new THREE.Vector2(ROAD[0], ROAD[1]) };
+    sh.vertexShader = 'varying vec3 vGW;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vGW = (modelMatrix*vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = 'uniform sampler2D uGD, uGE, uGDn, uGEn; uniform vec2 uRoad; varying vec3 vGW;\n' + sh.fragmentShader
+      .replace('#include <map_fragment>', '#include <map_fragment>\n float gRd = smoothstep(uRoad.x - 0.15, uRoad.x + 0.1, vGW.x)*smoothstep(uRoad.y + 0.15, uRoad.y - 0.1, vGW.x)*step(8.6, vGW.z), gFar = 1.0 - smoothstep(6.0, 22.0, length(vGW - cameraPosition));\n' +
+        ' vec2 gUV = vGW.xz*0.5; float gD = mix(texture2D(uGE, gUV).r, texture2D(uGD, gUV*1.3).r, gRd), gD2 = mix(texture2D(uGE, gUV*0.21).r, texture2D(uGD, gUV*0.27).r, gRd);\n' +
+        ' diffuseColor.rgb *= mix(1.0, (0.62 + 0.76*gD)*(0.85 + 0.3*gD2), gFar*0.85);')
+      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\n { vec3 dn = mix(texture2D(uGEn, gUV).xyz, texture2D(uGDn, gUV*1.3).xyz, gRd)*2.0 - 1.0; normal = normalize(normal + vec3(dn.x, 0.0, -dn.y)*0.6*gFar); }')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n roughnessFactor = clamp(roughnessFactor*(0.85 + 0.3*gD), 0.05, 1.0);'); };
+  gm.customProgramCacheKey = () => 'ground-detail';
+  const me = new THREE.Mesh(g, gm); me.receiveShadow = true; K.scene.add(me); tag(me, hit => groundSay(hit, ROAD));
 }
 
 /* ---------------- the sky: dusk, overcast. plum overhead, the last warm light low in the west. its horizon is the
@@ -194,7 +210,7 @@ export function buildStation(scene){
   const M = {
     facade: mat(T.facade), stucco: mat(T.stucco), tin: mat(T.tin, { rough:0.7, metal:0.3 }), tinG: mat(T.tinG, { rough:0.7, metal:0.3 }), boards: mat(T.boards, { emit:0x18120c }),   /* (Nov 19: the ceiling holds a little of the bulbs' warmth, not a void) */
    
-    fascia: mat(T.fascia, { cut:0.5, two:true }), iron: mat(T.iron, { rough:0.6, metal:0.2 }), wood: mat(T.wood), woodD: mat(T.woodD), conc: mat(T.conc, { rough:0.85 }),
+    fascia: mat(T.fascia, { cut:0.5, two:true }), iron: mat(T.iron, { rough:0.6, metal:0.2 }), wood: mat(T.wood), woodD: mat(T.woodD), conc: mat(T.conc, { rough:0.85 }), pole: mat(paintPole(), { rough:0.9 }),
     strip: mat(T.strip), face: mat(T.face), dark: mat(null, { color:0x1b1411 }), wire: mat(null, { color:0x120d0b }),
     rail: new THREE.MeshStandardMaterial({ color:0x4e4844, roughness:0.45, metalness:0.6 }),
     glass: new THREE.MeshStandardMaterial({ color:0x2a1a08, emissive:new THREE.Color(1.0, 0.72, 0.38), emissiveIntensity:6 }),
@@ -223,7 +239,7 @@ export function buildStation(scene){
   /* ---- telephone poles along the line, wires between, sagging ---- */
   const PX = [4, 11, 18, 25, 32, 39], LZ = 0.8;   /* (Nov 17, night: back from the track to 0.8, so the real-size train clears them) */
   PX.forEach((x, i) => {
-    tag(cyl(0.11, 0.09, 7.7, M.woodD, x + 0.08, -0.5, LZ, 14), 'pole'); SRC.poles.push({ x:x + 0.08, y:6.7, z:LZ }); K.solids.push({ x0:x, x1:x + 0.16, y0:-0.5, y1:7.2, z0:LZ - 0.08, z1:LZ + 0.08 }); box(x - 0.6, x + 0.76, 6.62, 6.74, LZ - 0.05, LZ + 0.05, M.woodD, { solid:false });
+    tag(cyl(0.11, 0.09, 7.7, M.pole, x + 0.08, -0.5, LZ, 16), 'pole'); SRC.poles.push({ x:x + 0.08, y:6.7, z:LZ }); K.solids.push({ x0:x, x1:x + 0.16, y0:-0.5, y1:7.2, z0:LZ - 0.08, z1:LZ + 0.08 }); box(x - 0.6, x + 0.76, 6.62, 6.74, LZ - 0.05, LZ + 0.05, M.woodD, { solid:false });
     if (i < PX.length - 1) [6.78, 6.78].forEach((y, k) => wire([x - 0.45 + k*1.05, y, LZ], [PX[i + 1] - 0.45 + k*1.05, y, LZ], 0.35, M.wire));
   });
 
@@ -281,8 +297,12 @@ export function buildStation(scene){
   for (const x of [10.5, 13.5, 16.5, 19.5, 22.5, 9.05, 24.95]) box(x - 0.05, x + 0.05, 2.98, 3.15, 4.21, 8, M.woodD, { solid:false });
 
   /* on the wall: the bench, the poster, the line map, the timetable (Seam's own pictures, below) */
-  tag(box(11.4, 12.76, 0.38, 0.43, 7.57, 7.95, M.wood), 'bench'); box(11.45, 11.55, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false }); box(12.61, 12.71, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false });
-  tag(box(11.4, 12.76, 0.5, 0.81, 7.9, 7.95, M.wood, { solid:false }), 'bench');
+  /* (Nov 19, the texture pass) the bench is slats now, with gaps, not one board: three on the seat, two on the back */
+  K.solids.push({ x0:11.4, x1:12.76, y0:0, y1:0.43, z0:7.57, z1:7.95 });
+  const benchW = M.wood.clone(); benchW.map = M.wood.map.clone(); benchW.map.center.set(0.5, 0.5); benchW.map.rotation = Math.PI/2; benchW.map.needsUpdate = true; if (M.wood.normalMap) { benchW.normalMap = M.wood.normalMap.clone(); benchW.normalMap.center.set(0.5, 0.5); benchW.normalMap.rotation = Math.PI/2; benchW.normalMap.needsUpdate = true; } benchW.userData = { ...M.wood.userData, m:[1, 0.25] };   /* (grain along the slats) */
+  for (const [z0, z1] of [[7.57, 7.68], [7.695, 7.805], [7.82, 7.93]]) tag(box(11.4, 12.76, 0.38, 0.43, z0, z1, benchW, { solid:false }), 'bench');
+  box(11.42, 12.74, 0.34, 0.38, 7.6, 7.9, M.woodD, { solid:false });   /* the rail under the slats */ box(11.45, 11.55, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false }); box(12.61, 12.71, 0, 0.38, 7.6, 7.92, M.woodD, { solid:false });
+  for (const [y0, y1] of [[0.52, 0.64], [0.68, 0.8]]) tag(box(11.4, 12.76, y0, y1, 7.9, 7.95, benchW, { solid:false }), 'bench');
   for (const x of [11.44, 12.64]) tag(box(x, x + 0.08, 0.43, 0.84, 7.86, 7.95, M.woodD, { solid:false }), 'bench');   /* (Nov 17, Aisling: the back was floating; two posts hold it to the seat) */
   [[14.6, 1.48, 0.7, 0.95, 'poster', 'f3poster'], [18, 1.65, 1.6, 0.6, 'linemap', 'f3linemap'], [20.7, 1.48, 0.8, 0.95, 'time', 'f3time']].forEach(p => {   /* (Nov 17, evening: Seam's own pictures of them, word for word) */
     const pm = new THREE.MeshStandardMaterial({ map:seamTex(p[5], 520, '#d8ccb0'), roughness:0.95 }); pm.userData.m = [1, 1]; tag(plane(p[2], p[3], pm, p[0], p[1], 7.985, Math.PI, { cast:false }), p[4]); });
@@ -441,7 +461,13 @@ export function buildStation(scene){
     tag(box(26.02, 26.38, 0, 0.6, 7.59, 7.95, [bb, bb, bt, bt, bb, bb]), 'bin'); tag(box(25.99, 26.41, 0.6, 0.86, 7.55, 7.95, [hs, hs, bt, bt, hs, hf], { solid:false }), 'bin'); }
   { const jf = new THREE.MeshStandardMaterial({ map:seamTex('f3jcF', 600, '#b8847a'), roughness:0.7, alphaTest:0.4 }), js = new THREE.MeshStandardMaterial({ map:seamTex('f3jcS', 600, '#b8847a'), roughness:0.7, alphaTest:0.4 }), jt = mat(null, { color:0xb8847a });
     jf.userData.m = [0.26, 0.36]; js.userData.m = [0.18, 0.36];   /* (Seam's faded pink kerosene can, 灯油 moulded faint on its side) */
-    tag(box(26.42, 26.68, 0, 0.36, 7.77, 7.95, [js, js, jt, jt, jf, jf]), 'jerry'); }
+    tag(box(26.42, 26.68, 0, 0.36, 7.77, 7.95, [js, js, jt, jt, jf, jf]), 'jerry');
+    /* (Nov 19, the texture pass) in the round on top: a grip handle with the gap under it, a ribbed grey cap on its
+       spout, a moulded rim round its shoulders; the plastic faded and a little shiny */
+    const pk = mat(null, { color:0xb8847a, rough:0.55 }), gy = mat(null, { color:0x77736c, rough:0.6 });
+    box(26.44, 26.66, 0.36, 0.375, 7.79, 7.93, pk, { solid:false });   /* the shoulder rim */
+    for (const x of [26.47, 26.6]) box(x, x + 0.03, 0.375, 0.46, 7.84, 7.88, pk, { solid:false }); box(26.47, 26.63, 0.44, 0.47, 7.84, 7.88, pk, { solid:false });   /* the grip handle */
+    tag(cyl(0.022, 0.02, 0.05, gy, 26.475, 0.36, 7.81, 12), 'jerry'); for (let k = 0; k < 4; k++) cyl(0.024, 0.024, 0.004, gy, 26.475, 0.365 + k*0.011, 7.81, 12, { cast:false }); }
   const vf = paintVendFront(); sized(vf, 1.02, 1.86); vf.wrapS = vf.wrapT = THREE.ClampToEdgeWrapping;
   const vfM = new THREE.MeshStandardMaterial({ map:vf, emissiveMap:vf, emissive:new THREE.Color(0.9, 0.82, 0.7), emissiveIntensity:0.32, roughness:0.5 });
   const vs = mat(null, { color:0xd8d2c8 });
@@ -526,7 +552,7 @@ export function buildStation(scene){
   const ms = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.48), new THREE.MeshStandardMaterial({ map:msT, roughness:0.95 })); ms.position.set(31.86, 1.24, 24.58); ms.rotation.y = -Math.PI/2; ms.receiveShadow = true; scene.add(ms); tag(ms, 'missing');
 
   /* ---- the street lamp where the road leaves the platform: the one real lamp out here ---- */
-  tag(cyl(0.075, 0.06, 4.6, M.woodD, 30.87, -0.3, 8.15, 12), 'lamp'); SRC.lamp = { x:30.36, y:3.95, z:8.15 }; K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
+  tag(cyl(0.075, 0.06, 4.6, M.pole, 30.87, -0.3, 8.15, 14), 'lamp'); SRC.lamp = { x:30.36, y:3.95, z:8.15 }; K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });
   box(30.25, 30.88, 4.12, 4.2, 8.13, 8.17, M.iron, { solid:false });
   tag(lathe([[0.012, 0.16], [0.05, 0.15], [0.12, 0.07], [0.21, 0.0]], shadeM, 30.36, 3.96, 8.15, 12, { cast:false }), 'lamp');
   const lb = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), M.glass); lb.position.set(30.36, 3.99, 8.15); scene.add(lb);
@@ -540,7 +566,7 @@ export function buildStation(scene){
   L.shaft = new THREE.Mesh(cg, cm); L.shaft.position.set(30.36, 3.95, 8.15); scene.add(L.shaft);
   /* poles down the road, wires going off into the dusk */
   const PY = [10.5, 17.5, 24.5, 31.5, 38.5];   /* (17.5 is the cut pole: station2 hangs it from the wires) */
-  PY.forEach((z, i) => { if (z !== 17.5) tag(cyl(0.11, 0.09, 7.5, M.woodD, 31.98, -0.5, z + 0.08, 14), 'pole'); if (z !== 17.5) { SRC.poles.push({ x:31.98, y:6.4, z:z + 0.08 }); K.solids.push({ x0:31.9, x1:32.06, y0:-0.5, y1:7, z0:z, z1:z + 0.16 }); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false }); }
+  PY.forEach((z, i) => { if (z !== 17.5) tag(cyl(0.11, 0.09, 7.5, M.pole, 31.98, -0.5, z + 0.08, 16), 'pole'); if (z !== 17.5) { SRC.poles.push({ x:31.98, y:6.4, z:z + 0.08 }); K.solids.push({ x0:31.9, x1:32.06, y0:-0.5, y1:7, z0:z, z1:z + 0.16 }); box(31.4, 32.56, 6.4, 6.52, z + 0.03, z + 0.13, M.woodD, { solid:false }); }
     wire([30.88, 4.15, 8.15], [31.98, 6.5, 10.58], 0.2, M.wire, 0.008);
     if (i < PY.length - 1) for (const k of [-0.4, 0.4]) wire([31.98 + k, 6.56, z + 0.08], [31.98 + k, 6.56, PY[i + 1] + 0.08], 0.45, M.wire); });
 

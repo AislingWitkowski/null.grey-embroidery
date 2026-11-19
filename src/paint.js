@@ -171,8 +171,45 @@ export function paintFascia(){
 /* old rust-red iron paint, flaking to dark metal */
 export function paintIron(){ return paint(128, 256, 0.5, 1, (x, y) => { const fl = fbm(x*8, y*5); return fl > 0.64 ? ['metal', 0.22 + 0.08*vn(x*40, y*40), 1, 0.3, 0.45] : ['hrust', clamp(0.36 + 0.1*vn(x*20, y*6) - 0.08*fbm(x*3, y*2) + 0.04*vn(x*90, y*90), 0, 1), 1, 0.7 + (fl > 0.6 ? 0.3 : 0) + 0.1*vn(x*90, y*90), 0.75]; }, { nrm:1.2 }); }
 /* weathered grey wood, grain running along y */
-export function paintWood(dark){ return paint(96, 384, 0.25, 1, (x, y) => { const g = vn(x*90, y*3) + 0.5*vn(x*300, y*6), split = Math.abs(frac(x*7 + vn(x, y*2)*0.3) - 0.5) < 0.02 && vn(x*5, y*0.7) > 0.6, knot = vn(x*30 + 3, y*30) > 0.85;
-  return ['hwood', clamp((dark ? 0.24 : 0.36) + 0.12*g + 0.08*vn(x*20, y*20) - (knot ? 0.12 : 0) - (split ? 0.15 : 0), 0, 1), 1, 0.5 + 0.35*g - (split ? 0.5 : 0) - (knot ? 0.2 : 0)]; }, { nrm:1.4 }); }
+export function paintWood(dark){
+  /* (Nov 19, the texture pass) old weathered timber, twice the detail: long grain lines running its length (the
+     latewood darker, wavering round a knot now and then), weathered silver-grey on its raised grain with the brown
+     sunk in the grooves, checks splitting along it, nail holes with a rust stain under them, grime gathered low. */
+  return paint(192, 768, 0.25, 1, (x, y) => {
+    const kx = 0.11 + 0.03*vn(9, 3), ky = 0.62, kd = Math.hypot((x - kx)*5, (y - ky)*1.2), knot = kd < 0.1, swirl = 0.05/(kd + 0.15);
+    const gx = x*34 + 0.6*vn(x*4, y*1.5) + swirl*Math.sin(Math.atan2(y - ky, x - kx)*2), ring = frac(gx), late = sm(0.62, 0.8, ring)*sm(1.0, 0.86, ring);
+    const fine = vn(x*160, y*9), split = Math.abs(frac(x*7 + vn(x, y*2)*0.3) - 0.5) < 0.012 && vn(x*5, y*0.7) > 0.62;
+    const nail = Math.hypot((frac(x*4) - 0.5)*0.25, (frac(y*1.6) - 0.5)*0.62) < 0.008 && vn(Math.floor(x*4), Math.floor(y*1.6)*3) > 0.7;
+    const stain = vn(Math.floor(x*4), Math.floor(y*1.6)*3) > 0.7 && Math.abs(frac(x*4) - 0.5) < 0.06 && frac(y*1.6) < 0.5 && frac(y*1.6) > 0.1;
+    const grey = sm(0.25, 0.65, vn(x*3 + 5, y*0.8)) * (1 - late);
+    if (knot) return ['hwood', (dark ? 0.12 : 0.18) + 0.1*sm(0.1, 0, kd), 1, 0.2, 0.9];
+    if (split) return ['hblack', 0.16, 1, 0.05, 0.95];
+    if (nail) return ['hblack', 0.32, 1, 0.9, 0.5];
+    if (stain) return ['hrust', (dark ? 0.24 : 0.3), 1, 0.5, 0.9];
+    const t = (dark ? 0.24 : 0.36) + 0.05*fine - 0.07*late + 0.06*vn(x*20, y*20) - 0.05*sm(0.3, 0, y);
+    return ['hwood', clamp(t + 0.05*grey, 0, 1), 1, 0.55 + 0.2*fine - 0.3*late, 0.88];
+  }, { nrm:1.6 });
+}
+/* (Nov 19, the texture pass) a telephone pole, painted at its true size for its own round (0.63 m round, 7.7 m tall):
+   creosote-dark at the foot fading up to weathered grey-brown; long checks split down it; the grain running up; old
+   staples in clusters and the torn corners of papers long gone at eye height; nail heads; a little moss on its north. */
+export function paintPole(){
+  return paint(256, 2048, 0.63, 7.7, (x, y) => {
+    const fine = vn(x*120, y*6), grain = frac(x*40 + 0.8*vn(x*3, y*0.6)), late = sm(0.6, 0.8, grain)*sm(1, 0.85, grain);
+    const ck = Math.abs(frac(x*5 + 0.08*vn(x*3, y*0.7)) - 0.5), check = ck < 0.006 + 0.008*vn(x*4, y*0.4) && vn(x*6 + 2, y*0.35) > 0.42;
+    const creo = sm(1.6, 0.0, y), eye = y > 1.0 && y < 2.3;
+    const st = eye && vn(x*30, y*24) > 0.86 && frac(y*24) < 0.12 && frac(x*30) < 0.6, paper = eye && fbm(x*6 + 3, y*4) > 0.78;
+    const nailH = Math.hypot((frac(x*3) - 0.5)*0.21, (frac(y*0.9) - 0.5)*1.1) < 0.006 && vn(Math.floor(x*3), Math.floor(y*0.9)) > 0.55;
+    const moss = x > 0.36 && x < 0.5 && y < 1.2 && fbm(x*20, y*6) > 0.58;
+    if (check) return ['hblack', 0.12, 1, 0.0, 0.95];
+    if (st) return ['hgrey', 0.62, 1, 0.9, 0.4];
+    if (nailH) return ['hblack', 0.34, 1, 0.95, 0.5];
+    if (paper) return ['hcream', 0.42 + 0.08*vn(x*40, y*40), 1, 0.7, 0.95];
+    if (moss) return ['hsage', 0.26 + 0.08*fine, 1, 0.65, 1];
+    const t = 0.3 + 0.07*fine - 0.08*late - 0.13*creo + 0.04*vn(x*10, y*2);
+    return [creo > 0.5 ? 'hwood' : (vn(x*2, y*0.5) > 0.5 ? 'hgrey' : 'hwood'), clamp(t, 0, 1), 1, 0.55 + 0.2*fine - 0.35*late, 0.9 - 0.2*creo];
+  }, { nrm:1.8 });
+}
 /* the platform: concrete slabs, cracks, damp patches, the worn tactile strip near the edge (painted on its own mesh) */
 export function paintConcrete(){
   /* (Nov 19, the texture pass) old platform concrete, twice the detail: poured slabs 1.5 m square, each its own grey;
