@@ -75,7 +75,7 @@ export function buildMore(C){
   const R = rnd(9177);
   const barkT = T.woodD.clone(); barkT.repeat.set(3, 1.2); barkT.needsUpdate = true;
   barkT.userData = {}; if (T.woodD.userData.normal) { const n = T.woodD.userData.normal.clone(); n.userData = {}; n.repeat.set(3, 1.2); n.needsUpdate = true; barkT.userData.normal = n; }   /* (a texture's clone turns its userData into plain copies: give it real ones) */
-  const bark = mat(barkT, { color:0xe6d8cc });   /* (Nov 18: lighter, so its bark shows instead of a black cut-out) */ bark.userData.m = [1, 1];
+  const bark = mat(barkT, { color:0xe6d8cc }), snagM = mat(barkT, { color:0xfff8f0, rough:0.95 }); snagM.emissive = new THREE.Color(0.05, 0.048, 0.045);   /* (a snag: bleached, barkless wood) */   /* (Nov 18: lighter, so its bark shows instead of a black cut-out) */ bark.userData.m = [1, 1];
   const ironR = mat(T.iron, { color:0x9a6a50 }), greyP = mat(null, { color:0x8a857e }); greyP.userData.m = [1, 1];
   const earth = mat(paint(256, 256, 2, 2, (x, y) => [fbm(x*2, y*2) > 0.55 ? 'hwood' : 'hrust', 0.14 + 0.08*vn(x*12, y*12) + 0.04*vn(x*40, y*40), 1, null, 1], { nrm:1 }));
   const TK = { sway:[] };
@@ -147,7 +147,8 @@ export function buildMore(C){
     items.forEach((it, i) => { if (it[8]) q.copy(it[8]); else { e.set(it[4], it[5], it[6]); q.setFromEuler(e); } M4.compose(new THREE.Vector3(it[0], it[1], it[2]), q, new THREE.Vector3(it[3], it[3], it[3])); im.setMatrixAt(i, M4); v[i] = it[7]; });
     g.setAttribute('aVar', new THREE.InstancedBufferAttribute(v, 1)); im.castShadow = !flat; im.receiveShadow = true; im.computeBoundingSphere(); scene.add(im); return im;
   }
-  function tree(tx, tz, ph, seed, say){
+  function tree(tx, tz, ph, seed, say, o = {}){
+    const SC = o.sc || 1;   /* (Nov 18: saplings are small trees; a snag is a dead one, white and broken, from her field photo) */
     const Rt = rnd(seed*97 + 5), Lf = LEAF[ph], gy = groundAt(tx, tz) - 0.05, tl = (Rt() - 0.5)*0.16, tlx = tl*Math.cos(seed), tlz = tl*Math.sin(seed);
     const geos = [], sites = [], m = leafMat(leafAtlas(Lf));
 
@@ -209,19 +210,20 @@ export function buildMore(C){
         grow(at, out, len*(0.5 + Rt()*0.25), r1*(0.75 + Rt()*0.15), depth + 1, maxD, true); }
     };
     /* the trunk, straight a long way, flaring at its foot; then it forks into two or three leaders */
-    const TH = 2.1 + Rt()*1.0, maxD = ph >= 3 ? 5 : 6;
+    const TH = (2.1 + Rt()*1.0)*(o.snag ? 1.2 : SC), maxD = o.snag ? 2 : (SC < 0.6 ? 4 : (ph >= 3 ? 5 : 6));
     { const tp = []; for (let i = 0; i <= 14; i++) { const f = i/12; tp.push([tx + tlx*TH*f + Math.sin(f*3 + seed)*0.04, gy - 0.1 + (TH + 0.1)*f, tz + tlz*TH*f + Math.cos(f*2.6 + seed)*0.04]); }   /* (on a little past the fork, closing inside the leaders: no cut end) */
-      const tg = tube(tp, 0.3, 0.06, 16), q = tg.attributes.position;
+      const tg = tube(tp, 0.3*(o.snag ? 0.7 : Math.pow(SC, 0.9)), 0.06*SC, 16), q = tg.attributes.position;
       for (let i = 0; i < q.count; i++) { const y = q.getY(i) - gy, fl = 1 + 0.5*Math.max(0, 1 - y/0.6)**2; q.setX(i, tx + (q.getX(i) - tx)*fl); q.setZ(i, tz + (q.getZ(i) - tz)*fl); }
       tg.computeVertexNormals(); geos.push(tg); }
     const top = V3(tx + tlx*TH, gy + TH - 0.1, tz + tlz*TH), nLead = 2 + (Rt() < 0.5 ? 1 : 0), a0 = Rt()*6.283;
     for (let i = 0; i < nLead; i++) { const ang = a0 + i*6.283/nLead + (Rt() - 0.5)*0.5, lean = 0.28 + Rt()*0.22;
-      grow(top.clone().add(V3(0, -0.35 - i*0.2, 0)), V3(Math.cos(ang)*lean*0.8, 1, Math.sin(ang)*lean*0.8), 1.7 + Rt()*0.6, 0.15 - i*0.012, 1, maxD, true); }   /* (starting well down inside the trunk, so the fork has no notch) */
+      grow(top.clone().add(V3(0, (-0.35 - i*0.2)*SC, 0)), V3(Math.cos(ang)*lean*(o.snag ? 1.6 : 0.8), 1, Math.sin(ang)*lean*(o.snag ? 1.6 : 0.8)), (1.7 + Rt()*0.6)*(o.snag ? 0.7 : SC), (0.15 - i*0.012)*(o.snag ? 0.8 : Math.pow(SC, 0.9)), 1, maxD, true); }   /* (starting well down inside the trunk, so the fork has no notch) */
     const H1 = TH;
     ROOTS.add(tx, tz, 0.3, 'earth');   /* (its foot in the earth: roots.js) */
     for (let k = 0; k < 5; k++) { const a = Rt()*6.283 + k*1.25, L = 0.75 + Rt()*0.4;   /* (Nov 18) its roots flaring into the ground, so it doesn't stand like a pipe */
       geos.push(rodGeo([tx + Math.cos(a)*0.12, gy + 0.14, tz + Math.sin(a)*0.12], [tx + Math.cos(a)*L, gy - 0.04, tz + Math.sin(a)*L], 0.11, 0.03, 8)); }
-    tag(meshOf(geos, bark), say); K.solids.push({ x0:tx - 0.28, x1:tx + 0.28, y0:gy - 1, y1:gy + H1, z0:tz - 0.28, z1:tz + 0.28 });
+    if (o.snag) { tag(meshOf(geos, snagM), say); K.solids.push({ x0:tx - 0.2, x1:tx + 0.2, y0:gy - 1, y1:gy + H1, z0:tz - 0.2, z1:tz + 0.2 }); return; }   /* (dead: no leaves) */
+    tag(meshOf(geos, bark), say); { const w = 0.28*Math.pow(SC, 0.9); K.solids.push({ x0:tx - w, x1:tx + w, y0:gy - 1, y1:gy + H1, z0:tz - w, z1:tz + w }); }
     for (let k = sites.length - 1; k > 0; k--) { const s = Math.floor(Rt()*(k + 1)); [sites[k], sites[s]] = [sites[s], sites[k]]; }   /* (which sites get leaves: at random, so no two trees match) */
     /* (Nov 18) the leaves grow on twiglets: from each site a few thin shoots, and the leaves hang off them in fans,
        each on its own stalk, spreading out and facing the sky a little, as on her maples */
@@ -232,13 +234,13 @@ export function buildMore(C){
       lv.push([N[0], N[1], N[2], sz, 0, 0, 0, Math.floor(Rt()*16), qq]); };
     const nUse = Math.min(sites.length, Math.round(sites.length*Math.min(1, Lf.n/86)));
     for (let t = 0; t < nUse; t++) { const S = sites[t], nt = ph >= 3 ? 1 : (ph === 2 ? 1 : 2);
-      for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = (ph >= 2 ? 0.4 : 0.25) + Rt()*0.4, d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
+      for (let w = 0; w < nt; w++) { const a = Rt()*6.283, len = ((ph >= 2 ? 0.4 : 0.25) + Rt()*0.4)*Math.max(SC, 0.4), d = new THREE.Vector3(Math.cos(a), -0.1 + Rt()*0.8, Math.sin(a)).normalize();
         const B = [S[0] + d.x*len, S[1] + d.y*len, S[2] + d.z*len]; tw.push(rodGeo(S, B, 0.009, 0.004, 3));
         for (const f of (ph >= 2 ? [1.0] : [0.35, 0.68, 1.0])) {   /* (the barer trees keep their last leaves out at the twig ends, not clinging at the joints) */ const N = [S[0] + d.x*len*f, S[1] + d.y*len*f, S[2] + d.z*len*f], nl = f === 1 ? 4 + Math.floor(Rt()*3) : 2 + Math.floor(Rt()*2);
           for (let l = 0; l < nl; l++) { const sp = (l - (nl - 1)/2)*0.75 + (Rt() - 0.5)*0.4, ca = Math.cos(sp), sa = Math.sin(sp);
             const dir = new THREE.Vector3(d.x*ca - d.z*sa, d.y*0.4 - 0.25 + Rt()*0.35, d.x*sa + d.z*ca);   /* fanning out from the shoot, drooping a little */
             if (Rt() < (ph >= 2 ? 0.25 : 0.06)) continue;   /* (gaps: some already fallen) */
-            leafAt(N, dir, 0.14 + Rt()*0.09); } } } }
+            leafAt(N, dir, (0.14 + Rt()*0.09)*(SC < 1 ? 0.85 : 1)); } } } }
     if (tw.length) tag(meshOf(tw, bark, { cast:false }), say);
     if (lv.length) tag(leafField(lv, m, false), say);
     const gl = [];   /* its leaves on the ground round it, thicker near the trunk */
@@ -248,6 +250,9 @@ export function buildMore(C){
     leafField(gl, leafMat(m.map, true), true);   /* (Nov 18, Aisling: the leaves on the ground were bobbing up and down: they lie still) */
   }
   [[4.6, 6.0, 1, 7, 'tree'], [36.8, 6.2, 0, 19, 'tree'], [45.5, 15.5, 2, 23, 'treeF'], [14.0, 19.0, 3, 37, 'treeF'], [51.2, 23.4, 2, 41, 'treeF'], [50.6, 16.6, 3, 43, 'treeF'], [52.6, 19.8, 1, 47, 'treeF']]   /* (Nov 18: three behind the windmill, in the corn) */.forEach(t => tree(t[0], t[1], t[2], t[3], t[4]));
+  /* (Nov 18, from her field photo) young saplings out in the fields, thin and leafy, and one dead white snag, crooked */
+  [[36.0, 13.6, 1, 61, 0.38], [38.7, 20.8, 0, 63, 0.33], [3.6, 15.2, 1, 67, 0.42], [34.4, 11.2, 2, 71, 0.3]].forEach(t => tree(t[0], t[1], t[2], t[3], 'treeF', { sc:t[4] }));
+  tree(37.4, 22.8, 3, 73, 'treeF', { snag:true });
 
   /* ================= the windmill, far out in the corn: a lattice tower going up and up, a small tank partway, the
      wheel of blades at the top, still; its vane lettered once. (Seam's f3Windmill, in the round) ================= */
