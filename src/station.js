@@ -9,7 +9,7 @@ import { ROOTS } from './roots.js';
 import { pathDist } from './station2.js';
 import * as THREE from 'three';
 import { stationKnob, stationLock, shedDoor, snackBox } from './eyes.js';
-import { wallDetails, awningDetails, binDetails } from './details.js';
+import { wallDetails, awningDetails, binDetails, dreamPoster } from './details.js';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintPole, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
 import { inkRGB } from './inks.js';
@@ -570,6 +570,7 @@ export function buildStation(scene){
     sk.position.set(16.004, 0.716, 13.67); sk.rotation.y = Math.PI/2; sk.receiveShadow = true; scene.add(sk); tag(sk, 'dump'); }   /* (Nov 17) "sky", the Columbus tag, on the dumpster's east side: Seam's own picture of it */
   const msT = seamTex('f3miss', 900, '#dcd4c4');
   const ms = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.48), new THREE.MeshStandardMaterial({ map:msT, roughness:0.95 })); ms.position.set(31.86, 1.24, 24.58); ms.rotation.y = -Math.PI/2; ms.receiveShadow = true; scene.add(ms); tag(ms, 'missing');
+  dreamPoster(scene, 31.865, 1.12, 10.58, -Math.PI/2);   /* (Nov 20) the faceless woman, on the road's first pole (src/details.js); no click line yet: hers to give */
 
   /* ---- the street lamp where the road leaves the platform: the one real lamp out here ---- */
   tag(cyl(0.075, 0.06, 4.6, M.pole, 30.87, -0.3, 8.15, 14), 'lamp'); SRC.lamp = { x:30.36, y:3.95, z:8.15 }; K.solids.push({ x0:30.79, x1:30.95, y0:-0.3, y1:4.3, z0:8.07, z1:8.23 });

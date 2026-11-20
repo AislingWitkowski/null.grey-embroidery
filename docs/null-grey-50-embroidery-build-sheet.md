@@ -608,3 +608,10 @@ Aisling sent 66 photos of real things (*"here is first batch … the cameras are
   - **The faceless-woman missing poster:** any of its wording for null.grey, or the look only?
   - **New items** (wafer bars, biscuit sticks, koala cookies, fruit chews): only if she wants them; names and words hers.
 - Checked: ids 317/317, the pocket, no errors.
+
+### Nov 20 (night) — Mozart's face; the faceless woman's poster
+Aisling: *"the mozart thing, yes use his face :) 2.0 yeah like use the wording? 3.) nah i think we made our own?"*
+- **Mozart bar** (Embroidery's look): red foil, crimped ends, gold scrollwork, a keyboard under him, and Mozart himself in profile (powdered wig with its side rolls and black-bowed queue, red coat, lace at the throat). He died in 1791, so his real likeness is allowed (her Nov 18 rule). Words unchanged. *Seam's pixel version still has the plain profile: it can follow if she wants.*
+- **A second missing poster**, on the road's first pole (by the station, x 31.9, z 10.6, facing the road): a photocopy on cheap paper, the faceless woman with only her smile. **Its wording is the poster she sent**, word for word, except the phone number: **(555) 637-4921** in place of the original 888 number, which could be a real line. Wet, yellowed, its bottom curling off the pole. **Not clickable yet: its click line is hers to give.**
+- **New items:** none (her call: "we made our own").
+- Checked: walking, clicks, the text check (no must-fix), no errors.

@@ -120,3 +120,33 @@ export function binDetails(scene){
     const b = new THREE.Mesh(new THREE.CylinderGeometry(0.0045, 0.0045, 0.026, 6), paper); b.rotation.set(Math.PI/2, 0, a); b.position.set(x, 0.88, z); scene.add(b);
     const f = new THREE.Mesh(new THREE.CylinderGeometry(0.0047, 0.0047, 0.012, 6), filt); f.rotation.set(Math.PI/2, 0, a); f.position.set(x + Math.sin(a)*0.018, 0.88, z + Math.cos(a)*0.018); scene.add(f); }
 }
+
+/* ---------- (Nov 20) a second missing poster, on the road's first pole: the faceless woman. Aisling: use its wording
+   (from a poster she sent). The words are kept; only the phone number is made up (555), as the one on the poster could
+   be a real line. A photocopy on cheap paper: toner gone grey, the face left blank but for her smile, wet and curling. ---------- */
+export function dreamPoster(scene, x, y, z, ry){
+  const W = 600, H = 800, c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.fillStyle = '#e4e0d6'; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 2600; i++) { g.fillStyle = `rgba(40,36,32,${0.04 + hsh(i, 3)*0.12})`; g.fillRect(hsh(i, 1)*W, hsh(i, 2)*H, 1 + hsh(i, 4)*2, 1 + hsh(i, 5)*2); }   /* toner speckle */
+  const T = (t, yy, px, w = 700, f = 'Helvetica Neue, Arial, sans-serif') => { g.font = `${w} ${px}px ${f}`; g.textAlign = 'center'; g.fillText(t, W/2, yy); };
+  g.fillStyle = '#2a2826'; T('HAVE YOU SEEN ME IN YOUR DREAMS?', 58, 25, 600);
+  g.fillStyle = '#1e1c1a'; T('MISSING', 150, 104, 900, 'Arial Black, Helvetica Neue, Arial, sans-serif');
+  g.fillStyle = '#1e1c1a'; g.fillRect(150, 182, 300, 300); g.fillStyle = '#d8d4ca'; g.fillRect(156, 188, 288, 288);
+  g.fillStyle = '#2a2826'; g.beginPath(); g.moveTo(200, 476); g.quadraticCurveTo(190, 300, 236, 236); g.quadraticCurveTo(300, 190, 364, 236); g.quadraticCurveTo(410, 300, 400, 476); g.closePath(); g.fill();   /* her hair */
+  g.fillStyle = '#ece8e0'; g.beginPath(); g.ellipse(300, 330, 62, 80, 0, 0, Math.PI*2); g.fill();   /* where the face should be */
+  g.strokeStyle = '#2a2826'; g.lineWidth = 3; g.beginPath(); g.moveTo(268, 372); g.quadraticCurveTo(300, 394, 332, 372); g.stroke(); g.fillStyle = '#f6f4ee'; g.beginPath(); g.moveTo(272, 374); g.quadraticCurveTo(300, 390, 328, 374); g.quadraticCurveTo(300, 382, 272, 374); g.fill();   /* only her smile */
+  g.fillStyle = '#3a3634'; g.beginPath(); g.moveTo(206, 476); g.quadraticCurveTo(300, 420, 394, 476); g.closePath(); g.fill();
+  for (let i = 0; i < 900; i++) { const px = 156 + hsh(i, 7)*288, py = 188 + hsh(i, 8)*288; g.fillStyle = `rgba(20,18,16,${hsh(i, 9)*0.25})`; g.fillRect(px, py, 2, 2); }
+  g.fillStyle = '#2a2826'; T('???????????', 530, 26, 600); T('Last seen October 31st 2002.', 570, 28, 500);
+  const para = ['The Department of Dream Analysis is', 'investigating the disappearance of the', 'faceless woman that stalks you in', 'your dreams. If you have any sightings', 'to report please call:'];
+  para.forEach((l, i) => T(l, 612 + i*28, 24, 500));
+  T('(555) 637-4921', 782, 32, 700);
+  const rg = g.createLinearGradient(0, 0, W, H); rg.addColorStop(0, 'rgba(90,80,60,0.1)'); rg.addColorStop(0.6, 'rgba(90,80,60,0)'); rg.addColorStop(1, 'rgba(70,60,44,0.28)'); g.fillStyle = rg; g.fillRect(0, 0, W, H);   /* damp, yellowed toward one corner */
+  for (let j = 0; j < 7; j++) { g.strokeStyle = `rgba(80,70,56,${0.12 + hsh(j, 11)*0.12})`; g.lineWidth = 2 + hsh(j, 12)*3; g.beginPath(); const sx = 40 + j*80; g.moveTo(sx, 0); g.lineTo(sx + 4, 60 + hsh(j, 13)*140); g.stroke(); }   /* rain run */
+  g.fillStyle = '#9a9690'; [[24, 18], [576, 18]].forEach(([a, b]) => { g.fillRect(a - 6, b - 1.5, 12, 3); });   /* staples */
+  const t = tex(c, { clampEdge:true }); t.userData.m = [1, 1];
+  const geo = new THREE.PlaneGeometry(0.33, 0.44, 6, 6), p = geo.attributes.position; for (let i = 0; i < p.count; i++) { const yy = p.getY(i); if (yy < -0.12) p.setZ(i, (yy + 0.12)*(yy + 0.12)*1.6); }   /* its bottom curling off the pole */
+  geo.computeVertexNormals();
+  const me = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map:t, roughness:0.95, side:THREE.DoubleSide })); me.position.set(x, y, z); me.rotation.y = ry; me.receiveShadow = true; scene.add(me);
+  return me;
+}

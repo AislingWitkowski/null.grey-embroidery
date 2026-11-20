@@ -299,6 +299,23 @@ var EG_ART = { f_clover:EG_CLOVER, f_clover_b:function(){ return '<g transform="
     s += tx('おみくじ飴', 20, 13.6, 5.6, '#c8302a', { w:900, st:'#fff6d8', sw:0.9 }) + tx('fortune candy', 20, 19, 2.8, '#7a1e18', { f:E, w:900 });
     return s + sh('ft', 3, 4, 34, 46, 0.3);
   };
+  A.f_mozart = function(){   /* (Nov 20, Aisling: "the mozart thing, yes use his face") red foil, crimped ends, gold scrollwork, a keyboard
+     running under him, and Mozart himself (dead since 1791, so his real likeness, her rule): powdered wig with its side
+     rolls and queue, red coat, lace at the throat, in profile */
+    var s = '<rect x="5" y="3" width="50" height="18" fill="#c4203a"/>'; for (var i = 0; i < 5; i++) s += '<path d="M5 ' + (3 + i*3.6) + ' l-3.4 1.8 l3.4 1.8 M55 ' + (3 + i*3.6) + ' l3.4 1.8 l-3.4 1.8" fill="#b81a32" stroke="#b81a32" stroke-width="0.5"/>';
+    s += '<defs><linearGradient id="mzf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8506a"/><stop offset="0.35" stop-color="#c4203a"/><stop offset="0.7" stop-color="#9a1428"/><stop offset="1" stop-color="#c4203a"/></linearGradient></defs><rect x="5" y="3" width="50" height="18" fill="url(#mzf)"/>';
+    s += '<path d="M8 6.4 q3 -2 6 0 t6 0 M40 6.4 q3 -2 6 0 t6 0" stroke="#e6c070" stroke-width="0.45" fill="none"/><path d="M10 7.2 q-1.6 1.4 0 2.6 M50 7.2 q1.6 1.4 0 2.6" stroke="#e6c070" stroke-width="0.4" fill="none"/>';
+    s += '<rect x="7" y="13.4" width="46" height="4.6" fill="#f6f2ea"/>'; for (var k = 0; k <= 30; k++) s += '<path d="M' + (7 + k*1.533).toFixed(2) + ' 13.4 L' + (7 + k*1.533).toFixed(2) + ' 18" stroke="#8a8680" stroke-width="0.15"/>'; for (var b = 0; b < 30; b++) if ([0, 1, 3, 4, 5].indexOf(b % 7) >= 0) s += '<rect x="' + (7 + b*1.533 + 1.0).toFixed(2) + '" y="13.4" width="0.95" height="2.7" fill="#1e1714"/>';
+    /* Mozart: the coat, the lace, the face, the wig */
+    s += '<path d="M33 21 Q33 15.6 37.4 14.6 L42.4 14.6 Q46.6 15.6 46.4 21 Z" fill="#b8243a" stroke="#6a1020" stroke-width="0.25"/><path d="M38 14.6 Q39.6 17.4 40 21 L42 21 Q42 17.2 42.6 14.6 Z" fill="#f2ece0"/><path d="M38.6 15.6 q0.8 0.6 1.6 0 M38.8 16.8 q0.8 0.6 1.6 0 M39 18 q0.8 0.6 1.6 0" stroke="#c8c0b0" stroke-width="0.25" fill="none"/>';
+    s += '<path d="M38.4 14.8 Q37.6 12.6 38.4 11 L38 10.2 Q37.8 8.8 38.6 7.4 Q40 5.6 42.2 5.8 Q44.6 6.2 44.8 9 Q44.8 11.6 43.4 13 Q42.6 14.6 40.4 14.8 Z" fill="#f2d2b8"/>';
+    s += '<path d="M38.4 9.8 L37.4 10.9 L38.3 11.3" fill="#f2d2b8" stroke="#c89a80" stroke-width="0.2"/><circle cx="39.6" cy="8.9" r="0.28" fill="#3a2a22"/><path d="M38.9 8.3 q0.6 -0.4 1.2 -0.1" stroke="#8a6a50" stroke-width="0.2" fill="none"/><path d="M38.6 12.3 q0.6 0.25 1.1 0" stroke="#a85a50" stroke-width="0.25" fill="none"/><path d="M40.8 11.8 q0.6 0.6 1.6 0.4" stroke="#e8b8a0" stroke-width="0.4" fill="none" opacity="0.7"/>';
+    s += '<path d="M39.2 6.6 Q40.6 4.4 43.4 4.6 Q46.6 4.8 47 8 Q47.4 10.4 46.6 12.6 Q45.8 12.4 45.6 11 Q45.2 9 44 8.2 Q42 7.2 40 7.4 Z" fill="#f4f0ea" stroke="#c8c2b8" stroke-width="0.2"/>';
+    s += '<ellipse cx="45" cy="10.4" rx="1.3" ry="0.9" fill="#ebe6dc" stroke="#c8c2b8" stroke-width="0.2"/><ellipse cx="45" cy="12.2" rx="1.3" ry="0.9" fill="#ebe6dc" stroke="#c8c2b8" stroke-width="0.2"/><path d="M46.6 11 Q48.4 12.4 47.8 14.4" stroke="#ebe6dc" stroke-width="1" fill="none"/><path d="M47.2 11.6 l1.2 -0.6 l-0.2 1.3 Z M47.2 11.6 l1.3 0.7 l-1 0.8 Z" fill="#1e1714"/>';
+    s += tx('Mozart', 21, 10.6, 5.8, '#f6f2ea', { f:SER, w:700, st:'#a8802a', sw:0.5 }) + tx('marzipan · pistachio · nougat', 21, 20.2, 1.9, '#f2d890', { f:SER, w:700, it:true });
+    s += '<circle cx="10.4" cy="10.4" r="2.6" fill="none" stroke="#e6c070" stroke-width="0.4"/><circle cx="49.6" cy="10.4" r="0" fill="none"/>';
+    return s + sh('mz', 5, 3, 50, 18, 0.5);
+  };
   for (var k in A) EG_ART[k] = A[k];
 })();
 function egSvgFor(id, A, w, h){
