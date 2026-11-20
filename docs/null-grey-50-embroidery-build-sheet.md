@@ -665,3 +665,13 @@ Aisling, on the made things: *"yes much btter!!"*. Then: *"can we make th static
 
 ### Nov 20 (afternoon, later) — four cartons show their fruit
 Aisling: *"keep all magazine only change the um apple banana cherry and momo drink? the rest ok!"*. The four cartons' hand-made looks now show a real-looking apple, banana, cherries and peach where the girl was, from the shared `fuFruit()` (doc 30, same date; their words changed to match). Everything else keeps its glitched face. Checked: ids 317/317, the pocket, the text check, no blue.
+
+### Nov 20 (afternoon, late) — the realism rule for every object; wear by where a thing comes from
+Aisling: *"we can move the realism rule to embroidery in general? like on objects?"*, then *"some objects will be dirty, hazy dreamy weird and maybe dark depending where they come from..but furu items are cleaner cause what they are? make sense"*.
+- **The rule, written into Embroidery's CLAUDE.md:** every object is real like the key: real shape and material, lit from the upper left, Missing Mile's haze, a very slight pixel, the dark side a soft grey (never black). Her own photos and scans stay exactly as they are. Printed faces are a glitched photo. **How worn a thing is depends on where it comes from.**
+- **Wear, in code:**
+  - **pocket things** (`egWear` in `seam/shim-post.js`): Furusato's shop goods and the gacha capsules are new (wear 0.12: no grime, no patina, barely a crease); everything else a little handled (0.6, as this morning);
+  - **pictures in the world** (`realCanvas(cv, {wear})`, `src/real.js`): Missing Mile's are weathered (1, the default), with the blacks lifted further, a haze that gathers in the darks, and the same slight pixel as the pocket things. A cleaner place passes a lower wear.
+  - **the close-ups** (the machine, the newspaper, the clippings, the posters): Missing Mile's, so they stay weathered, now with light from the upper left and a soft haze falling to the far corner.
+- `t/closeups.js` now waits for the slow page (its first load timed out).
+- **For Aisling, later:** each new place says how worn its things are (dirty, dark, dreamy, weird or clean).

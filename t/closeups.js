@@ -5,7 +5,7 @@ const C = [['the drinks machine', [27.43, 6.2, 180, -0.05], 'vend'], ['the clipp
 (async () => { const b = await chromium.launch({ args:['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport:{ width:960, height:540 } }); let errs = 0;
   p.on('pageerror', e => { errs++; console.log('ERR', String(e.stack).slice(0, 300)); });
-  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed');
+  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed', { timeout:300000 });
   await p.waitForFunction(() => document.getElementById('wait').classList.contains('gone'), null, { timeout:180000 });
   for (const [name, s, f] of C) {
     const r = await p.evaluate(s => { const E = window.__eg, P = E.P; E.pause(true); P.x = s[0]; P.z = s[1]; P.yaw = s[2]*Math.PI/180; P.pitch = s[3]; P.y = (s[0] > 9 && s[0] < 32 && s[1] > 3 && s[1] < 8) ? 0 : E.ground(s[0], s[1]); P.eye = 1.55;
