@@ -396,9 +396,45 @@ var EG_ART = { f_clover:EG_CLOVER, f_clover_b:function(){ return '<g transform="
   var dots = function(x, y, w, h, st, r, col, op){ var s = ''; for (var j = 0; j*st < h; j++) for (var i = 0; i*st < w; i++) s += '<circle cx="' + (x + i*st + (j % 2 ? st/2 : 0)).toFixed(2) + '" cy="' + (y + j*st).toFixed(2) + '" r="' + r + '"/>'; return '<g fill="' + col + '" opacity="' + (op || 0.25) + '">' + s + '</g>'; };
   var crimpV = function(x, y0, y1, w, col, n){ var s = '', h = (y1 - y0)/n; for (var i = 0; i < n; i++) s += 'L' + (x + (i % 2 ? 0 : w)) + ' ' + (y0 + h*(i + 0.5)).toFixed(2) + ' '; return '<path d="M' + x + ' ' + y0 + ' ' + s + 'L' + x + ' ' + y1 + ' Z" fill="' + col + '"/>'; };
   var crimpH = function(y, x0, x1, h, col, n){ var s = '', w = (x1 - x0)/n; for (var i = 0; i <= n; i++) s += 'L' + (x0 + w*i).toFixed(2) + ' ' + (y + (i % 2 ? h : 0)) + ' '; return '<path d="M' + x0 + ' ' + (y + h/2) + ' ' + s + 'L' + x1 + ' ' + (y + h/2) + ' Z" fill="' + col + '"/>'; };
-  var stat = function(cx, cy, rx, ry, id){   /* a printed face: grey static, as the rule says */
-    var s = '<clipPath id="st' + id + '"><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '"/></clipPath><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" fill="#8a8680"/><g clip-path="url(#st' + id + ')">';
-    for (var i = 0; i < 26; i++) s += '<rect x="' + (cx - rx + rnd(i + id.length)*rx*2).toFixed(2) + '" y="' + (cy - ry + i*ry*2/26).toFixed(2) + '" width="' + (0.6 + rnd(i*3)*rx*0.6).toFixed(2) + '" height="' + (ry*0.05).toFixed(2) + '" fill="' + (i % 2 ? '#e8e6e2' : '#3a3836') + '"/>';
+  var stat = function(cx, cy, rx, ry, id){
+    /* (Nov 20, Aisling: "make the static less like a generic circle … more like a true distortion … like a glitched photo
+       … where the names stay clear but the face is more a glitch") a printed face as a broken photo: a soft photographic
+       face underneath, torn into bands that slip sideways, a warm red ghost (never cyan), a few smeared lines and blocks.
+       You can tell there was a face; you can't see who. It stays inside the face's own oval, so names round it stay clear. */
+    var k = id.length*7 + id.charCodeAt(0), r = function(n){ return rnd(n + k); };
+    var L = cx - rx, T = cy - ry, W = rx*2, H = ry*2;
+    var face = '<g id="gf' + id + '">' +
+      '<defs><radialGradient id="gs' + id + '" cx="0.45" cy="0.42" r="0.62"><stop offset="0" stop-color="#ecd2b6"/><stop offset="0.6" stop-color="#d6ae8e"/><stop offset="1" stop-color="#8a6450"/></radialGradient>' +
+      '<linearGradient id="gh' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a201c"/><stop offset="1" stop-color="#4a3428" stop-opacity="0"/></linearGradient></defs>' +
+      '<rect x="' + L + '" y="' + T + '" width="' + W + '" height="' + H + '" fill="#6a5a50"/>' +
+      '<ellipse cx="' + cx + '" cy="' + (cy + ry*0.08) + '" rx="' + (rx*0.78) + '" ry="' + (ry*0.9) + '" fill="url(#gs' + id + ')"/>' +
+      '<rect x="' + L + '" y="' + T + '" width="' + W + '" height="' + (H*0.42) + '" fill="url(#gh' + id + ')"/>' +
+      '<ellipse cx="' + (cx - rx*0.3) + '" cy="' + (cy - ry*0.05) + '" rx="' + (rx*0.13) + '" ry="' + (ry*0.06) + '" fill="#2a1e1a"/>' +
+      '<ellipse cx="' + (cx + rx*0.3) + '" cy="' + (cy - ry*0.05) + '" rx="' + (rx*0.13) + '" ry="' + (ry*0.06) + '" fill="#2a1e1a"/>' +
+      '<path d="M' + (cx - rx*0.05) + ' ' + (cy + ry*0.05) + ' L' + (cx - rx*0.1) + ' ' + (cy + ry*0.3) + ' L' + (cx + rx*0.06) + ' ' + (cy + ry*0.32) + '" stroke="#9a6e58" stroke-width="' + (rx*0.06) + '" fill="none"/>' +
+      '<path d="M' + (cx - rx*0.25) + ' ' + (cy + ry*0.5) + ' Q' + cx + ' ' + (cy + ry*0.58) + ' ' + (cx + rx*0.25) + ' ' + (cy + ry*0.5) + '" stroke="#8a4a40" stroke-width="' + (rx*0.08) + '" fill="none"/>' +
+      '</g>';
+    var s = '<defs><clipPath id="gc' + id + '"><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '"/></clipPath>' +
+      '<filter id="gr' + id + '" x="0" y="0" width="1" height="1"><feColorMatrix type="matrix" values="1 0 0 0 0.1  0 0.25 0 0 0  0 0 0.15 0 0  0 0 0 0.45 0"/></filter>' +
+      face + '</defs><g clip-path="url(#gc' + id + ')">';
+    /* the bands: uneven heights, each slipped sideways; a few slip far */
+    var y = T, n = 0;
+    while (y < T + H && n < 14) {
+      var bh = H*(0.04 + r(n*5 + 1)*0.13), far = r(n*7 + 2) > 0.72, dx = (r(n*3 + 3) - 0.5)*W*(far ? 0.7 : 0.16);
+      s += '<clipPath id="gb' + id + n + '"><rect x="' + (L - 1) + '" y="' + y.toFixed(2) + '" width="' + (W + 2) + '" height="' + (bh + 0.05).toFixed(2) + '"/></clipPath>' +
+        '<g clip-path="url(#gb' + id + n + ')"><use href="#gf' + id + '" transform="translate(' + dx.toFixed(2) + ' 0)"/>' +
+        (r(n*11 + 4) > 0.5 ? '<use href="#gf' + id + '" transform="translate(' + (dx + rx*0.14).toFixed(2) + ' 0)" filter="url(#gr' + id + ')"/>' : '') + '</g>';
+      y += bh; n++;
+    }
+    /* one line dragged out into a smear (a stuck scanline), and a few blocks where the picture broke into squares */
+    var sy = T + H*(0.3 + r(9)*0.4);
+    s += '<clipPath id="gm' + id + '"><rect x="' + L + '" y="' + sy.toFixed(2) + '" width="' + W + '" height="' + (H*0.08).toFixed(2) + '"/></clipPath>' +
+      '<g clip-path="url(#gm' + id + ')"><use href="#gf' + id + '" transform="translate(0 ' + sy.toFixed(2) + ') scale(1 9) translate(0 ' + (-sy).toFixed(2) + ')"/></g>';
+    var cols = ['#d6ae8e', '#8a6450', '#2a201c', '#ecd2b6', '#a8806a', '#6a5a50'];
+    for (var b = 0; b < 7; b++) { var bs = rx*(0.12 + r(b*13 + 5)*0.16); s += '<rect x="' + (L + r(b*17 + 6)*W).toFixed(2) + '" y="' + (T + r(b*19 + 7)*H).toFixed(2) + '" width="' + bs.toFixed(2) + '" height="' + (bs*0.7).toFixed(2) + '" fill="' + cols[Math.floor(r(b*23 + 8)*cols.length)] + '" opacity="0.85"/>'; }
+    /* two thin torn lines, pale and dark */
+    s += '<rect x="' + L + '" y="' + (T + H*(0.2 + r(31)*0.6)).toFixed(2) + '" width="' + W + '" height="' + (H*0.012).toFixed(2) + '" fill="#f2ece0" opacity="0.7"/>' +
+      '<rect x="' + L + '" y="' + (T + H*(0.2 + r(37)*0.6)).toFixed(2) + '" width="' + W + '" height="' + (H*0.016).toFixed(2) + '" fill="#1e1714" opacity="0.6"/>';
     return s + '</g>';
   };
   var A = {};
