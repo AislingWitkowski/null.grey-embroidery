@@ -650,3 +650,10 @@ Aisling: *"do you remekmber my portal? the one that is on the bottom of all page
 - **Added:** the stepping-disc portal (the master is Seam's `e-portal.js`), bottom right, the same size and place as in Seam. It shrinks on phones the way Seam's does, and steps aside while the pocket is open. Clicking it goes home (`/`). The code is `tools/portal.js`, a standalone copy of Seam's that also holds still for people who ask for reduced motion; `build.sh` puts it in the page.
 - **Rule added to every repo's CLAUDE.md:** the portal is the home button on every page, Seam's and Embroidery's alike, and it's never swapped for a plain icon.
 - `t/text.js`: no MUST FIX.
+
+### Nov 20 (noon) — her photos stay as they are; made things less dirty, hazier, a slight pixel
+- Aisling: "i want real like key but not dirty but haze? i dont like the blackness? but i like the realness and 3d ness...likke aas pholto real with pixel slightly?"
+- Aisling: "anything that is photo we can just keep the same because that IS real and i want those kept i like those as is but anything ccreated i want to match those?"
+- **Photos kept as they are.** A thing whose drawing holds a real photo or scan is left alone by the Embroidery look: no lighting, haze or pixel. Today that is `f_pit`, `f_coin100`, `f_coin100_b`, `f_key`, `f_key_b` (`egIsPhoto`, `EG_SEAM.look.photos()`). Any new photo or scan she adds is kept the same way, by itself.
+- **Made things:** much less grime, rust and creases; the dark side stays a soft grey instead of black; Missing Mile's haze, more in shadow; a very fine pixel (`egPix`).
+- **Honest gap:** next to her photos, the made things are cleaner but still read as drawn, not photographed. The most real way is the pit's way: her own photo or scan of the real object. The photos she sent on Nov 19–20 are of the real objects, so they could be used directly for those things. **For her to decide:** use her photos as the things' own pictures (cut out, like the pit)?
