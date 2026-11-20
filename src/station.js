@@ -9,6 +9,7 @@ import { ROOTS } from './roots.js';
 import { pathDist } from './station2.js';
 import * as THREE from 'three';
 import { stationKnob, stationLock, shedDoor, snackBox } from './eyes.js';
+import { realCanvas } from './real.js';
 import { wallDetails, awningDetails, binDetails, dreamPoster } from './details.js';
 import { K, kitInit, mat, sized, box, lathe, plane, wire, clumps, rnd, cyl, seamTex } from './kit.js';
 import { paint, vn, fbm, frac, clamp, sm, hsh, paintFacade, paintStucco, paintTin, paintBoards, paintFascia, paintIron, paintWood, paintPole, paintConcrete, paintStrip, paintFace, paintGrassAtlas, paintCornAtlas, paintNameBoard, paintHangSign, paintVendFront, paintLeafAtlas, paintFarTrees } from './paint.js';
@@ -375,7 +376,7 @@ export function buildStation(scene){
     const RR = rnd(712);
     const trio = (w, h, f) => { const mk = () => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }, C = mk(), Bm = mk(), Rg = mk();
       const g = C.getContext('2d'), b = Bm.getContext('2d'), r = Rg.getContext('2d'); b.fillStyle = '#808080'; b.fillRect(0, 0, w, h); r.fillStyle = '#5a5a5a'; r.fillRect(0, 0, w, h);
-      f(g, b, r, w, h); const T = c => { const t = new THREE.CanvasTexture(c); t.anisotropy = 8; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; };
+      f(g, b, r, w, h); realCanvas(C, { k:0.8 }); const T = c => {   /* (Nov 20: the phone's metal and face, the real pass) */ const t = new THREE.CanvasTexture(c); t.anisotropy = 8; t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; return t; };
       const t = T(C); t.colorSpace = THREE.SRGBColorSpace; return { map:t, bump:T(Bm), rough:T(Rg) }; };
     const brushed = (g, b, r, w, h, base, k = 1) => { g.fillStyle = base; g.fillRect(0, 0, w, h);
       for (let i = 0; i < 5200*k; i++) { const y = RR()*h, l = (0.04 + RR()*0.3)*w, x = RR()*w, a = 0.06 + RR()*0.1;   /* the brushing: thousands of fine strokes one way */

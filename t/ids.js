@@ -4,7 +4,7 @@ const { chromium } = require('playwright'); const path = require('path'); const 
 const ids = fs.readFileSync('t/things-ids.csv', 'utf8').split('\n').slice(1).map(l => l.split(',')[0].trim()).filter(Boolean);
 (async () => { const b = await chromium.launch({ args:['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport:{ width:640, height:360 } });
-  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed');
+  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed', { timeout:300000 });
   await p.waitForFunction(() => window.EG_SEAM && window.EG_SEAM.look, null, { timeout:180000 });
   const have = new Set(await p.evaluate(() => window.EG_SEAM.look.ids()));
   const lost = ids.filter(i => !have.has(i)), extra = [...have].filter(i => !ids.includes(i));

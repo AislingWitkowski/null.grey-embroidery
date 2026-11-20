@@ -14,6 +14,7 @@ import { UI, initUI, say, tickUI, ccSay, VOID_LINE } from './ui.js';
 import { soundSync, soundWake, soundTick, setSoundFiles } from './sound.js';
 import { SOUND_FILES } from './sound-files.js';
 import { K } from './kit.js';
+import { realCloseups } from './real.js';
 import { rootAll } from './roots.js';
 import { P, setWorld, initInput, stepPlayer, pressJump, toggleCrouch, simKeys, TAP } from './player.js';
 import { LOOKS } from './looks.js';
@@ -98,7 +99,7 @@ function start(){
   P.y = 0;
   const byTrain = trainArrive();   /* (a ride from a Seam page ended here: you're beside the train) */
   initInput(cv);
-  initUI(); setSoundFiles(SOUND_FILES);
+  initUI(); realCloseups(); setSoundFiles(SOUND_FILES);
   /* Seam's pocket (milestone 2): its captions are ours, its sounds follow our switch, its sounds get CC */
   const SEAM = window.EG_SEAM || null;
   if (SEAM) { SEAM.say = (t, ms) => say(t, ms || 4200); SEAM.cc = (k, t) => ccSay(k, t, 3000); }

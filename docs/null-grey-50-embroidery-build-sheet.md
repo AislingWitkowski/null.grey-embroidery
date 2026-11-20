@@ -626,3 +626,15 @@ Aisling: *"ok please do a huge job now anytihng that can improve project in any 
 - **Gooch's windmill, after her windmill photo:** a big riveted, rusted tank now sits inside the tower about a third of the way up, on its own beams (it was a small drum high up); the wheel is in the round (eighteen curved galvanised blades, two rings, spokes, the hub and gearbox), still; the vane is a weathered bent sheet with GOOCH stencilled and half worn off, rust running from its rivets. Seen from the clearing the wheel is side-on: it faces the station.
 - **Still from her photos, for later:** the gothic magazine, ばらの肌's foil packet, the foam cones, the corn sticks, the drop tin; the kiosk, fridge, pegboard and film vending machine in 3D when a kiosk is built.
 - **Seam's own drawings** still have the old pictures (her rule: Seam is the pixel world). If she'd like any of these looks carried back into Seam's pixels too (Mozart's face especially), that's a small job.
+
+### Nov 20 (night, later) — real and hazy, not cartoon: a realism pass on everything
+Aisling: *"I think the 3d things are too cartoon and stark in style now in embroidery … they need to be more Konami or horror game or like sh3 more the style we have here … the same object design but not seam looks? A little less cartoon and outlined more real hazy missing mile"*, then *"Also close ups of so machine and mailbox and signs and newspaper and phone need same treatment and the train"*.
+- **The rule from now on:** in Embroidery, drawn things never look like clean vector art. Same designs and words, but real worn objects in the fog.
+- **One realism pass, used everywhere** (`src/real.js`'s `realCanvas`; the pocket's `egReal` in `seam/shim-post.js`):
+  - the drawing's hard edges softened (a soft copy mixed in, so words still read), no dark outlines;
+  - colour muted, blacks lifted, highlights pulled down, a little warm (old film);
+  - a little of Missing Mile's fog over everything;
+  - wear: soft grime gathering in patches, fine creases, worn edges, scuffs, grain.
+- **Where:** every thing in the pocket (all 317); the pictures in the world (the mailbox, the mileage signs, the newspaper on the bench, the drinks machine's front and sides, the posters, the dumpster, the crossbuck, the pole tags, the windmill's vane); the payphone's metal and face; the train (its steel, ribs, stripe, doors, cab; repeating textures get only the grade and grain, so no seams show). The ride's line map is left sharp, because it's read.
+- **The close-ups** (newspaper, clippings, missing poster, the drinks machine): Seam's drawings, shown smooth (not pixels), muted and hazed, with grime and grain laid inside each picture so it stops at the paper's edge.
+- **Cost:** about 1.8 s more loading on the test machine (no graphics card); far less on her Mac.

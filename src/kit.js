@@ -5,6 +5,7 @@
    ================================================================ */
 import * as THREE from 'three';
 import { hsh } from './paint.js';
+import { realCanvas } from './real.js';
 
 export const K = { scene:null, solids:[], wind:{ uTime:{ value:0 }, uGust:{ value:0 }, uYou:{ value:new THREE.Vector3(0, -99, 0) } }, statics:[] };
 export function kitInit(scene){ K.scene = scene; K.solids = []; }
@@ -117,7 +118,7 @@ export function seamTex(name, ppu, fallback){
   if (fallback) { const g = cv.getContext('2d'); g.fillStyle = fallback; g.fillRect(0, 0, 4, 4); }
   if (!P) return t;
   const k = Math.min(1, 2048/Math.max(P.w*(ppu || 400), P.h*(ppu || 400))), W = Math.max(8, Math.round(P.w*(ppu || 400)*k)), H = Math.max(8, Math.round(P.h*(ppu || 400)*k)), img = new Image();   /* (ppu: pixels per metre of the thing) */
-  img.onload = () => { const c2 = document.createElement('canvas'); c2.width = W; c2.height = H; c2.getContext('2d').drawImage(img, 0, 0, W, H); t.dispose(); t.image = c2; t.needsUpdate = true; };   /* (a new size: the old one is let go first) */
+  img.onload = () => { const c2 = document.createElement('canvas'); c2.width = W; c2.height = H; c2.getContext('2d').drawImage(img, 0, 0, W, H); realCanvas(c2, { k:0.9 }); t.dispose();   /* (Nov 20: the real pass: mailbox, signs, newspaper, the machine, posters) */ t.image = c2; t.needsUpdate = true; };   /* (a new size: the old one is let go first) */
   try { img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + P.vbw + ' ' + P.vbh + '" width="' + W + '" height="' + H + '">' + P.svg() + '</svg>'); } catch (e) {}
   return t;
 }

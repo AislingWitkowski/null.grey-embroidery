@@ -23,6 +23,7 @@ import { inkRGB } from './inks.js';
 import { F3_SAYS, F3_WALL } from './f03-says.js';
 import { ROOTS } from './roots.js';
 import { signPost, signBolts, ageBoard, dustyGlass } from './details.js';
+import { realCanvas } from './real.js';
 
 /* Seam's deep reds (hblood, from null.grey-furusatostation's RAMP_SRC) for the leaves only: Embroidery's ink grade keeps its own ramps */
 const HBLOOD = ['#120202','#220404','#340606','#470909','#5b0b0b','#700e0d','#851211','#9a1715','#ae1f1a','#c22b22','#d4463a','#e47466'];
@@ -62,6 +63,7 @@ function meshOf(geos, m, o = {}){
 }
 function cvTex(w, h, draw, clampEdge = true){
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h; draw(cv.getContext('2d'), w, h);
+  if (clampEdge) realCanvas(cv, { k:0.85 });   /* (Nov 20: signs, boards, the vane, tags: the real pass) */
   const t = tex(cv, { clampEdge }); return t;
 }
 /* a Seam picture as a material covering one face exactly (not tiled) */

@@ -26,6 +26,7 @@
    The ride's line map, its words and where each stop goes are Seam's own, through the bridge (EG_SEAM.ride).
    ================================================================ */
 import * as THREE from 'three';
+import { realCanvas } from './real.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { K } from './kit.js';
 import { tex, vn, clamp, sm } from './paint.js';
@@ -49,7 +50,7 @@ const carX0 = k => TR.front - TR.L - k*(TR.L + TR.G);
 export const trainRear = () => carX0(TR.N - 1);
 
 /* ---------------- pictures, painted in code ---------------- */
-function cv(w, h, draw){ const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return c; }
+function cv(w, h, draw, o){ const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); return realCanvas(c, o || { tile:true, k:0.85 }); }   /* (Nov 20: the real pass, Aisling: "and the train") */
 function steel(){   /* (Nov 18, late; Aisling: "push the train too") real stainless: one panel per metre, its welded seam
      and a row of rivet heads down it, fine brushing along the car, faint ripples where the sheet was pulled tight, rain
      streaks running down and grime gathering low, a few scrapes. (one tile is one metre of car, true size) */
@@ -92,7 +93,7 @@ function doorPic(){   /* a door leaf: steel, its tall window, the stripe carried
     c.fillStyle = '#c9a067'; c.fillRect(0, y(0.92), w, y(0.8) - y(0.92)); c.fillStyle = '#9a3826'; c.fillRect(0, y(0.79), w, y(0.76) - y(0.79));
     c.fillStyle = '#1d1714'; c.beginPath(); c.roundRect(14, y(1.78), w - 28, y(1.0) - y(1.78), 8); c.fill();
     c.fillStyle = 'rgba(255,240,220,0.08)'; c.fillRect(16, y(1.76), 10, y(1.02) - y(1.76));
-    c.strokeStyle = '#6e675e'; c.lineWidth = 3; c.strokeRect(1, 1, w - 2, h - 2); }), { clampEdge:true });
+    c.strokeStyle = '#6e675e'; c.lineWidth = 3; c.strokeRect(1, 1, w - 2, h - 2); }, { k:0.85 }), { clampEdge:true });
 }
 function cabPic(tail){   /* the flat cab face: the black mask round the windscreen, the amber board, the vermilion band, the crest, the lamps' band */
   return tex(cv(360, 520, (c, w, h) => { const y = v => h*(1 - (v - TR.BOT)/(TR.TOP - TR.BOT));
@@ -116,7 +117,7 @@ function cabPic(tail){   /* the flat cab face: the black mask round the windscre
     c.fillStyle = '#2a211c'; c.beginPath(); c.arc(w/2, y(0.48), 21, 0, Math.PI*2); c.fill();   /* (Nov 18, the text check: a dark roundel under the crest, so the gold ふ reads on the cab face) */
     c.strokeStyle = '#c9a067'; c.lineWidth = 5; c.beginPath(); c.arc(w/2, y(0.48), 22, 0, Math.PI*2); c.stroke(); c.fillStyle = '#c9a067'; c.font = '800 26px "Hiragino Sans","Noto Sans CJK JP",sans-serif'; c.fillText('ふ', w/2, y(0.48) + 2);
     c.fillStyle = '#1a1512'; c.fillRect(30, y(0.56), 80, y(0.36) - y(0.56)); c.fillRect(w - 110, y(0.56), 80, y(0.36) - y(0.56));   /* the lamps' band */
-    c.fillStyle = 'rgba(40,30,24,0.4)'; c.fillRect(0, y(0.05), w, h - y(0.05)); }), { clampEdge:true });
+    c.fillStyle = 'rgba(40,30,24,0.4)'; c.fillRect(0, y(0.05), w, h - y(0.05)); }, { k:0.85 }), { clampEdge:true });
 }
 function mapPic(){
   const R = window.EG_SEAM && EG_SEAM.ride, c = document.createElement('canvas'); c.width = 1400; c.height = 380; const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
