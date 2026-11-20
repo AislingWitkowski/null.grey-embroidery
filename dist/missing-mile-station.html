@@ -2948,16 +2948,36 @@ function surfHoned(v, fx, fy, h2, wx, wy, k){
 
 ;
 /* ---- copied from null.grey-furusatostation/src/shared/furu-shop.js ---- */
-/* (Oct 30, Aisling: "all faces on magazines and such should just be blank or static") a face is TV static: the head's
-   shape stays, where the face was there is snow and scanlines, nobody's features */
+/* (Oct 30, Aisling: "all faces on magazines and such should just be blank or static") a printed face, made unreadable.
+   (Nov 20, Aisling: "make the static less like a generic circle … more like a glitched photo … where the names stay clear
+   but the face is more a glitch", and for Seam: "obviously it will be more simple in seam") now a broken photo: a plain
+   face underneath, cut into a few bands that slip sideways, a warm red ghost on one (never cyan), a smeared line and a
+   few broken blocks. You can tell there was a face, not whose. It stays inside the face's oval, so words round it stay clear. */
 var FU_STATIC_N = 0;
 function fuStatic(cx, cy, rx, ry){
-  var id = 'fst' + (FU_STATIC_N++), s = '<defs><clipPath id="' + id + '"><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '"/></clipPath></defs><g clip-path="url(#' + id + ')"><rect x="' + (cx - rx) + '" y="' + (cy - ry) + '" width="' + (rx*2) + '" height="' + (ry*2) + '" fill="#9e9a94"/>';
-  var n = Math.round(rx*ry*1.6), g = Math.max(0.35, rx/9);
-  for (var i = 0; i < n; i++) { var u = ((i*0.618034) % 1), v = ((i*0.414214 + (i % 7)*0.13) % 1), c = ['#e8e4dc', '#5d5a54', '#c7c3ba', '#3a3632'][i % 4];
-    s += '<rect x="' + (cx - rx + u*rx*2).toFixed(2) + '" y="' + (cy - ry + v*ry*2).toFixed(2) + '" width="' + (g*(1 + (i % 3))).toFixed(2) + '" height="' + (g*0.7).toFixed(2) + '" fill="' + c + '"/>'; }
-  for (var y = cy - ry; y < cy + ry; y += g*2.2) s += '<rect x="' + (cx - rx) + '" y="' + y.toFixed(2) + '" width="' + (rx*2) + '" height="' + (g*0.5).toFixed(2) + '" fill="#2a2628" opacity="0.25"/>';
-  return s + '</g><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" fill="none" stroke="#5d5a54" stroke-width="' + (g*0.5).toFixed(2) + '" opacity="0.6"/>';
+  var n0 = FU_STATIC_N++, id = 'fst' + n0, r = function(n){ var x = Math.sin((n + n0*31 + 7)*12.9898)*43758.5453; return x - Math.floor(x); };
+  var L = cx - rx, T = cy - ry, W = rx*2, H = ry*2;
+  var face = '<g id="' + id + 'f"><rect x="' + L + '" y="' + T + '" width="' + W + '" height="' + H + '" fill="#6a5a50"/>' +
+    '<ellipse cx="' + cx + '" cy="' + (cy + ry*0.08) + '" rx="' + (rx*0.8) + '" ry="' + (ry*0.9) + '" fill="#d6ae8e"/>' +
+    '<ellipse cx="' + (cx - rx*0.15) + '" cy="' + (cy - ry*0.1) + '" rx="' + (rx*0.4) + '" ry="' + (ry*0.4) + '" fill="#ecd2b6"/>' +
+    '<rect x="' + L + '" y="' + T + '" width="' + W + '" height="' + (H*0.26) + '" fill="#2a201c"/>' +
+    '<rect x="' + (cx - rx*0.42) + '" y="' + (cy - ry*0.1) + '" width="' + (rx*0.24) + '" height="' + (ry*0.12) + '" fill="#2a1e1a"/>' +
+    '<rect x="' + (cx + rx*0.18) + '" y="' + (cy - ry*0.1) + '" width="' + (rx*0.24) + '" height="' + (ry*0.12) + '" fill="#2a1e1a"/>' +
+    '<rect x="' + (cx - rx*0.25) + '" y="' + (cy + ry*0.46) + '" width="' + (rx*0.5) + '" height="' + (ry*0.1) + '" fill="#8a4a40"/></g>';
+  var s = '<defs><clipPath id="' + id + '"><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '"/></clipPath>' + face + '</defs><g clip-path="url(#' + id + ')">';
+  var y = T, k = 0;
+  while (y < T + H && k < 7) {
+    var bh = H*(0.1 + r(k*5)*0.16), dx = (r(k*3 + 1) - 0.5)*W*(r(k*7 + 2) > 0.7 ? 0.6 : 0.2);
+    s += '<clipPath id="' + id + 'b' + k + '"><rect x="' + (L - 1) + '" y="' + y.toFixed(2) + '" width="' + (W + 2) + '" height="' + (bh + 0.05).toFixed(2) + '"/></clipPath>' +
+      '<g clip-path="url(#' + id + 'b' + k + ')"><use href="#' + id + 'f" transform="translate(' + dx.toFixed(2) + ' 0)"/>' +
+      (k === 2 ? '<rect x="' + L + '" y="' + y.toFixed(2) + '" width="' + W + '" height="' + bh.toFixed(2) + '" fill="#c8402e" opacity="0.35" transform="translate(' + (rx*0.2).toFixed(2) + ' 0)"/>' : '') + '</g>';
+    y += bh; k++;
+  }
+  var sy = T + H*(0.35 + r(9)*0.3);
+  s += '<rect x="' + L + '" y="' + sy.toFixed(2) + '" width="' + W + '" height="' + (H*0.1).toFixed(2) + '" fill="#b8907a" opacity="0.8"/>';
+  var cols = ['#d6ae8e', '#2a201c', '#ecd2b6', '#8a6450'];
+  for (var b = 0; b < 3; b++) { var bs = rx*(0.22 + r(b*13 + 5)*0.16); s += '<rect x="' + (L + r(b*17 + 6)*(W - bs)).toFixed(2) + '" y="' + (T + r(b*19 + 7)*(H - bs)).toFixed(2) + '" width="' + bs.toFixed(2) + '" height="' + (bs*0.7).toFixed(2) + '" fill="' + cols[b % 4] + '"/>'; }
+  return s + '</g>';
 }
 /* ================================================================
    THE KIOSK, FILLED (Oct 28). shared: both pages (so everything bought on Furusato is still in your pocket upstairs).
