@@ -6251,6 +6251,200 @@ var EG_ART = { f_clover:EG_CLOVER, f_clover_b:function(){ return '<g transform="
   };
   for (var k in A) EG_ART[k] = A[k];
 })();
+/* ---- (Nov 20, night: Aisling asleep, "anything that can improve project") the rest of her item photos, in Embroidery's
+   look. Same rules: ids and every word kept; names one step off where still sold; blue shifted off; printed faces static. ---- */
+(function(){
+  var J = 'Hiragino Sans,Noto Sans JP,Yu Gothic,sans-serif', E = 'Helvetica Neue,Arial,sans-serif', SER = 'Georgia,Times New Roman,serif', BLK = 'Arial Black,Helvetica Neue,Arial,sans-serif', RND = 'Arial Rounded MT Bold,Hiragino Maru Gothic ProN,sans-serif';
+  var tx = function(t, x, y, sz, fill, o){ o = o || {}; return '<text x="' + x + '" y="' + y + '" text-anchor="' + (o.a || 'middle') + '" font-family="' + (o.f || J) + '" font-weight="' + (o.w || 800) + '" font-size="' + sz + '" fill="' + fill + '"' + (o.st ? ' stroke="' + o.st + '" stroke-width="' + (o.sw || sz*0.18) + '" paint-order="stroke" stroke-linejoin="round"' : '') + (o.tf ? ' transform="' + o.tf + '"' : '') + (o.it ? ' font-style="italic"' : '') + '>' + t + '</text>'; };
+  var rnd = function(n){ var x = Math.sin(n*12.9898)*43758.5453; return x - Math.floor(x); };
+  var sh = function(id, x, y, w, h, k){ return '<defs><linearGradient id="sh' + id + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.35" stop-color="#fff" stop-opacity="' + (k || 0.35) + '"/><stop offset="0.45" stop-color="#fff" stop-opacity="0"/><stop offset="0.7" stop-color="#fff" stop-opacity="' + ((k || 0.35)*0.4) + '"/><stop offset="0.78" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="url(#sh' + id + ')"/>'; };
+  var dots = function(x, y, w, h, st, r, col, op){ var s = ''; for (var j = 0; j*st < h; j++) for (var i = 0; i*st < w; i++) s += '<circle cx="' + (x + i*st + (j % 2 ? st/2 : 0)).toFixed(2) + '" cy="' + (y + j*st).toFixed(2) + '" r="' + r + '"/>'; return '<g fill="' + col + '" opacity="' + (op || 0.25) + '">' + s + '</g>'; };
+  var crimpV = function(x, y0, y1, w, col, n){ var s = '', h = (y1 - y0)/n; for (var i = 0; i < n; i++) s += 'L' + (x + (i % 2 ? 0 : w)) + ' ' + (y0 + h*(i + 0.5)).toFixed(2) + ' '; return '<path d="M' + x + ' ' + y0 + ' ' + s + 'L' + x + ' ' + y1 + ' Z" fill="' + col + '"/>'; };
+  var crimpH = function(y, x0, x1, h, col, n){ var s = '', w = (x1 - x0)/n; for (var i = 0; i <= n; i++) s += 'L' + (x0 + w*i).toFixed(2) + ' ' + (y + (i % 2 ? h : 0)) + ' '; return '<path d="M' + x0 + ' ' + (y + h/2) + ' ' + s + 'L' + x1 + ' ' + (y + h/2) + ' Z" fill="' + col + '"/>'; };
+  var stat = function(cx, cy, rx, ry, id){   /* a printed face: grey static, as the rule says */
+    var s = '<clipPath id="st' + id + '"><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '"/></clipPath><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" fill="#8a8680"/><g clip-path="url(#st' + id + ')">';
+    for (var i = 0; i < 26; i++) s += '<rect x="' + (cx - rx + rnd(i + id.length)*rx*2).toFixed(2) + '" y="' + (cy - ry + i*ry*2/26).toFixed(2) + '" width="' + (0.6 + rnd(i*3)*rx*0.6).toFixed(2) + '" height="' + (ry*0.05).toFixed(2) + '" fill="' + (i % 2 ? '#e8e6e2' : '#3a3836') + '"/>';
+    return s + '</g>';
+  };
+  var A = {};
+  /* ---- cans, 32 × 56: a real cylinder (dark at both edges, a highlight a quarter in), the printed sleeve, the top ---- */
+  var can = function(id, body, art){
+    return '<defs><linearGradient id="cy' + id + '" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0.45"/><stop offset="0.18" stop-color="#fff" stop-opacity="0.32"/><stop offset="0.3" stop-color="#fff" stop-opacity="0.05"/><stop offset="0.75" stop-color="#000" stop-opacity="0.08"/><stop offset="1" stop-color="#000" stop-opacity="0.5"/></linearGradient><clipPath id="cc' + id + '"><rect x="3" y="6" width="26" height="45"/></clipPath></defs>' +
+      '<rect x="3" y="6" width="26" height="45" fill="' + body + '"/><g clip-path="url(#cc' + id + ')">' + art + '</g>' +
+      '<path d="M3 51 L29 51 L28 54 Q16 56 4 54 Z" fill="#a9a8a5"/><path d="M3 51.6 L29 51.6" stroke="#fff" stroke-opacity="0.5" stroke-width="0.4"/><rect x="3" y="6" width="26" height="45" fill="url(#cy' + id + ')"/>' + EG_CANTOP(3, 29, 6);
+  };
+  A.f_mm_lemon = function(){   /* silver, a yellow swirl rising through it in halftone dots, a lemon slice */
+    var a = '<path d="M3 46 C10 40 8 28 18 22 C24 18 26 12 29 6 L29 18 C24 24 22 30 14 36 C10 40 8 46 6 51 L3 51 Z" fill="#f0d84a"/><path d="M6 51 C9 44 12 38 18 33 C24 28 26 24 29 20 L29 26 C26 30 22 34 18 38 C14 42 12 46 11 51 Z" fill="#f2f0ea" opacity="0.8"/>' + dots(3, 8, 26, 42, 1.4, 0.32, '#f2f0ea', 0.45);
+    a += '<g transform="translate(22 40)"><path d="M-6 0 A6 6 0 0 1 6 0 Z" fill="#f0c83a"/><path d="M-5 0 A5 5 0 0 1 5 0 Z" fill="#f8ec9a"/>'; for (var i = 1; i < 6; i++) { var t = Math.PI*i/6; a += '<path d="M0 0 L' + (-Math.cos(t)*4.8).toFixed(2) + ' ' + (-Math.sin(t)*4.8).toFixed(2) + '" stroke="#e8c840" stroke-width="0.4"/>'; } a += '</g>';
+    a += tx('LEMON', 16, 17.4, 5.4, '#c8202a', { f:BLK, w:900, st:'#1e1714', sw:0.5, tf:'rotate(-8 16 17)' }) + tx('COLA', 15, 24, 5.4, '#c8202a', { f:BLK, w:900, st:'#1e1714', sw:0.5, tf:'rotate(-8 15 24)' }) + tx('レモンコーラ', 16, 48.4, 2.6, '#1e1714', { w:900 });
+    return can('ml', '#c4c2bd', a);
+  };
+  A.f_mm_cherry = function(){   /* deep red, an oval badge with the name, the fizz drawn as frost */
+    var a = ''; for (var i = 0; i < 30; i++) a += '<circle cx="' + (4 + rnd(i)*24).toFixed(1) + '" cy="' + (8 + rnd(i + 30)*42).toFixed(1) + '" r="' + (0.3 + rnd(i + 60)*0.5).toFixed(2) + '" fill="#f6c8d0" opacity="0.5"/>';
+    a += '<path d="M3 22 Q8 16 16 18 Q24 20 29 15 L29 38 Q22 42 16 40 Q8 38 3 42 Z" fill="#8a0e22" opacity="0.6"/>';
+    a += '<ellipse cx="16" cy="29" rx="12" ry="7.4" fill="#c8202a" stroke="#f2ece0" stroke-width="0.7"/><ellipse cx="16" cy="29" rx="10.6" ry="6.2" fill="none" stroke="#f2ece0" stroke-width="0.25"/>';
+    a += tx('Cherry', 16, 28.6, 5.2, '#f2ece0', { f:SER, w:700, it:true }) + tx('CHEER', 16, 33, 2.8, '#f2ece0', { f:E, w:900 }) + tx('since forever', 16, 46.6, 2.2, '#f2ece0', { f:E, w:700 });
+    a += '<circle cx="11" cy="15" r="2.2" fill="#9a1424"/><circle cx="14" cy="16" r="2.2" fill="#b8243a"/><path d="M11 13 Q13 9 16 9 M14 14 Q15 10 16 9" stroke="#5e7a3e" stroke-width="0.5" fill="none"/>';
+    return can('mh', '#b0182c', a);
+  };
+  A.f_mm_uviolet = function(){   /* deep plum, a dark lightning-streak of violet, the name stacked hard and slanted (never blue) */
+    var a = '<path d="M3 6 L29 6 L29 51 L3 51 Z" fill="#4a2a44"/><path d="M8 6 L20 6 L12 26 L22 26 L6 51 L10 30 L2 30 Z" fill="#7a3a6e" opacity="0.8"/><path d="M10 6 L17 6 L11 24 L19 24 L8 46 L11 28 L5 28 Z" fill="#a85a90" opacity="0.6"/>';
+    for (var i = 0; i < 14; i++) a += '<path d="M' + (4 + rnd(i)*24).toFixed(1) + ' ' + (8 + rnd(i + 9)*40).toFixed(1) + ' l0.5 1 l1 0.1 l-0.8 0.6 l0.3 1 l-1 -0.6 l-1 0.6 l0.3 -1 l-0.8 -0.6 l1 -0.1 Z" fill="#f2e6f0" opacity="0.7"/>';
+    a += tx('ULTRA', 18, 30, 4.8, '#f2e6f0', { f:BLK, w:900, st:'#2a1428', sw:0.6, tf:'rotate(-14 18 30)' }) + tx('VIOLET', 18, 36, 4.4, '#e8a0d0', { f:BLK, w:900, st:'#2a1428', sw:0.6, tf:'rotate(-14 18 36)' }) + tx('flavour: ?', 16, 47.4, 2.4, '#f2e6f0', { f:E, w:800 });
+    return can('mu', '#4a2a44', a);
+  };
+  A.f_chiefcoffee = function(){   /* a short dark coffee can: the badge, a man in it (our own, static as printed faces are), the name big */
+    var a = '<rect x="3" y="6" width="26" height="45" fill="#3a2a22"/><circle cx="16" cy="22" r="8.4" fill="#f2ece0"/><circle cx="16" cy="22" r="7.4" fill="#3a2a22"/>' + stat(16, 21, 3.6, 4.2, 'cfc') + '<path d="M9.4 28 Q16 23 22.6 28 L22.6 29.4 L9.4 29.4 Z" fill="#1e1714"/><path d="M15.2 25 L16 28 L16.8 25 Z" fill="#c8402e"/>';
+    a += tx('係長', 16, 39.4, 7, '#f2ece0', { w:900 }) + '<rect x="5" y="41.6" width="22" height="3.2" fill="#c9a067"/>' + tx('section chief', 16, 43.9, 2.2, '#1e1714', { f:SER, w:700 }) + tx('MILK COFFEE', 16, 48.4, 2.2, '#f2ece0', { f:E, w:900 });
+    return can('cf', '#3a2a22', a);
+  };
+  A.f_chuhai_berry = function(){   /* a tall winter cocktail can: a glass of berries on ice, snowflakes, the gold ribbon */
+    var s = '<defs><linearGradient id="cyb" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0.45"/><stop offset="0.18" stop-color="#fff" stop-opacity="0.3"/><stop offset="0.3" stop-color="#fff" stop-opacity="0.04"/><stop offset="1" stop-color="#000" stop-opacity="0.5"/></linearGradient></defs>';
+    s += '<rect x="4" y="5.4" width="22" height="51" fill="#7a2048"/><path d="M4 5.4 L13 5.4 L4 16 Z" fill="#c9a067"/>';
+    for (var i = 0; i < 10; i++) { var x = 6 + rnd(i)*18, y = 9 + rnd(i + 5)*40, r = 0.8 + rnd(i + 9)*0.8; s += '<path d="M' + (x - r) + ' ' + y + ' L' + (x + r) + ' ' + y + ' M' + x + ' ' + (y - r) + ' L' + x + ' ' + (y + r) + ' M' + (x - r*0.7) + ' ' + (y - r*0.7) + ' L' + (x + r*0.7) + ' ' + (y + r*0.7) + ' M' + (x - r*0.7) + ' ' + (y + r*0.7) + ' L' + (x + r*0.7) + ' ' + (y - r*0.7) + '" stroke="#f6d8e4" stroke-width="0.25" opacity="0.7"/>'; }
+    s += '<path d="M8 12 L22 12 L20.4 26 L9.6 26 Z" fill="#e8a0b8" opacity="0.6"/><rect x="10" y="13" width="4" height="4" fill="#f6f2f4" opacity="0.6"/><rect x="15" y="14" width="3.6" height="3.6" fill="#f6f2f4" opacity="0.5"/>';
+    [[11, 20, '#b8243a'], [14, 22, '#c8402e'], [17, 19, '#5a1a30'], [19.6, 13, '#c8202a']].forEach(function(b){ s += '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="1.6" fill="' + b[2] + '"/>'; });
+    s += '<path d="M5 30 Q15 26 25 30 L24.4 34.6 Q15 31 5.6 34.6 Z" fill="#c9a067"/>' + tx('COCKTAIL', 15, 33.2, 2.6, '#5a1a30', { f:SER, w:800 });
+    s += tx('ベリー', 15, 40.4, 4.4, '#f2ece0', { w:900, st:'#5a1a30', sw:0.4 }) + tx('berry chūhai · 3%', 15, 45, 2.1, '#f2ece0', { f:E, w:700 }) + '<circle cx="21" cy="51" r="3" fill="#f0c890"/>' + tx('お酒', 21, 52, 2.2, '#7a2048', { w:900 });
+    s += '<path d="M4 56.4 L26 56.4 L25 59 Q15 60 5 59 Z" fill="#a9a8a5"/><rect x="4" y="5.4" width="22" height="51" fill="url(#cyb)"/>' + EG_CANTOP(4, 26, 5.4);
+    return s;
+  };
+  /* ---- the little drink cartons, 32 × 60: a gable top with its seam, a side, halftone print, a striped straw ---- */
+  var carton = function(id, body, side, top, straw, art){
+    var s = '<rect x="20" y="0" width="2" height="12" fill="' + straw + '"/>'; for (var i = 0; i < 6; i++) s += '<rect x="20" y="' + (i*2) + '" width="2" height="0.9" fill="#f2f0ea" opacity="0.7"/>';
+    s += '<path d="M3 14 L15 6 L27 14 Z" fill="' + top + '"/><path d="M27 14 L15 6 L19 4.4 L30 12 Z" fill="' + top + '" opacity="0.7"/><path d="M3 14 L27 14" stroke="#000" stroke-opacity="0.25" stroke-width="0.4"/><path d="M14.4 6.4 L14.4 4 L15.6 4 L15.6 6.4" fill="' + top + '"/>';
+    s += '<path d="M27 14 L30 12 L30 56 L27 58 Z" fill="' + side + '"/>'; for (var k = 0; k < 8; k++) s += '<rect x="27.6" y="' + (18 + k*4.6) + '" width="1.8" height="2.4" fill="#f2f0ea" opacity="0.5" transform="skewY(-34)" transform-origin="28.5 ' + (19 + k*4.6) + '"/>';
+    s += '<clipPath id="ck' + id + '"><rect x="3" y="14" width="24" height="44"/></clipPath><rect x="3" y="14" width="24" height="44" fill="' + body + '"/><g clip-path="url(#ck' + id + ')">' + dots(3, 15, 24, 43, 1.2, 0.28, '#fff', 0.3) + art + '</g>';
+    return s + '<rect x="3" y="57" width="24" height="1" fill="#000" opacity="0.2"/>' + sh('ck' + id, 3, 14, 24, 44, 0.25);
+  };
+  var hair = function(x, y, col){ return '<path d="M' + (x - 6) + ' ' + (y + 6) + ' Q' + (x - 7.4) + ' ' + (y - 4) + ' ' + x + ' ' + (y - 6) + ' Q' + (x + 7.4) + ' ' + (y - 4) + ' ' + (x + 6) + ' ' + (y + 6) + ' Z" fill="' + col + '"/>'; };
+  A.f_carton_apple = function(){ return carton('ap', '#e86a5a', '#c8502e', '#f0a090', '#f0d84a', hair(13, 34, '#c8402e') + stat(13, 34, 4.2, 5, 'ap') + '<path d="M6 46 Q13 40 20 46 L20 52 L6 52 Z" fill="#f2ece0"/>' + [[22, 44], [25, 48], [21, 50]].map(function(p){ return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.2" fill="#86bb69"/>'; }).join('') + tx('Apple', 15, 22.6, 6, '#f2ece0', { f:RND, w:900, st:'#a8302a', sw:0.6 }) + tx('apple milk', 15, 55.4, 2.6, '#f2ece0', { f:E, w:800 })); };
+  A.f_carton_banana = function(){ return carton('bn', '#f2a6b8', '#d8889a', '#f6c0cc', '#f0d84a', '<path d="M6 28 Q15 36 25 26 Q24 31 15 33 Q8 33 6 28 Z" fill="#f6e2a0" stroke="#c9a067" stroke-width="0.4"/><circle cx="12" cy="31" r="0.4" fill="#8a6a3a"/><circle cx="18" cy="31" r="0.4" fill="#8a6a3a"/>' + '<rect x="7" y="37" width="16" height="15" fill="#f6e2c0"/>' + hair(15, 45, '#e8803e') + stat(15, 45, 3.6, 4.4, 'bn') + tx('南国バナナ', 15, 23, 4.6, '#c8402e', { w:900 }) + tx('banana milk', 15, 56, 2.6, '#a1465a', { f:E, w:800 })); };
+  A.f_carton_cherry = function(){ return carton('ch', '#e8a070', '#c8804e', '#86bb69', '#e05aa0', '<path d="M3 14 Q8 22 6 30 M27 14 Q22 24 25 30" stroke="#5e8a4a" stroke-width="1.6" fill="none"/>' + '<path d="M8 50 Q15 36 22 50 Z" fill="#c8402e"/><path d="M9 50 l2 -6 M12 50 l1 -8 M15 50 l0 -9 M18 50 l-1 -8 M21 50 l-2 -6" stroke="#f2ece0" stroke-width="0.5"/>' + '<path d="M9 34 Q9 26 15 25 Q21 26 21 34 L19 38 L11 38 Z" fill="#1e1714"/>' + stat(15, 34, 3.6, 4.4, 'ch') + '<circle cx="23" cy="40" r="1.4" fill="#c8202a"/><circle cx="24.6" cy="41" r="1.4" fill="#b8243a"/>' + tx('Rich Cherry', 15, 21.6, 4.2, '#f2ece0', { f:RND, w:900, st:'#7a3a2a', sw:0.5 }) + tx('cherry juice', 15, 56, 2.6, '#f2ece0', { f:E, w:800 })); };
+  A.f_carton_coffee = function(){ return carton('cf', '#6ea062', '#4e8042', '#86bb69', '#f0d84a', [[6, 22, 5], [22, 26, 4], [8, 50, 4], [24, 52, 5], [12, 40, 3]].map(function(p){ return '<ellipse cx="' + p[0] + '" cy="' + p[1] + '" rx="' + p[2] + '" ry="' + (p[2]*0.7) + '" fill="#c8402e"/><ellipse cx="' + (p[0] + 0.6) + '" cy="' + (p[1] - 0.4) + '" rx="' + (p[2]*0.5) + '" ry="' + (p[2]*0.3) + '" fill="#f2ece0"/>'; }).join('') + '<rect x="3" y="30" width="24" height="9" fill="#f2c8b0"/>' + stat(15, 34.4, 9, 3.6, 'cf') + '<rect x="9" y="33" width="4" height="2.4" rx="0.8" fill="none" stroke="#c8402e" stroke-width="0.4"/><rect x="17" y="33" width="4" height="2.4" rx="0.8" fill="none" stroke="#c8402e" stroke-width="0.4"/>' + tx('コーヒー牛乳', 15, 45, 3.2, '#c8402e', { w:900, st:'#f2ece0', sw:0.5 }) + tx('coffee milk', 15, 56, 2.6, '#f2ece0', { f:E, w:800 })); };
+  A.f_carton_momo = function(){ return carton('mm', '#9a5a7a', '#7a3a5a', '#c87aa0', '#e05aa0', '<path d="M15 44 C4 36 7 26 15 31 C23 26 26 36 15 44 Z" fill="#f2ece0"/>' + hair(15, 34, '#f0c8a8') + stat(15, 34, 3, 3.6, 'mm') + '<circle cx="21" cy="30" r="0.8" fill="#e05aa0"/><circle cx="15" cy="51" r="3.6" fill="#f0a890"/>' + [0, 1, 2].map(function(k){ return '<path d="M' + (12 + k*2) + ' 48 L' + (12 + k*2) + ' 54" stroke="#e8786a" stroke-width="0.3"/>'; }).join('') + '<rect x="4" y="15.6" width="22" height="3.4" fill="#1e1714"/>' + tx('momo milk', 15, 25.6, 4.6, '#f2ece0', { f:RND, w:900 }) + tx('100% momo', 15, 18.4, 2.2, '#f2ece0', { f:E, w:800 })); };
+  A.f_carton_melon = function(){ return carton('ml', '#f0d84a', '#d0b830', '#f6e890', '#c8402e', '<path d="M7 44 L15 24 L23 44 Z" fill="#e8504a"/><path d="M7 44 L23 44 L22 46 L8 46 Z" fill="#3e7a3a"/><path d="M7.6 43 L22.4 43" stroke="#a8d088" stroke-width="0.8"/>' + [[13, 36], [17, 36], [15, 31], [12, 40], [18, 40]].map(function(d){ return '<ellipse cx="' + d[0] + '" cy="' + d[1] + '" rx="0.5" ry="0.9" fill="#1e1714"/>'; }).join('') + '<path d="M4 50 L8 46 L12 50 L8 54 Z" fill="#f2ece0"/>' + '<path d="M6 20 l2 3 l3 -1 l-1 3 l3 2 l-3 1 l1 3 l-3 -1 l-2 3 l-1 -3 l-3 1 l1 -3 l-3 -2 l3 -1 l-1 -3 l3 1 Z" fill="#f2ece0" opacity="0.6"/>' + tx('water melon', 15, 22.4, 4.4, '#a1465a', { f:SER, w:900, it:true, st:'#f2ece0', sw:0.5 }) + tx('watermelon', 17, 56, 2.6, '#a1465a', { f:E, w:800 })); };
+  /* ---- bottles ---- */
+  var pet = function(id, liquid, cap, label, art){   /* a clear plastic bottle: ridges low down, the label wrapped round, a ribbed cap */
+    var s = '<path d="M11 4 L19 4 L19 12 Q26 16 26 24 L26 64 Q26 68 23 68 L7 68 Q4 68 4 64 L4 24 Q4 16 11 12 Z" fill="' + liquid + '" opacity="0.5"/><path d="M11 4 L19 4 L19 12 Q26 16 26 24 L26 64 Q26 68 23 68 L7 68 Q4 68 4 64 L4 24 Q4 16 11 12 Z" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="0.4"/>';
+    for (var r = 0; r < 3; r++) s += '<path d="M4.4 ' + (55 + r*4) + ' Q15 ' + (57 + r*4) + ' 25.6 ' + (55 + r*4) + '" stroke="#fff" stroke-opacity="0.35" stroke-width="0.5" fill="none"/>';
+    s += '<rect x="10.5" y="0" width="9" height="5" rx="1" fill="' + cap + '"/>'; for (var i = 0; i < 6; i++) s += '<rect x="' + (11 + i*1.5) + '" y="0.6" width="0.5" height="3.8" fill="#000" opacity="0.15"/>';
+    s += '<rect x="10.8" y="5" width="8.4" height="1.2" fill="' + cap + '" opacity="0.8"/><rect x="4" y="30" width="22" height="22" fill="' + label + '"/>' + art;
+    return s + '<path d="M7 18 L7 64" stroke="#fff" stroke-width="1.2" opacity="0.35"/>' + sh('pb' + id, 4, 12, 22, 56, 0.3);
+  };
+  A.f_peachwater = function(){ return pet('pw', '#f6ece4', '#f2f0ea', 'none', '<circle cx="15" cy="37" r="6.4" fill="#f4b8a4"/><circle cx="13" cy="35" r="3" fill="#f8d4c4" opacity="0.8"/><path d="M15 30.6 Q13.4 37 15 43.4" stroke="#e08878" stroke-width="0.5" fill="none"/><circle cx="19" cy="33" r="0.7" fill="#fff" opacity="0.8"/><circle cx="11" cy="40" r="0.5" fill="#fff" opacity="0.8"/>' + tx('もものみず', 15, 48.4, 3.6, '#1e1714', { w:900 }) + tx('peach water', 15, 52, 2.2, '#1e1714', { f:E, w:600 }) + tx('clear · 透明', 15, 61, 1.8, '#8a8076', { f:E, w:700 })); };
+  A.f_sighwater = function(){ return pet('sw', '#f0eee8', '#f2f0ea', '#e8e2d8', '<path d="M4 44 Q12 40 26 46 L26 52 L4 52 Z" fill="#f2f0ea"/>' + tx('はぁ…', 15, 35, 2.6, '#8a5a5a', { w:800 }) + tx('ためいき', 15, 41.6, 4.4, '#1e1714', { w:900 }) + tx('sigh water', 15, 48, 2.4, '#8a5a5a', { f:E, w:800 }) + tx('ion supply', 15, 51.4, 1.6, '#8a8076', { f:E, w:700 })); };
+  A.f_strawmilk = function(){ return carton('sm', '#f6c8d0', '#e0a0b0', '#f2b0c0', '#e05aa0', '<rect x="3" y="26" width="24" height="12" fill="#e05a7a"/>' + [[9, 46], [20, 47]].map(function(p){ return '<path d="M' + p[0] + ' ' + (p[1] - 3) + ' Q' + (p[0] + 3.4) + ' ' + (p[1] - 3) + ' ' + (p[0] + 2.4) + ' ' + p[1] + ' Q' + p[0] + ' ' + (p[1] + 4) + ' ' + (p[0] - 2.4) + ' ' + p[1] + ' Q' + (p[0] - 3.4) + ' ' + (p[1] - 3) + ' ' + p[0] + ' ' + (p[1] - 3) + ' Z" fill="#d8302a"/><path d="M' + (p[0] - 2) + ' ' + (p[1] - 3) + ' l2 -1.6 l2 1.6" fill="#5e8a4a"/>'; }).join('') + tx('いちごミルク', 15, 33.6, 3.6, '#f2f0ea', { w:900 }) + tx('strawberry milk', 15, 22, 2.6, '#c8406a', { f:E, w:800 }) + tx('200ml', 15, 56, 2, '#a1465a', { f:E, w:700 })); };
+  /* ---- sweets ---- */
+  A.f_kissbar = function(){   /* white with pink diagonal stripes, crimped ends, a strawberry, the name big */
+    var s = crimpV(0.5, 4, 20, 3.5, '#f6f2ee', 10) + '<path d="M59.5 4 ' + (function(){ var p = ''; for (var i = 0; i < 10; i++) p += 'L' + (i % 2 ? 59.5 : 56) + ' ' + (4 + 1.6*(i + 0.5)) + ' '; return p; })() + 'L59.5 20 Z" fill="#f6f2ee"/>';
+    s += '<clipPath id="ksc"><rect x="4" y="4" width="52" height="16"/></clipPath><rect x="4" y="4" width="52" height="16" fill="#f6f2ee"/><g clip-path="url(#ksc)">'; for (var i = 0; i < 18; i++) s += '<path d="M' + (i*4 - 6) + ' 24 L' + (i*4 + 4) + ' 0" stroke="#f0a0b8" stroke-width="1.2"/>'; s += '</g>';
+    s += '<rect x="4" y="15.6" width="52" height="4.4" fill="#e86a90"/>';
+    s += '<path d="M15 6.6 Q19.6 6.6 19 10.6 Q18 14.6 15 15 Q12 14.6 11 10.6 Q10.4 6.6 15 6.6 Z" fill="#e05a8a"/><path d="M12.4 6.8 l2.6 -2 l2.6 2" fill="#6e9a4a"/>'; for (var d = 0; d < 6; d++) s += '<circle cx="' + (12.6 + (d % 3)*2.4) + '" cy="' + (9 + Math.floor(d/3)*2.4) + '" r="0.35" fill="#fbe0ea"/>';
+    s += tx('KISS', 34, 14.4, 9, '#8a3a7a', { f:BLK, w:900, st:'#f6f2ee', sw:0.9, it:true }) + tx('strawberry', 46, 18.8, 2.2, '#f6f2ee', { f:E, w:800 });
+    return s + sh('ks', 4, 4, 52, 16, 0.45);
+  };
+  A.f_deircoin = function(){   /* gold foil coins in an orange net bag, gathered at the top under a little card */
+    var s = '';
+    [[12, 36], [22, 38], [30, 34], [16, 46], [26, 46], [20, 28], [11, 26], [29, 25]].forEach(function(p, i){ s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="6" fill="#c9a03a"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="5.2" fill="#e8c460"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="4.2" fill="none" stroke="#a8802a" stroke-width="0.4"/><path d="M' + (p[0] - 3) + ' ' + (p[1] - 2) + ' q2 -2 4 -1" stroke="#fff6c8" stroke-width="0.6" fill="none" opacity="0.8"/>' + (i < 3 ? tx('д', p[0], p[1] + 2, 5, '#8a6a20', { f:SER, w:900 }) : ''); });
+    s += '<path d="M20 12 Q4 18 4 36 Q4 52 20 53 Q36 52 36 36 Q36 18 20 12 Z" fill="none"/>'; for (var i = 0; i < 14; i++) s += '<path d="M' + (4 + i*2.4) + ' 52 Q' + (6 + i*1.4) + ' 30 20 13" stroke="#e8803e" stroke-width="0.35" fill="none"/><path d="M' + (36 - i*2.4) + ' 52 Q' + (34 - i*1.4) + ' 30 20 13" stroke="#e8803e" stroke-width="0.35" fill="none"/>';
+    s += '<rect x="17" y="10" width="6" height="4" rx="1" fill="#e8803e"/>';
+    s += '<path d="M10 1 L30 1 L30 9 L22 9 L20 11 L18 9 L10 9 Z" fill="#c8302a"/><circle cx="20" cy="3" r="0.8" fill="#2a2024"/>' + tx('デイル金貨', 20, 6.8, 3.2, '#f6e2a0', { w:900 }) + tx('deir coins', 20, 8.6, 1.5, '#f6e2a0', { f:E, w:700 });
+    s += '<rect x="9" y="49" width="22" height="4.4" rx="1" fill="#f2ece0" opacity="0.92"/>' + tx('milk choco', 15, 52.2, 1.8, '#7a4a2a', { f:E, w:700 }) + tx('6 coins', 26, 52.2, 1.8, '#7a4a2a', { f:E, w:700 });
+    return s;
+  };
+  A.f_ouchgum = function(){   /* a tall tin, its lid with a hinge, three stripes of flavour, bandage-spotted gum inside the labels */
+    var s = '<rect x="4" y="6" width="24" height="32" rx="2" fill="#c8c4bc"/><rect x="4" y="2" width="24" height="6" rx="1.6" fill="#e8c0d0"/><rect x="4" y="6.6" width="24" height="1" fill="#000" opacity="0.2"/><rect x="12" y="2" width="8" height="6" fill="#f0d84a" opacity="0.6"/>';
+    [['#a86a9a', 5], ['#86bb69', 13], ['#f0b83a', 21]].forEach(function(c){ s += '<rect x="' + c[1] + '" y="15" width="6.4" height="21" rx="1" fill="' + c[0] + '"/>'; for (var k = 0; k < 6; k++) s += '<circle cx="' + (c[1] + 2 + (k % 2)*2.4) + '" cy="' + (19 + Math.floor(k/2)*5) + '" r="0.7" fill="#f2f0ea"/>'; });
+    s += tx('OUCHIE!', 16, 13.6, 5.4, '#f0d84a', { f:BLK, w:900, st:'#a1465a', sw:0.7 });
+    return s + sh('og', 4, 2, 24, 36, 0.4);
+  };
+  A.f_stripegum = function(){   /* a magenta box, diagonal stripes of every flavour, five sticks laid in front */
+    var s = '<rect x="4" y="2" width="36" height="13" fill="#c83a8a"/><clipPath id="sgc"><rect x="4" y="2" width="36" height="13"/></clipPath><g clip-path="url(#sgc)">'; ['#f0d84a', '#e8603e', '#f0a0b8', '#f2f0ea', '#a86a9a'].forEach(function(c, i){ s += '<path d="M' + (4 + i*8) + ' 15 L' + (12 + i*8) + ' 2 L' + (14 + i*8) + ' 2 L' + (6 + i*8) + ' 15 Z" fill="' + c + '" opacity="0.75"/>'; }); s += '</g>';
+    s += '<rect x="9" y="5.4" width="26" height="6" fill="#f6f2ee"/>' + tx('STRIPE GUM', 22, 10, 4, '#c8302a', { f:BLK, w:900 });
+    ['#a86a9a', '#e8803e', '#f0a0b8', '#f0d84a', '#f6c8a8'].forEach(function(c, i){ var x = 5 + i*7; s += '<rect x="' + x + '" y="17" width="5.6" height="12" fill="#f6f2ee"/><clipPath id="sk' + i + '"><rect x="' + x + '" y="17" width="5.6" height="12"/></clipPath><g clip-path="url(#sk' + i + ')">'; for (var k = 0; k < 6; k++) s += '<path d="M' + (x - 2) + ' ' + (19 + k*2.4) + ' Q' + (x + 3) + ' ' + (17 + k*2.4) + ' ' + (x + 8) + ' ' + (15 + k*2.4) + '" stroke="' + c + '" stroke-width="1.1" fill="none"/>'; s += '</g>'; });
+    return s + sh('sg', 4, 2, 36, 13, 0.35);
+  };
+  A.f_bubblycola = function(){   /* a soft white gum pack: the name in fat red letters, pink bubbles rising */
+    var s = '<rect x="2" y="3" width="40" height="20" rx="1.4" fill="#f6f2ee"/><rect x="2" y="18" width="40" height="5" rx="1" fill="#ece6e0"/>';
+    for (var i = 0; i < 12; i++) s += '<circle cx="' + (6 + rnd(i)*32).toFixed(1) + '" cy="' + (5 + rnd(i + 4)*12).toFixed(1) + '" r="' + (0.6 + rnd(i + 8)*1.4).toFixed(2) + '" fill="#f0a0b8" opacity="0.8"/>';
+    s += tx('Bubbly', 18, 12.6, 8, '#d8202a', { f:BLK, w:900, st:'#5a1a30', sw:0.7 }) + tx('Cherry Cola', 26, 18, 5, '#d8202a', { f:SER, w:900, it:true });
+    return s + sh('bc', 2, 3, 40, 20, 0.4);
+  };
+  A.f_pachipachi = function(){   /* a little foil sachet, black with stars, the popping words loud */
+    var s = crimpH(1.4, 4, 36, 2.6, '#2a2026', 14) + crimpH(49.6, 4, 36, 2.6, '#2a2026', 14) + '<rect x="4" y="3" width="32" height="48" fill="#2a2026"/>';
+    for (var i = 0; i < 9; i++) { var x = 8 + rnd(i)*24, y = 24 + rnd(i + 3)*22, r = 1.2 + rnd(i + 6)*1.8; s += '<path d="M' + x + ' ' + (y - r) + ' L' + (x + r*0.3) + ' ' + (y - r*0.3) + ' L' + (x + r) + ' ' + y + ' L' + (x + r*0.3) + ' ' + (y + r*0.3) + ' L' + x + ' ' + (y + r) + ' L' + (x - r*0.3) + ' ' + (y + r*0.3) + ' L' + (x - r) + ' ' + y + ' L' + (x - r*0.3) + ' ' + (y - r*0.3) + ' Z" fill="' + ['#f0d84a', '#f0a0b8', '#86bb69'][i % 3] + '"/>'; }
+    s += '<ellipse cx="20" cy="36" rx="9" ry="6" fill="#f0a0b8"/>'; for (var k = 0; k < 20; k++) s += '<circle cx="' + (13 + rnd(k + 20)*14).toFixed(1) + '" cy="' + (32 + rnd(k + 40)*8).toFixed(1) + '" r="0.5" fill="#fbe0ea"/>';
+    s += tx('パチパチ', 20, 13.6, 6.4, '#f0a0b8', { w:900, st:'#fff', sw:0.4 }) + tx('popping candy', 20, 19.4, 2.8, '#f2f0ea', { f:E, w:900 });
+    return s + sh('pp', 4, 3, 32, 48, 0.4);
+  };
+  A.f_hotball = function(){   /* a yellow box, a window cut like a cloud showing the red balls inside */
+    var s = '<path d="M4 4 L7 1.6 L30 1.6 L27 4 Z" fill="#c8302a"/><path d="M27 4 L30 1.6 L30 36 L27 38.4 Z" fill="#c8a020"/><rect x="4" y="4" width="23" height="34.4" fill="#f0d030"/>';
+    s += '<path d="M8 25 Q6 18 11 17 Q12 13 16 14 Q20 12 22 16 Q26 16 24 22 Q26 26 22 27 L9 27 Z" fill="#f6f2ee" stroke="#c8302a" stroke-width="0.5"/><path d="M10 25 Q9 19 12.6 18.6 Q14 15.6 16.4 16.4 Q19.6 15 20.6 18 Q23.6 18.6 22 22.6 Q23 25 21 25 Z" fill="#5a1a14"/>';
+    [[13, 21], [17, 20], [19.4, 23], [15, 23.6]].forEach(function(b){ s += '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="2.2" fill="#d8201a"/><circle cx="' + (b[0] - 0.7) + '" cy="' + (b[1] - 0.7) + '" r="0.6" fill="#fff" opacity="0.6"/>'; });
+    s += '<path d="M10 27 L12 31 L19 31 L21 27 Z" fill="#f6f2ee" stroke="#c8302a" stroke-width="0.4"/>';
+    s += tx('ATOMIC', 15.5, 9, 4.2, '#c8302a', { f:BLK, w:900 }) + tx('HOT BALL', 15.5, 13.2, 3.8, '#c8302a', { f:BLK, w:900 }) + tx('red hot', 15.5, 35.4, 2.8, '#c8302a', { f:E, w:900, it:true });
+    return s + sh('hb', 4, 4, 23, 34.4, 0.3);
+  };
+  A.f_wafermouse = function(){   /* a paper roll of chocolate wafers: brown paper, a red label, the ends twisted white */
+    var s = '<defs><linearGradient id="nkr" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity="0.4"/><stop offset="0.25" stop-color="#fff" stop-opacity="0.2"/><stop offset="0.5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.45"/></linearGradient></defs>';
+    s += '<rect x="12" y="2" width="16" height="50" rx="2" fill="#5e3a26"/><path d="M12 2 Q20 0 28 2 L28 6 L12 6 Z" fill="#f2ece0"/><path d="M12 48 L28 48 L28 52 Q20 54 12 52 Z" fill="#f2ece0"/>';
+    s += '<rect x="12.6" y="14" width="14.8" height="10" rx="2.4" fill="#c8302a" stroke="#f2ece0" stroke-width="0.5"/>' + tx('Nekko', 20, 21, 4.4, '#f2ece0', { f:SER, w:900 });
+    s += '<path d="M18 34 Q16.4 30 18.4 28.6 L18.4 27 L19.6 28.2 L20.6 28.2 L21.6 27 L21.6 28.6 Q23.6 30 22 34 Z" fill="#f2ece0"/><path d="M22 33 q2.6 -0.4 2 -3" stroke="#f2ece0" stroke-width="0.6" fill="none"/>' + tx('since 1847', 20, 42, 2.6, '#f2ece0', { f:SER, w:700, it:true });
+    return s + '<rect x="12" y="2" width="16" height="50" rx="2" fill="url(#nkr)"/>';
+  };
+  A.f_tvgum = function(){   /* an old pink stick-gum pack, two dogs running across it, worn and torn at one end */
+    var s = '<rect x="3" y="8" width="34" height="38" fill="#f2b8c4"/><path d="M37 8 L37 46 L34 46 L35.4 40 L33.4 34 L35.6 28 L33.6 20 L35.4 14 L34 8 Z" fill="#c8a080"/><rect x="3" y="8" width="34" height="2" fill="#e090a4"/><rect x="3" y="44" width="34" height="2" fill="#e090a4"/>';
+    s += '<rect x="5" y="12" width="9" height="6" rx="1" fill="#1e1714"/>';
+    s += '<path d="M10 33 Q9 26 14 26 L16.6 23.4 L17.4 26 Q20.6 27.4 19.4 33 L18 38 L16.6 33 L13 33 L11.6 38 Z" fill="#c8c4bc" stroke="#5a5450" stroke-width="0.35"/><circle cx="16.4" cy="27.6" r="0.5" fill="#1e1714"/>';
+    s += '<path d="M21 33 Q20 26 25 26 L27.6 23.4 L28.4 26 Q31.6 27.4 30.4 33 L29 38 L27.6 33 L24 33 L22.6 38 Z" fill="#e8c060" stroke="#8a6a20" stroke-width="0.35"/><circle cx="27.4" cy="27.6" r="0.5" fill="#1e1714"/>';
+    for (var i = 0; i < 22; i++) s += '<rect x="' + (4 + rnd(i)*31).toFixed(1) + '" y="' + (9 + rnd(i + 7)*36).toFixed(1) + '" width="' + (0.6 + rnd(i + 3)*2).toFixed(1) + '" height="0.5" fill="#fff" opacity="0.5"/>';
+    s += tx('TV GUM', 26, 17.4, 5, '#c8302a', { f:BLK, w:900 }) + tx('テレビガム', 20, 41, 4.6, '#c8302a', { w:900 }) + tx('5 sticks · strawberry', 20, 21.6, 2.2, '#8a3a4a', { f:E, w:700 });
+    return s + sh('tv', 3, 8, 34, 38, 0.35);
+  };
+  A.f_fruitslices = function(){   /* a round clear tub of sugared fruit slices in a ring, a square label on the lid */
+    var s = '<circle cx="20" cy="20" r="18.4" fill="#ece8e2" opacity="0.25"/><circle cx="20" cy="20" r="18.4" fill="none" stroke="#fff" stroke-opacity="0.6" stroke-width="0.5"/>';
+    ['#c8302a', '#f0d84a', '#5e3a5a', '#e8803e', '#86bb69', '#c8302a', '#f0d84a', '#e8a0b8', '#e8803e', '#86bb69'].forEach(function(c, i){ var a = i/10*Math.PI*2; s += '<g transform="translate(' + (20 + Math.cos(a)*11.4).toFixed(2) + ' ' + (20 + Math.sin(a)*11.4).toFixed(2) + ') rotate(' + (a*180/Math.PI + 90) + ')"><path d="M-5.4 0 A5.4 5.4 0 0 1 5.4 0 Z" fill="' + c + '"/><path d="M-4.4 0 A4.4 4.4 0 0 1 4.4 0" stroke="#f6f2ee" stroke-width="0.6" fill="none"/>'; for (var k = 0; k < 8; k++) s += '<circle cx="' + ((rnd(i*9 + k) - 0.5)*8).toFixed(2) + '" cy="' + (-rnd(i*7 + k)*4).toFixed(2) + '" r="0.25" fill="#fff" opacity="0.8"/>'; s += '</g>'; });
+    s += '<rect x="13" y="13" width="14" height="14" fill="#c8302a"/><path d="M20 15 l1.6 3.4 l3.6 0.6 l-2.6 2.6 l0.6 3.6 l-3.2 -1.8 l-3.2 1.8 l0.6 -3.6 l-2.6 -2.6 l3.6 -0.6 Z" fill="#f0d84a" opacity="0.5"/>' + tx('fruit', 20, 19.6, 3.4, '#f6f2ee', { f:SER, w:700 }) + tx('slices', 20, 24, 3.4, '#f6f2ee', { f:SER, w:700 });
+    return s + '<circle cx="20" cy="20" r="18.4" fill="#fff" opacity="0.06"/><path d="M8 10 Q14 4 22 4" stroke="#fff" stroke-width="1.4" opacity="0.5" fill="none"/>';
+  };
+  A.f_waxbottles = function(){   /* little wax bottles in a row, coloured juice behind the wax, caps of soft wax */
+    var s = ''; ['#c8402e', '#e8a040', '#f0d84a', '#86bb69', '#e6a6b3'].forEach(function(c, i){ var x = 5 + i*7.6; s += '<path d="M' + x + ' 28 L' + x + ' 14 Q' + x + ' 10.6 ' + (x + 2) + ' 9.6 L' + (x + 2) + ' 5 L' + (x + 4) + ' 5 L' + (x + 4) + ' 9.6 Q' + (x + 6) + ' 10.6 ' + (x + 6) + ' 14 L' + (x + 6) + ' 28 Z" fill="#f2ece4" opacity="0.6"/><path d="M' + (x + 0.6) + ' 27.4 L' + (x + 0.6) + ' 15 Q' + (x + 0.6) + ' 12 ' + (x + 2.4) + ' 11 L' + (x + 3.6) + ' 11 Q' + (x + 5.4) + ' 12 ' + (x + 5.4) + ' 15 L' + (x + 5.4) + ' 27.4 Z" fill="' + c + '" opacity="0.85"/><rect x="' + (x + 1.8) + '" y="3.4" width="2.4" height="2.4" rx="0.6" fill="' + c + '"/><path d="M' + (x + 1.2) + ' 14 L' + (x + 1.2) + ' 26" stroke="#fff" stroke-width="0.5" opacity="0.6"/>'; });
+    return s;
+  };
+  A.f_sakuramallow = function(){   /* a soft pink bag of flower-shaped marshmallows, a gold ribbon, sakura falling */
+    var s = crimpH(1.4, 3, 37, 2.6, '#f2b8c8', 16) + crimpH(49.6, 3, 37, 2.6, '#f2b8c8', 16) + '<rect x="3" y="3" width="34" height="47" fill="#f2b8c8"/>';
+    for (var i = 0; i < 9; i++) { var x = 6 + rnd(i)*28, y = 6 + rnd(i + 9)*20; for (var k = 0; k < 5; k++) { var a = k/5*Math.PI*2 - Math.PI/2; s += '<circle cx="' + (x + Math.cos(a)*1).toFixed(2) + '" cy="' + (y + Math.sin(a)*1).toFixed(2) + '" r="0.8" fill="#f8e2ea" opacity="0.7"/>'; } }
+    s += '<path d="M5 18 Q20 14 35 18 L34 23 Q20 19 6 23 Z" fill="#d8b060"/><path d="M5 18 L3 20.6 L5.6 21 Z M35 18 L37 20.6 L34.4 21 Z" fill="#b89040"/>';
+    [[12, 40], [20, 43], [28, 39], [16, 35], [25, 34]].forEach(function(p){ for (var k = 0; k < 5; k++) { var a = k/5*Math.PI*2 - Math.PI/2; s += '<circle cx="' + (p[0] + Math.cos(a)*2).toFixed(2) + '" cy="' + (p[1] + Math.sin(a)*2).toFixed(2) + '" r="1.8" fill="#fbf2f4"/>'; } s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="0.6" fill="#f2c0cc"/>'; });
+    s += tx('さくらマシュマロ', 20, 21.6, 3.4, '#8a3a4a', { w:900 }) + tx('marshmallows', 20, 30, 4, '#d8b060', { f:SER, w:700, it:true, st:'#8a3a4a', sw:0.3 });
+    return s + sh('sm', 3, 3, 34, 47, 0.45);
+  };
+  A.f_devilsour = function(){   /* a black sachet, a grinning sour monster (our own; green, never blue), lightning and drips */
+    var s = '<path d="M4 4 Q4 2 6 2 L34 2 Q36 2 36 4 L36 50 Q36 52 34 52 L6 52 Q4 52 4 50 Z" fill="#1e1a1c"/><circle cx="20" cy="5" r="1.4" fill="#4a4448"/>';
+    for (var i = 0; i < 8; i++) s += '<path d="M' + (6 + i*4) + ' 2 l0 ' + (2 + rnd(i)*4).toFixed(1) + '" stroke="#86bb69" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>';
+    s += '<path d="M7 24 l2 -3 l-1 3 l2 -1" stroke="#f0d84a" stroke-width="0.6" fill="none"/><path d="M31 22 l-2 -3 l1 3 l-2 -1" stroke="#f0d84a" stroke-width="0.6" fill="none"/>';
+    s += '<path d="M9 44 Q8 28 20 26 Q32 28 31 44 Z" fill="#6e9a4a"/><path d="M12 30 Q14 27 17 29 M23 29 Q26 27 28 30" stroke="#3e6a2a" stroke-width="0.6" fill="none"/><circle cx="15" cy="34" r="3" fill="#f2f0ea"/><circle cx="25" cy="34" r="2.4" fill="#f2f0ea"/><circle cx="15.6" cy="34.4" r="1.2" fill="#1e1714"/><circle cx="24.6" cy="34.4" r="1" fill="#1e1714"/><path d="M12 40 l2 1.6 l2 -1.6 l2 1.6 l2 -1.6 l2 1.6 l2 -1.6 l2 1.6 l2 -1.6" stroke="#f2f0ea" stroke-width="0.7" fill="#a83a4a"/>';
+    s += tx('魔鬼酸', 20, 15, 7, '#e8a0d0', { w:900, st:'#5a1a3a', sw:0.7 }) + tx('ACID SUGAR', 20, 21.4, 3.6, '#e05aa0', { f:BLK, w:900 });
+    return s + sh('ds', 4, 2, 32, 50, 0.35);
+  };
+  A.f_cocoacig = function(){   /* a candy-cigarette pack, the top flipped open, three white sticks with brown tips */
+    var s = '<rect x="7" y="12" width="26" height="40" fill="#f6f2ee"/><rect x="7" y="12" width="26" height="12" fill="#a83a5a"/><path d="M7 12 L33 12 L31 8 L9 8 Z" fill="#c8506a"/>';
+    [[12, 0], [16.6, 2], [21, -1]].forEach(function(c){ s += '<rect x="' + c[0] + '" y="' + (1 + c[1]) + '" width="3.4" height="13" rx="0.6" fill="#f6f2ee" stroke="#d8d4cc" stroke-width="0.3"/><rect x="' + c[0] + '" y="' + (1 + c[1]) + '" width="3.4" height="2.2" rx="0.6" fill="#8a5a3a"/>'; });
+    s += '<rect x="7" y="12" width="26" height="1" fill="#000" opacity="0.2"/><rect x="26" y="10.6" width="4" height="2" fill="#f0b83a"/>';
+    s += '<path d="M14 30 l2 -3 l2 3 l2 -3 l2 3 l2 -3 l2 3" stroke="#c9a067" stroke-width="0.8" fill="none"/>' + tx('QUEENS', 20, 37, 5.4, '#a83a5a', { f:SER, w:900 }) + tx('ココアシガレット', 20, 43, 2.8, '#1e1714', { w:900 }) + tx('CANDY', 20, 48.4, 3, '#1e1714', { f:E, w:900 });
+    return s + sh('cc', 7, 8, 26, 44, 0.35);
+  };
+  A.f_alyonka = function(){   /* a chocolate in a folded paper twist: cream and gold, a headscarf (static where the face is, as printed faces are), the name in a curl */
+    var s = '<path d="M20 2 L37 20 L20 38 L3 20 Z" fill="#e8d890"/><path d="M20 2 L37 20 L20 20 Z" fill="#d8c070" opacity="0.6"/><path d="M3 20 L20 38 L20 20 Z" fill="#c8b060" opacity="0.4"/>';
+    s += '<path d="M20 2 L28 10 L12 10 Z" fill="#3a2a1e"/>'; for (var i = 0; i < 6; i++) s += '<path d="M' + (14 + i*2) + ' 9 L' + (17 + i*2) + ' 5" stroke="#c9a067" stroke-width="0.25"/>';
+    s += '<path d="M12 22 Q11 10 20 10 Q29 10 28 22 Q27 26 25 27 L15 27 Q13 26 12 22 Z" fill="#c8402e"/><path d="M13 14 q3 2 6 0 M21 13 q3 2 5 -1 M14 20 q2 1 4 0" stroke="#6e9a4a" stroke-width="0.8" fill="none"/><circle cx="16" cy="16" r="1" fill="#f0d84a"/><circle cx="24" cy="18" r="1" fill="#f0d84a"/>';
+    s += stat(20, 20, 4.8, 5.6, 'al');
+    s += '<ellipse cx="20" cy="31" rx="5" ry="1.8" fill="#c8302a"/>' + tx('Алёнка', 20, 35.2, 3.8, '#7a4a2a', { f:SER, w:700, it:true });
+    return s;
+  };
+  for (var k in A) EG_ART[k] = A[k];
+})();
 function egSvgFor(id, A, w, h){
   var raw = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + A.vb[0] + ' ' + A.vb[1] + '" width="' + w + '" height="' + h + '">' + egFixSvg(id, EG_ART[id] ? EG_ART[id]() : A.svg()) + '</svg>';
   try { var doc = new DOMParser().parseFromString(raw, 'image/svg+xml'); if (!doc.querySelector('parsererror')) { egFixDom(id, doc.documentElement); raw = new XMLSerializer().serializeToString(doc.documentElement); } } catch (e) {}

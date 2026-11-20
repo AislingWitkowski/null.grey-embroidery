@@ -308,22 +308,41 @@ export function buildMore(C){
     geos.push(rodGeo([WX, g0 + 1.6, WZ], [WX, g0 + 8.62, WZ], 0.018, 0.018, 4));   /* the pump rod */
     for (const [sx, sz] of CN) { ROOTS.add(WX + sx*0.62, WZ + sz*0.62, 0.06, 'earth'); K.solids.push({ x0:WX + sx*0.62 - 0.08, x1:WX + sx*0.62 + 0.08, y0:g0 - 1, y1:g0 + 8, z0:WZ + sz*0.62 - 0.08, z1:WZ + sz*0.62 + 0.08 }); }   /* (its legs are solid: you can walk in under it, not through them) */
     const blk = mat(T.iron, { color:0x4a403a }); tag(meshOf(geos, blk), 'windmill');
-    tag(cyl(0.36, 0.36, 0.85, mat(T.tinG, { color:0x8a5a40 }), WX, g0 + 4.1, WZ, 12), 'windmill');   /* the tank */
+    /* (Nov 20, after Aisling's windmill photo) the tank: big, riveted, rusted, a little wider at its foot, sat inside the
+       tower about a third of the way up on its own platform of beams */
+    { const tankM = mat(T.tinG, { color:0x9a6a48, rough:0.8, metal:0.3 }), tg = new THREE.CylinderGeometry(0.5, 0.56, 1.5, 24, 6, true), tp = tg.attributes.position;
+      for (let i = 0; i < tp.count; i++) { const a = Math.atan2(tp.getZ(i), tp.getX(i)), y = tp.getY(i), dent = 1 + 0.012*Math.sin(a*7 + y*3) - 0.02*Math.exp(-((a - 1.1)*(a - 1.1))*6)*Math.exp(-(y*y)*4); tp.setX(i, tp.getX(i)*dent); tp.setZ(i, tp.getZ(i)*dent); }
+      tg.computeVertexNormals(); const tk = new THREE.Mesh(tg, tankM); tk.position.set(WX, g0 + 3.15, WZ); tk.castShadow = tk.receiveShadow = true; scene.add(tk); tag(tk, 'windmill');
+      const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.5, 0.06, 24), tankM); lid.position.set(WX, g0 + 3.92, WZ); scene.add(lid);
+      const hoop = mat(null, { color:0x4a3a30, rough:0.6, metal:0.5 }); for (const y of [2.55, 3.15, 3.75]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.535 - (y - 2.4)*0.04, 0.012, 6, 40), hoop); ring.rotation.x = Math.PI/2; ring.position.set(WX, g0 + y, WZ); scene.add(ring); }
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) box(WX - (dz ? 0.7 : 0.03) , WX + (dz ? 0.7 : 0.03), g0 + 2.32, g0 + 2.4, WZ - (dx ? 0.7 : 0.03), WZ + (dx ? 0.7 : 0.03), blk, { solid:false });   /* the beams it sits on */
+      const st = mat(null, { color:0x3a2a20, rough:0.9 }); box(WX - 0.12, WX + 0.12, g0 + 2.3, g0 + 2.42, WZ - 0.12, WZ + 0.12, st, { solid:false }); }
     box(WX - 0.32, WX + 0.32, g0 + top, g0 + top + 0.07, WZ - 0.32, WZ + 0.32, blk, { solid:false });   /* the platform */
     /* the head: the wheel faces north-west (toward the station and the road), the tail out behind it */
     const head = new THREE.Group(); head.position.set(WX, g0 + 8.62, WZ); head.rotation.y = Math.PI*0.25 + Math.PI/2; scene.add(head);
-    const wheelT = cvTex(256, 256, (c) => { c.translate(128, 128);
-      for (let i = 0; i < 18; i++) { c.save(); c.rotate(i/18*Math.PI*2); c.fillStyle = col('hcream', 0.5 + 0.08*(i % 3)); c.beginPath(); c.moveTo(-6, 42); c.lineTo(6, 42); c.lineTo(15, 124); c.lineTo(-13, 124); c.closePath(); c.fill(); c.restore(); }
-      c.strokeStyle = col('hrust', 0.26); c.lineWidth = 5; for (const r of [82, 122]) { c.beginPath(); c.arc(0, 0, r, 0, Math.PI*2); c.stroke(); }
-      c.fillStyle = col('hrust', 0.26); c.beginPath(); c.arc(0, 0, 18, 0, Math.PI*2); c.fill(); });
-    const wm = new THREE.MeshStandardMaterial({ map:wheelT, alphaTest:0.5, side:THREE.DoubleSide, roughness:0.9 });
-    const wh = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 1.36), wm); wh.castShadow = true; head.add(wh); tag(wh, 'windmill');
+    /* (Nov 20) the wheel in the round: eighteen galvanised blades, each a thin curved sheet set at an angle to catch the
+       wind, held by two rings and spokes; rust where they're riveted. it stays still (the wind that turns it never comes) */
+    { const bladeM = mat(null, { color:0x8a8478, rough:0.6, metal:0.4, two:true }), rustM = mat(null, { color:0x6a4030, rough:0.8, metal:0.3 }), bg = [], rg = [];
+      for (let i = 0; i < 18; i++) { const g = new THREE.PlaneGeometry(0.15, 0.5, 1, 4), p = g.attributes.position; for (let k = 0; k < p.count; k++) p.setZ(k, 0.014*Math.sin((p.getX(k)/0.15 + 0.5)*Math.PI));   /* each blade a little curved */
+        g.translate(0, 0.5, 0); g.rotateY(0.4); g.rotateZ(i/18*Math.PI*2); bg.push(g); }
+      const wheel = new THREE.Mesh(mergeGeometries(bg), bladeM); wheel.castShadow = true; head.add(wheel); tag(wheel, 'windmill');
+      for (const r of [0.3, 0.66]) { const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.008, 5, 48), rustM); head.add(ring); }
+      for (let i = 0; i < 6; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(0.01, 0.68, 0.01), rustM); sp.position.set(Math.sin(i/6*Math.PI*2)*0.34, Math.cos(i/6*Math.PI*2)*0.34, -0.02); sp.rotation.z = -i/6*Math.PI*2; head.add(sp); }
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.14, 12), rustM); hub.rotation.x = Math.PI/2; hub.position.z = -0.04; head.add(hub);
+      const gear = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.18, 0.3), rustM); gear.position.set(0, -0.02, -0.24); head.add(gear); }
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 1.2), blk); arm.position.z = -0.62; head.add(arm);
-    const vaneT = cvTex(256, 128, (c) => { c.fillStyle = col('hcream', 0.48); c.beginPath(); c.moveTo(0, 34); c.lineTo(256, 4); c.lineTo(256, 124); c.lineTo(0, 94); c.closePath(); c.fill();
-      c.fillStyle = col('hrust', 0.3); c.font = '900 30px Arial Black, Arial, sans-serif'; c.textAlign = 'center'; c.font = '900 40px Arial Black, Arial, sans-serif'; c.fillText('GOOCH', 132, 80);   /* (Nov 18, Aisling: "windmill will be gooch") */
-      for (let i = 0; i < 40; i++) { c.fillStyle = col('hwood', 0.2); c.fillRect(Math.random()*256, 20 + Math.random()*90, 3, 2); } });   /* (its old letters, as Seam's vane has them) */
-    const vm = new THREE.MeshStandardMaterial({ map:vaneT, alphaTest:0.5, side:THREE.DoubleSide, roughness:0.9 });
-    const vn2 = new THREE.Mesh(new THREE.PlaneGeometry(0.66, 0.42), vm); vn2.rotation.y = Math.PI/2; vn2.position.z = -1.3; head.add(vn2); tag(vn2, 'windmill');
+    /* (Nov 20) the vane, after her photo: a weathered sheet, bent a little, the old letters stencilled and half worn off,
+       rust coming through. its word stays hers: GOOCH */
+    const vaneT = cvTex(256, 160, (c) => { c.fillStyle = col('hcream', 0.5); c.fillRect(0, 0, 256, 160);
+      for (let i = 0; i < 900; i++) { c.fillStyle = `rgba(${90 + Math.random()*40},${60 + Math.random()*20},${40},${Math.random()*0.18})`; c.fillRect(Math.random()*256, Math.random()*160, 1 + Math.random()*4, 1 + Math.random()*3); }
+      c.fillStyle = col('hrust', 0.28); c.font = '900 64px Arial Black, Arial, sans-serif'; c.textAlign = 'center'; c.globalAlpha = 0.85; c.fillText('GOOCH', 128, 104); c.globalAlpha = 1;   /* (Nov 18, Aisling: "windmill will be gooch") */
+      for (let i = 0; i < 120; i++) { c.fillStyle = col('hcream', 0.48 + Math.random()*0.06); c.fillRect(Math.random()*256, 50 + Math.random()*70, 2 + Math.random()*6, 1 + Math.random()*2); }   /* worn through the letters */
+      const g = c.createLinearGradient(0, 0, 0, 160); g.addColorStop(0, 'rgba(110,60,36,0)'); g.addColorStop(1, 'rgba(110,60,36,0.45)'); c.fillStyle = g; c.fillRect(0, 0, 256, 160);
+      for (let k = 0; k < 6; k++) { c.fillStyle = 'rgba(120,60,30,0.35)'; c.fillRect(12 + k*46, 0, 2 + Math.random()*3, 30 + Math.random()*90); }   /* rust running down from the rivets */
+      c.strokeStyle = col('hrust', 0.3); c.lineWidth = 6; c.strokeRect(3, 3, 250, 154); });
+    const vm = new THREE.MeshStandardMaterial({ map:vaneT, side:THREE.DoubleSide, roughness:0.85, metalness:0.2 });
+    const vg = new THREE.PlaneGeometry(0.72, 0.46, 6, 3), vp = vg.attributes.position; for (let i = 0; i < vp.count; i++) vp.setZ(i, 0.02*Math.sin(vp.getX(i)*6));   /* bent a little */
+    const vn2 = new THREE.Mesh(vg, vm); vn2.rotation.y = Math.PI/2; vn2.position.set(0, 0.06, -1.32); vn2.castShadow = true; head.add(vn2); tag(vn2, 'windmill');
   })();
 
   /* ================= the crossbuck: two boards crossed on a post, lettered both sides, a small 踏切 plate ================= */
