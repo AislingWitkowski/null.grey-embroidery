@@ -3,7 +3,7 @@ const { chromium } = require('playwright'); const path = require('path'); const 
 const OUT = process.argv[2] || '/tmp/sh_', CELL = +(process.argv[3] || 300);
 (async () => { const b = await chromium.launch({ args:['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport:{ width:640, height:360 } }); let errs = 0; p.on('pageerror', e => { errs++; console.log('ERR', String(e).slice(0, 200)); });
-  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed');
+  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed', { timeout:300000 });
   await p.waitForFunction(() => window.EG_SEAM && window.EG_SEAM.look, null, { timeout:180000 }); await p.waitForTimeout(3000);
   const ids = process.argv[4] ? process.argv[4].split(',') : await p.evaluate(() => window.EG_SEAM.look.ids());
   for (let i = +(process.env.FROM || 0); i < ids.length; i += 20) {

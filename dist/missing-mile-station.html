@@ -6515,20 +6515,26 @@ function egSvgFor(id, A, w, h){
   return raw;
 }
 var _egPkMap = pkMap;
-pkMap = function(id, done){
-  _egPkMap(id, function(){
-    var A = PK_ART[id], M = POK.maps[id]; if (!M) { done(); return; }
-    var S = Math.max(1, Math.min(3, Math.floor(900/Math.max(M.w, M.h)))), img = new Image();   /* drawn finer than its lifted size, so it stays sharp up close */
-    if (A && A.paint) { try { var pc = document.createElement('canvas'); pc.width = M.w*S; pc.height = M.h*S; A.paint(pc.getContext('2d'), pc.width, pc.height); M.eg = egBake(M, pc, S, A); } catch (e) { console.error(e); } done(); return; }   /* (a thing painted straight onto a canvas: the stranger's note) */
-    if (!A || typeof A.svg !== 'function') { done(); return; }   /* (nothing to draw it from: Seam's own way) */
-    img.onload = function(){ try { M.eg = egBake(M, img, S, A); } catch (e) { console.error(e); } done(); };
-    img.onerror = function(){ done(); };
-    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(egSvgFor(id, A, M.w*S, M.h*S));
-  });
-};
+/* (Nov 20, Aisling: "pocket no longer working at all … oh its just real slow") the Embroidery look used to be made for
+   every thing at once when the pocket opened, which froze the page. Now Seam's map is made as before (the pocket opens
+   straight away, each thing in its plain look) and the Embroidery look is made one thing at a time in the background,
+   the things you can see first; each swaps in when it's ready. */
+var EG_Q = [], EG_QBUSY = false;
+function egBakeOne(id, done){
+  var A = PK_ART[id], M = POK.maps[id]; if (!M || M.eg || M.egBusy) { done(); return; } M.egBusy = true;
+  var S = Math.max(1, Math.min(2, Math.floor(520/Math.max(M.w, M.h)))), fin = function(){ M.egBusy = false; POK.items && POK.items.forEach(function(it){ if (it.id === id) { it.S = null; it.Sh = null; } }); if (POK.lift && POK.lift.it && POK.lift.it.id === id) POK.lift.S = null; done(); };
+  if (A && A.paint) { try { var pc = document.createElement('canvas'); pc.width = M.w*S; pc.height = M.h*S; A.paint(pc.getContext('2d'), pc.width, pc.height); M.eg = egBake(M, pc, S, A); } catch (e) { console.error(e); } fin(); return; }
+  if (!A || typeof A.svg !== 'function') { fin(); return; }
+  var img = new Image(); img.onload = function(){ try { M.eg = egBake(M, img, S, A); } catch (e) { console.error(e); } fin(); }; img.onerror = fin;
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(egSvgFor(id, A, M.w*S, M.h*S));
+}
+function egQueue(id, first){ var M = POK.maps[id]; if (!M || M.eg || EG_Q.indexOf(id) >= 0) return; if (first) EG_Q.unshift(id); else EG_Q.push(id); egRun(); }
+function egRun(){ if (EG_QBUSY || !EG_Q.length) return; EG_QBUSY = true; var id = EG_Q.shift(); setTimeout(function(){ egBakeOne(id, function(){ EG_QBUSY = false; setTimeout(egRun, 16); }); }, 0); }
+pkMap = function(id, done){ _egPkMap(id, function(){ done(); egQueue(id); }); };
 var _egPkSprite = pkSprite;
 pkSprite = function(id, sc, rot, light, now){
-  var M = POK.maps[id], A = PK_ART[id]; if (!M || !M.eg || EG_SEAM.lookOff) return _egPkSprite.apply(null, arguments);
+  var M = POK.maps[id], A = PK_ART[id]; if (M && !M.eg && !EG_SEAM.lookOff) egQueue(id, true);
+  if (!M || !M.eg || EG_SEAM.lookOff) return _egPkSprite.apply(null, arguments);
   var cs = Math.cos(rot), sn = Math.sin(rot), hw = M.w*sc/2, hh = M.h*sc/2;
   var W = Math.ceil(Math.abs(hw*cs) + Math.abs(hh*sn))*2 + 2, H = Math.ceil(Math.abs(hw*sn) + Math.abs(hh*cs))*2 + 2;
   var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
@@ -6570,7 +6576,7 @@ EG_SEAM.look = { ids:function(){ return Object.keys(PK_ART); }, vb:function(id){
         if (src) { var sc = Math.min((cell - 8)/src.width, (cell - 8)/src.height); x.imageSmoothingQuality = 'high'; x.drawImage(src, cx + (cell - src.width*sc)/2, cy + (cell - src.height*sc)/2, src.width*sc, src.height*sc); }
         else { x.fillStyle = '#a33'; x.fillText('no look', cx + 8, cy + 20); }
         x.fillStyle = '#d8ccb4'; x.font = '11px monospace'; x.fillText(id, cx + 4, cy + cell + 12); setTimeout(next, 0); };
-      if (POK.maps[id] && POK.maps[id].eg) go(); else { try { pkMap(id, go); } catch (e) { go(); } } })();
+      if (POK.maps[id] && POK.maps[id].eg) go(); else { try { pkMap(id, function(){ egBakeOne(id, go); }); } catch (e) { go(); } } })();
   }, lift:function(id){ if (POK.lift) { POK.lift = null; POK.ask = null; pkAsk.style.display = 'none'; } POK.folder = null; POK.page = 0; pkLayout(); var it = (POK.items || []).filter(function(i){ return i.id === id; })[0]; if (!it) { POK.folder = pkFolderOf(id); POK.page = 0; pkLayout(); it = (POK.items || []).filter(function(i){ return i.id === id; })[0]; } if (it) pkLift(it); return !!it; }, yes:function(){ var L = POK.lift; if (L && PK_ART[L.it.id].onYes) PK_ART[L.it.id].onYes(L.it, L); }, off:function(v){ EG_SEAM.lookOff = !!v; POK.items.forEach(function(it){ it.S = null; it.Sh = null; }); if (POK.lift) POK.lift.S = null; try { pkLayout(); } catch (e) {} }, baked:function(){ var n = 0, t = 0; for (var k in POK.maps) { t++; if (POK.maps[k].eg) n++; } return [n, t]; } };   /* (tests: how many things have their Embroidery look) */
 
 /* ---- (the bridge, end) hand Embroidery what it needs from inside Seam's closure, then close it ---- */
