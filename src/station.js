@@ -173,7 +173,7 @@ function sky(){
       '  float smud = 0.35 + 0.65*smoothstep(0.85, 0.35, cl(cp*1.6 + 11.0));\n' +
       '  c = mix(c, vec3(0.66, 0.62, 0.57), (md*0.5 + mg*0.2)*smud);\n' +
       '  gl_FragColor = vec4(c, 1.0); }' });
-  const me = new THREE.Mesh(new THREE.SphereGeometry(60, 24, 12), m); me.frustumCulled = false; me.renderOrder = -1; K.scene.add(me); return m;
+  const me = new THREE.Mesh(new THREE.SphereGeometry(60, 24, 12), m); me.frustumCulled = false; me.renderOrder = -1; K.scene.add(me); L.sky = me; return m;   /* (Nov 20: the frame keeps it round you, so the edges of town far south have the same dusk) */
 }
 
 /* ---------------- light: the canopy's bare bulbs under tin shades, the awning's bulb, the drinks machine's display,

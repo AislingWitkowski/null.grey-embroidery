@@ -94,6 +94,7 @@ function egReal(d, w, h, S, MT){
     shade *= 1 - grime*(0.4*wm + 0.5*wr + 0.45*wp + 0.4*wq) - crease*0.25; sb2 = 0.94 - 0.08*wm; grain += wp*(egNoise((i/3) | 0, j) - 0.5)*8;
     r = r*shade + 255*spec*sr2 + grain; g = g*shade + 245*spec*sg2 + grain; b = b*shade + 228*spec*sb2 + grain;
     var hz = 0.14 + 0.08*(1 - diff); r = r*(1 - hz) + FOG[0]*1.25*hz; g = g*(1 - hz) + FOG[1]*1.25*hz; b = b*(1 - hz) + FOG[2]*1.25*hz;   /* Missing Mile's haze, more in the shadow than in the light ("not dirty but haze") */
+    if (b > r && r + g + b < 260) b = r + (b - r)*0.35;   /* dark violet shadows kept warm (the blue rule) */
     d[o] = r < 0 ? 0 : r > 255 ? 255 : r; d[o + 1] = g < 0 ? 0 : g > 255 ? 255 : g; d[o + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
     d[o + 3] = src[o + 3]*0.9 + soft[o + 3]*0.1; }
 }
@@ -122,8 +123,10 @@ function egBake(M, img, S, A){
     else { add = 40*relief; }
     var f = 1; add = 0;   /* (the lighting is egReal's now) */
     d[k*4] = Math.max(0, Math.min(255, r*f + add)); d[k*4 + 1] = Math.max(0, Math.min(255, g*f + add*0.96)); d[k*4 + 2] = Math.max(0, Math.min(255, b*f + add*0.9));
-    if (ri === R_SILVER || ri === R_GOLD || ri === R_PLUMGLOW) { fd[k*4 + 3] = A[k]; anyFoil = true; }
+    if (EG_ID === 'passportOpen') { var u = i/w, v = j/h; if (((v > 0.76 && u > 0.5) || (v > 0.15 && v < 0.33 && u < 0.5)) && r > 120 && g > 0.76*r && g < r && b < g - 30) { fd[k*4 + 3] = A[k]; anyFoil = true; } }   /* inside, only the gold rune foil shimmers: the band over the photos and the band along the stamps page's foot (not the stamps: they're ink, and the blue lustre is for holograms only) */
+    else if (ri === R_SILVER || ri === R_GOLD || ri === R_PLUMGLOW) { fd[k*4 + 3] = A[k]; anyFoil = true; }
   }
+  if (EG_LEATHER[EG_ID]) egLeather(d, w, h, S, MT);
   egReal(d, w, h, S, MT); egPix(d, w, h, S);   /* (Nov 20) the real pass: shape, light, material; then a slight pixel */
   x.putImageData(id, 0, 0); if (anyFoil) fx.putImageData(fid, 0, 0);
   return { c:c, foil:anyFoil ? fm : null };
@@ -639,14 +642,14 @@ var _egPkMap = pkMap;
    the things you can see first; each swaps in when it's ready. */
 var EG_Q = [], EG_QBUSY = false;
 function egBakeOne(id, done){
-  var A = PK_ART[id], M = POK.maps[id]; if (!M || M.eg || M.egBusy) { done(); return; } M.egBusy = true; var W0 = egWear(id);
+  var A = PK_ART[id], M = POK.maps[id]; if (!M || M.eg || M.egBusy) { done(); return; } M.egBusy = true; var W0 = egWear(id), ID0 = id;
   var S = Math.max(1, Math.min(2, Math.floor(440/Math.max(M.w, M.h)))), fin = function(){ M.egBusy = false; POK.items && POK.items.forEach(function(it){ if (it.id === id) { it.S = null; it.Sh = null; } }); if (POK.lift && POK.lift.it && POK.lift.it.id === id) POK.lift.S = null; done(); };
-  if (A && A.paint) { try { var pc = document.createElement('canvas'); pc.width = M.w*S; pc.height = M.h*S; A.paint(pc.getContext('2d'), pc.width, pc.height); EG_W = W0; M.eg = egBake(M, pc, S, A); } catch (e) { console.error(e); } fin(); return; }
+  if (A && A.paint) { try { var pc = document.createElement('canvas'); pc.width = M.w*S; pc.height = M.h*S; A.paint(pc.getContext('2d'), pc.width, pc.height); EG_W = W0; EG_ID = ID0; M.eg = egBake(M, pc, S, A); } catch (e) { console.error(e); } fin(); return; }
   if (!A || typeof A.svg !== 'function') { fin(); return; }
-  var img = new Image(); img.onload = function(){ try { EG_W = W0; M.eg = egBake(M, img, S, A); } catch (e) { console.error(e); } fin(); }; img.onerror = fin;
+  var img = new Image(); img.onload = function(){ try { EG_W = W0; EG_ID = ID0; M.eg = egBake(M, img, S, A); } catch (e) { console.error(e); } fin(); }; img.onerror = fin;
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(egSvgFor(id, A, M.w*S, M.h*S));
 }
-function egQueue(id, first){ if (EG_SEAM.noBake || egIsPhoto(id)) return;   /* her photos stay as they are */ var M = POK.maps[id]; if (!M || M.eg || EG_Q.indexOf(id) >= 0) return; if (first) EG_Q.unshift(id); else EG_Q.push(id); egRun(); }
+function egQueue(id, first){ if (EG_SEAM.noBake || egIsPhoto(id)) return;   /* her photos stay as they are */ var M = POK.maps[id]; if (!M || M.eg) return; var at = EG_Q.indexOf(id); if (at >= 0) { if (first && at > 0) { EG_Q.splice(at, 1); EG_Q.unshift(id); } return; } if (first) EG_Q.unshift(id); else EG_Q.push(id); egRun(); }   /* (a thing being looked at jumps the queue, even if it was already waiting) */
 function egRun(){ if (EG_QBUSY || !EG_Q.length) return; EG_QBUSY = true; var id = EG_Q.shift(); setTimeout(function(){ egBakeOne(id, function(){ EG_QBUSY = false; setTimeout(egRun, 40); }); }, 0); }
 pkMap = function(id, done){ _egPkMap(id, function(){ done(); egQueue(id); }); };
 var _egPkSprite = pkSprite;
@@ -658,17 +661,94 @@ pkSprite = function(id, sc, rot, light, now){
   var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d');
   x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
   x.save(); x.translate(W/2, H/2); x.rotate(rot); x.drawImage(M.eg.c, -hw, -hh, hw*2, hh*2); x.restore();
-  if (A.foil && now && M.eg.foil) {   /* the hologram: a slow band of colour sliding across the foil */
-    var t = document.createElement('canvas'); t.width = W; t.height = H; var tx = t.getContext('2d'), ph = ((now/1000)*0.11) % 1, gr = tx.createLinearGradient(0, 0, W, H);
-    [[0, 'rgba(200,200,205,0)'], [0.2, 'rgba(200,200,205,0.5)'], [0.4, 'rgba(156,143,184,0.6)'], [0.55, 'rgba(140,160,196,0.45)'], [0.7, 'rgba(127,166,160,0.55)'], [0.85, 'rgba(201,168,106,0.55)'], [1, 'rgba(201,168,106,0)']].forEach(function(s){ gr.addColorStop(s[0], s[1]); });
-    tx.save(); tx.translate((ph*2 - 1)*W*1.2, (ph*2 - 1)*H*0.6); tx.fillStyle = gr; tx.fillRect(-W, -H, W*3, H*3); tx.restore();
-    tx.globalCompositeOperation = 'destination-in'; tx.save(); tx.translate(W/2, H/2); tx.rotate(rot); tx.drawImage(M.eg.foil, -hw, -hh, hw*2, hh*2); tx.restore();
-    x.save(); x.globalCompositeOperation = 'screen'; x.globalAlpha = 0.55; x.drawImage(t, 0, 0); x.restore();
+  if ((A.foil || now) && now && M.eg.foil) {   /* the hologram (egHolo): fine bands of colour drifting across the foil */
+    var t = egHolo(W, H, now, 1);
+    var tx = t.getContext('2d'); tx.globalCompositeOperation = 'destination-in'; tx.save(); tx.translate(W/2, H/2); tx.rotate(rot); tx.drawImage(M.eg.foil, -hw, -hh, hw*2, hh*2); tx.restore();
+    x.save(); x.globalCompositeOperation = 'color'; x.globalAlpha = 0.78; x.drawImage(t, 0, 0); x.globalCompositeOperation = 'soft-light'; x.globalAlpha = 0.5; x.drawImage(t, 0, 0); x.restore();
   }
   if (light < 0.999) { x.save(); x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(6,5,5,' + Math.min(1, 1 - light).toFixed(3) + ')'; x.fillRect(0, 0, W, H); x.restore(); }
   else if (light > 1.001) { x.save(); x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(255,244,228,' + Math.min(0.5, (light - 1)*0.6).toFixed(3) + ')'; x.fillRect(0, 0, W, H); x.restore(); }
   var dd = x.getImageData(0, 0, W, H).data, mask = new Uint8Array(W*H); for (var q = 0; q < W*H; q++) mask[q] = dd[q*4 + 3] > 120 ? 1 : 0;
   return { c:c, W:W, H:H, mask:mask };
+};
+/* ================================================================
+   (Nov 20, Aisling: "does pocket get a new look? dopes passport get a new look? … like a real neat pretty holographic look
+   on runes and such? leathery look on the outside and such? magical, but the same like base?", "yeah i just mean it gets
+   more real", "the holograms can have a slight blue liuister, breaking the rule..making it weird"; built Nov 20 while she
+   rested.) THE POCKET AND THE PASSPORT, EMBROIDERY'S LOOK. Same layout, art and words as Seam; only the look:
+   - the passport's cover (and the cover's edge round the open pages) is real leather: a pebble grain, fine creases,
+     worn paler and browner at its edges and corners, a soft sheen where it catches the light;
+   - its foil (the title, the emblem, the rune strip; the rune foil inside) is a hologram: fine bands of colour drifting
+     slowly across it, silver, rose, amber, a pale green, and a slight blue lustre (allowed here, and only here);
+   - the pocket itself is real wool: the dither smoothed away, a felted grain, the lip a real fold catching the light, the
+     dark at the bottom a soft deep plum, not black; the runes round its frame shimmer like the passport's foil.
+   Nothing flashes: every shimmer drifts over seconds.
+   ================================================================ */
+var EG_ID = '', EG_LEATHER = { passport:1, passportOpen:1 };
+function egLeather(d, w, h, S, MT){
+  var sx = 1/(4.2*S), cx = 1/(16*S), er = Math.max(3, Math.round(6*S)), rim = EG_ID === 'passportOpen' ? Math.round(16*S) : 0;
+  for (var j = 0; j < h; j++) for (var i = 0; i < w; i++) {
+    var o = (j*w + i)*4; if (d[o + 3] < 8 || MT[j*w + i] === 3) continue;
+    var r = d[o], g = d[o + 1], b = d[o + 2], L = (r*0.3 + g*0.59 + b*0.11)/255, mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    if (L > 0.36 || mx - mn > 70) continue;   /* only the dark cover, not the pages or the foil */
+    if (rim) { var nearEdge = false; for (var q2 = 2; q2 <= rim && !nearEdge; q2 += 2) if ((i - q2 >= 0 && d[o - q2*4 + 3] < 40) || i - q2 < 0 || (i + q2 < w && d[o + q2*4 + 3] < 40) || i + q2 >= w || (j - q2 >= 0 && d[o - q2*w*4 + 3] < 40) || j - q2 < 0 || (j + q2 < h && d[o + q2*w*4 + 3] < 40) || j + q2 >= h) nearEdge = true; if (!nearEdge) continue; }   /* open: only the cover's rim round the pages */
+    var hp = function(a, b){ return egVN(a*sx, b*sx)*0.6 + egVN(a*sx*1.9 + 13, b*sx*1.9 + 7)*0.4; }, peb = hp(i, j), rel = (hp(i - 1.5, j - 1.5) - hp(i + 1.5, j + 1.5))*2.2;   /* the pebble grain, lit from the upper left */
+    var cr = Math.max(0, 1 - Math.abs(egVN(i*cx + 3, j*cx*0.7) - 0.5)*26)*0.5 + Math.max(0, 1 - Math.abs(egVN(i*cx*0.6 + 9, j*cx*1.3 + 5) - 0.5)*30)*0.35;   /* fine creases */
+    var ed = er; for (var q = 1; q <= er; q++) { if ((i - q >= 0 && d[o - q*4 + 3] < 40) || (i + q < w && d[o + q*4 + 3] < 40) || (j - q >= 0 && d[o - q*w*4 + 3] < 40) || (j + q < h && d[o + q*w*4 + 3] < 40)) { ed = q; break; } }
+    var wear = ed < er ? (1 - ed/er)*(0.55 + 0.6*egVN(i*0.05, j*0.05)) : 0;
+    var sheen = Math.max(0, 1 - Math.abs((i/w)*0.7 + (j/h)*0.5 - 0.42)*3.2), k = 1 + rel*0.4 + (peb - 0.5)*0.14 - cr*0.2, top = Math.max(0, rel)*44*(0.5 + sheen) + sheen*sheen*16;
+    r = r*k + top + wear*34; g = g*k + top*0.95 + wear*22; b = b*k + top*0.9 + wear*12;
+    d[o] = r < 0 ? 0 : r > 255 ? 255 : r; d[o + 1] = g < 0 ? 0 : g > 255 ? 255 : g; d[o + 2] = b < 0 ? 0 : b > 255 ? 255 : b;
+  }
+}
+var EG_HOLO = {};
+function egHolo(W, H, now, k){   /* a hologram's colours over W × H: fine bands that drift (about 14 s round), and a soft glint */
+  var c = document.createElement('canvas'); c.width = W; c.height = H; var x = c.getContext('2d'), t = (now || 0)/1000;
+  var ph = (t/14) % 1, L = Math.hypot(W, H), g = x.createLinearGradient(0, 0, W*0.9, H);
+  var cols = ['206,200,212', '226,150,176', '228,180,96', '158,206,128', '150,190,160', '158,162,204', '180,148,214', '206,200,212'];   /* (the blue only a slight lustre: lavender-grey, and the teal kept green-grey) */   /* silver, rose, amber, pale green, teal-grey, the slight blue lustre, lavender */
+  for (var n = 0; n <= 24; n++) { var u = n/24, ci = Math.floor((u*3 + ph*7) % 7); g.addColorStop(u, 'rgba(' + cols[ci] + ',' + (0.75 + 0.25*Math.sin((u + ph)*Math.PI*6)).toFixed(3) + ')'); }
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  var gp = ((t/9) % 1)*1.6 - 0.3, gl = x.createLinearGradient(W*(gp - 0.2), 0, W*(gp + 0.2), H*0.4);   /* the glint, crossing slowly */
+  gl.addColorStop(0, 'rgba(255,250,240,0)'); gl.addColorStop(0.5, 'rgba(255,250,240,' + (0.35*(k || 1)).toFixed(3) + ')'); gl.addColorStop(1, 'rgba(255,250,240,0)');
+  x.fillStyle = gl; x.fillRect(0, 0, W, H);
+  return c;
+}
+/* the pocket itself, in wool; its frame's runes as hologram foil */
+var EG_PKRUNE = null;
+var _egBuildBg = pkBuildBg;
+pkBuildBg = function(done){ _egBuildBg(function(){ try { if (POK.bg && !EG_SEAM.noBake) egPocketBg(); } catch (e) { console.error(e); } done(); }); };
+function egPocketBg(){
+  var seam = POK.bg; POK.bgSeam = seam;
+  var c = document.createElement('canvas'); c.width = PW; c.height = PH; var x = c.getContext('2d'); x.drawImage(seam, 0, 0);
+  var id = x.getImageData(0, 0, PW, PH), d = id.data, src = new Uint8ClampedArray(d), m = document.createElement('canvas'); m.width = PW; m.height = PH;
+  var mx = m.getContext('2d'), mid = mx.createImageData(PW, PH), md = mid.data;
+  for (var j = 0; j < PH; j++) for (var i = 0; i < PW; i++) {
+    var o = (j*PW + i)*4, ins = pkInside(i, j), lip = j >= 70 && j < 92 && i > 52 && i < 716;
+    if (ins || lip) {   /* smooth the dither: a small soft average */
+      var r = 0, g = 0, b = 0, n = 0; for (var dj = -1; dj <= 1; dj++) for (var di = -1; di <= 1; di++) { var ii = i + di, jj = j + dj; if (ii < 0 || jj < 0 || ii >= PW || jj >= PH) continue; var q = (jj*PW + ii)*4; r += src[q]; g += src[q + 1]; b += src[q + 2]; n++; }
+      r /= n; g /= n; b /= n;
+      var fib = (egNoise(i*3 + 1, j*5 + 2) - 0.5)*7 + (egVN(i*0.35, j*0.12) - 0.5)*9 + (egVN(i*0.08 + 4, j*0.08) - 0.5)*10;   /* felted wool */
+      var lit = 1 + 0.12*(0.5 - (i/PW*0.6 + j/PH*0.4));   /* light from the upper left */
+      if (lip) { var lt = (j - 70)/22; lit *= 1 + 0.28*Math.max(0, Math.sin(lt*Math.PI))*(lt < 0.5 ? 1 : 0.4) - (lt > 0.82 ? 0.3 : 0); }
+      r = r*lit + fib; g = g*lit + fib*0.9; b = b*lit + fib*0.95;
+      var fl = 20; r = Math.max(r, fl*0.95); g = Math.max(g, fl*0.75); b = Math.max(b, fl);   /* the deep dark: soft plum, not black */
+      r *= 1.06; b *= 0.9; if (b > r) b = r + (b - r)*0.25;   /* plum stays plum: warm, never drifting violet-blue (the blue rule) */
+      d[o] = r; d[o + 1] = g; d[o + 2] = b;
+    } else {   /* the frame: its runes become the hologram's mask */
+      var R = src[o], G = src[o + 1], B = src[o + 2], Lm = R*0.3 + G*0.59 + B*0.11, near = Math.min(Math.hypot(i - 22, j - 22), Math.hypot(i - 746, j - 22), Math.hypot(i - 22, j - 410), Math.hypot(i - 746, j - 410));
+      var band = j < 31 || j > 401 || i < 31 || i > 737;
+      if (band && near > 30 && Lm > 95 && Math.abs(R - B) < 26 && !(i > 724 && j > 136 && j < 300)) md[o + 3] = 255;
+    }
+  }
+  x.putImageData(id, 0, 0); mx.putImageData(mid, 0, 0); POK.bg = c; POK.bgEg = c; EG_PKRUNE = m;
+}
+var _egPkFrame = pkFrame;
+pkFrame = function(now){
+  if (POK.bgSeam && POK.bgEg) POK.bg = EG_SEAM.lookOff ? POK.bgSeam : POK.bgEg;   /* the two looks switch back and forth */
+  _egPkFrame(now);
+  if (!POK.ready || !EG_PKRUNE || EG_SEAM.lookOff || EG_SEAM.noBake) return;
+  var t = egHolo(PW, PH, now, 0.6), tx = t.getContext('2d'); tx.globalCompositeOperation = 'destination-in'; tx.drawImage(EG_PKRUNE, 0, 0);
+  var x = pkCx; x.save(); x.globalCompositeOperation = 'color'; x.globalAlpha = POK.lift ? 0.3 : 0.85; x.drawImage(t, 0, 0); x.globalCompositeOperation = 'soft-light'; x.globalAlpha = POK.lift ? 0.15 : 0.45; x.drawImage(t, 0, 0); x.restore();
 };
 /* stamps in real ink (the same drawings: Seam's psptTirStamp and psptFuruStamp; new stamps should be wrapped the same way) */
 var EG_STAMPN = 0;
@@ -698,7 +778,7 @@ EG_SEAM.look = { ids:function(){ return Object.keys(PK_ART); }, photos:function(
         else { x.fillStyle = '#a33'; x.fillText('no look', cx + 8, cy + 20); }
         x.fillStyle = '#d8ccb4'; x.font = '11px monospace'; x.fillText(id, cx + 4, cy + cell + 12); setTimeout(next, 0); };
       if (POK.maps[id] && POK.maps[id].eg) go(); else { try { pkMap(id, function(){ egBakeOne(id, go); }); } catch (e) { go(); } } })();
-  }, lift:function(id){ if (POK.lift) { POK.lift = null; POK.ask = null; pkAsk.style.display = 'none'; } POK.folder = null; POK.page = 0; pkLayout(); var it = (POK.items || []).filter(function(i){ return i.id === id; })[0]; if (!it) { POK.folder = pkFolderOf(id); POK.page = 0; pkLayout(); it = (POK.items || []).filter(function(i){ return i.id === id; })[0]; } if (it) pkLift(it); return !!it; }, yes:function(){ var L = POK.lift; if (L && PK_ART[L.it.id].onYes) PK_ART[L.it.id].onYes(L.it, L); }, off:function(v){ EG_SEAM.lookOff = !!v; POK.items.forEach(function(it){ it.S = null; it.Sh = null; }); if (POK.lift) POK.lift.S = null; try { pkLayout(); } catch (e) {} }, baked:function(){ var n = 0, t = 0; for (var k in POK.maps) { t++; if (POK.maps[k].eg) n++; } return [n, t]; } };   /* (tests: how many things have their Embroidery look) */
+  }, lift:function(id){ if (POK.lift) { POK.lift = null; POK.ask = null; pkAsk.style.display = 'none'; } POK.folder = null; POK.page = 0; pkLayout(); var it = (POK.items || []).filter(function(i){ return i.id === id; })[0]; if (!it) { POK.folder = pkFolderOf(id); POK.page = 0; pkLayout(); it = (POK.items || []).filter(function(i){ return i.id === id; })[0]; } if (it) pkLift(it); return !!it; }, yes:function(){ var L = POK.lift; if (L && PK_ART[L.it.id].onYes) PK_ART[L.it.id].onYes(L.it, L); }, off:function(v){ EG_SEAM.lookOff = !!v; POK.items.forEach(function(it){ it.S = null; it.Sh = null; }); if (POK.lift) POK.lift.S = null; try { pkLayout(); } catch (e) {} }, info:function(id){ var M = POK.maps[id]; return { eg:!!(M && M.eg), foil:!!(M && M.eg && M.eg.foil), view:POK.lift ? POK.lift.view || null : null }; }, baked:function(){ var n = 0, t = 0; for (var k in POK.maps) { t++; if (POK.maps[k].eg) n++; } return [n, t]; } };   /* (tests: how many things have their Embroidery look) */
 
 /* ---- (the bridge, end) hand Embroidery what it needs from inside Seam's closure, then close it ---- */
 EG_SEAM.pocket = {

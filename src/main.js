@@ -19,6 +19,7 @@ import { rootAll } from './roots.js';
 import { P, setWorld, initInput, stepPlayer, pressJump, toggleCrouch, simKeys, TAP } from './player.js';
 import { LOOKS } from './looks.js';
 import { paintDetail } from './paint.js';
+import { buildEdges, hellIsReal, EDGE, edgesInside, edgesSurface } from './edges.js';
 
 /* the mist (Nov 17, later): the fog isn't one even wall. it drifts, very slowly (well under a breath a second), thicker
    in some places than others and pooling low near the ground, the way Silent Hill's does */
@@ -91,7 +92,12 @@ function start(){
   let voidT = -1e9;
   world.noGo = (x, z) => z < 3.12 && !onTrainFloor(x, z);
   /* (Nov 18) the place's edge, east: the field stops at the corn (x 40.8), except along the path out to the windmill */
-  world.bounds = Object.assign({}, world.bounds, { x1:49.4 }); world.inside = (x, z) => x <= 40.8 || onWindmillWay(x, z);
+  world.bounds = Object.assign({}, world.bounds, { x1:57, z1:EDGE.z1 + 1 });
+  /* (Nov 20) two places in one world: the station (and the road up to the fog) and, far south past the fog, the edges of
+     town. you can't walk between them: the fog takes you (TRANS below) */
+  world.inside = (x, z) => (z <= 24.0 && (x <= 40.8 || onWindmillWay(x, z))) || edgesInside(x, z);
+  { const g0 = world.ground; world.ground = (x, z) => z > 100 ? 0 : g0(x, z); }
+  buildEdges(scene); hellIsReal(scene);
   world.onNoGo = () => { const n = performance.now(); if (n - voidT > 20000) { voidT = n; say(VOID_LINE, 5200); } };
   giveMist(scene);
   setWorld(world);
@@ -100,6 +106,7 @@ function start(){
   const byTrain = trainArrive();   /* (a ride from a Seam page ended here: you're beside the train) */
   initInput(cv);
   initUI(); realCloseups(); setSoundFiles(SOUND_FILES);
+  { const v = document.createElement('div'); v.id = 'fogveil'; v.style.cssText = 'position:fixed;inset:0;pointer-events:none;opacity:0;z-index:5;background:#6e6158'; document.body.appendChild(v); }
   /* Seam's pocket (milestone 2): its captions are ours, its sounds follow our switch, its sounds get CC */
   const SEAM = window.EG_SEAM || null;
   if (SEAM) { SEAM.say = (t, ms) => say(t, ms || 4200); SEAM.cc = (k, t) => ccSay(k, t, 3000); }
@@ -155,13 +162,15 @@ function frame(now){
   if (SEAM && SEAM.where) SEAM.where(P.x, P.z, P.yaw);
   const pkOpen = !!(SEAM && ((SEAM.pocket && SEAM.pocket.isOpen()) || (SEAM.closeUpOpen && SEAM.closeUpOpen())));   /* (the pocket or a close-up: the world waits behind it) */ if (document.body.classList.contains('pk-open') !== pkOpen) document.body.classList.toggle('pk-open', pkOpen);
   if (pkOpen) { tickUI(now); return; }   /* the pocket is open: it's what's drawn (as in Seam); the world waits */
-  if (!window.__frozen) { trainTick(now, dt); stepPlayer(dt); adapt(dt); }
+  if (!window.__frozen) { trainTick(now, dt); if (!TRANS) stepPlayer(dt); adapt(dt); }
+  fogCross(now);
   /* (Nov 18, Aisling: "it gets weird when you walk forward and look downwards..its like you float upwards") the eyes turn on a
      neck, not on the spot: looking down tips the head forward and a little lower, as yours does; and a soft shadow under
      you follows the ground, so you stand on it */
   { const nk = 0.24, fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw), dn = Math.max(0, -P.pitch);
     camera.position.set(P.x + fx*nk*Math.sin(dn), P.y + P.eye - nk*(1 - Math.cos(dn)) + (P.onGround ? Math.sin(t*7)*0.008*(Math.abs(P._spd || 0) > 0.1 ? 1 : 0) : 0), P.z + fz*nk*Math.sin(dn)); }
   camera.rotation.set(P.pitch, P.yaw, 0);
+  if (L.sky) L.sky.position.copy(camera.position);
   if (YOU) { YOU.visible = !P.riding; YOU.position.set(P.x, P.y + 0.012, P.z); }
   MOUTH_D.value = Math.hypot(camera.position.x - TUN.x, camera.position.y - 1, camera.position.z - TUN.zc);
   K.wind.uYou.value.set(P.x, P.y, P.z); K.wind.uTime.value = t; MIST.value = t; K.wind.uGust.value = window.__gust != null ? window.__gust : gust(t);   /* (__gust: tests only) */
@@ -175,8 +184,40 @@ function frame(now){
   }
   fpsCount(dt);
 }
+/* (Nov 20, Aisling, Oct 25: "arriving in Missing Mile proper is disorienting … you don't know how you got here, you last
+   remember walking down a long road") walk on down the road past the second mileage sign and the fog closes over
+   everything; when it thins you're at the edge of town. walk back into the fog (either end of town) and you come to on
+   the road by the station again, with her line. the fog's colour is the look's own; it thickens over 1.6 s, holds, and
+   thins over 2.4 s (nothing flashes) */
+let TRANS = null;
+const LINE_ARRIVE = 'you don\'t know how you got here, you last remember walking down a long road.';   /* Aisling, Oct 25 (doc 32, f03-road.js) */
+const LINE_BACK = 'somehow you keep ending up back at the station… you feel like you are forgetting something.';   /* Aisling, Oct 25 */
+function fogCross(now){
+  const veil = document.getElementById('fogveil'); if (!veil) return;
+  if (!TRANS) {
+    if (P.riding) return;
+    let to = null;
+    if (P.z > 23.55 && P.z < 30 && P.x > 27.6 && P.x < 32.4) to = 'edges';
+    else if (P.z > 100 && (P.z < EDGE.back || P.z > EDGE.end)) to = 'station';
+    if (!to) return;
+    const f = LOOKS[cur].fog; veil.style.background = 'rgb(' + Math.round(f[0]*255) + ',' + Math.round(f[1]*255) + ',' + Math.round(f[2]*255) + ')';
+    TRANS = { to, t0:now, moved:false }; return;
+  }
+  const t = (now - TRANS.t0)/1000;
+  if (t >= 1.6 && !TRANS.moved) {   /* (always moved, even if a slow frame jumps past the moment) */ TRANS.moved = true;
+      if (TRANS.to === 'edges') { P.x = EDGE.arrive[0]; P.z = EDGE.arrive[1]; P.yaw = Math.PI; }
+      else { P.x = 30.0; P.z = 22.4; P.yaw = 0; }
+      P.y = world.ground(P.x, P.z); P.vy = 0; P.pitch = 0; P.sit = false; }
+  if (t < 1.6) veil.style.opacity = (t/1.6).toFixed(3);
+  else if (t < 2.2) veil.style.opacity = '1';
+  else if (t < 4.6) veil.style.opacity = (1 - (t - 2.2)/2.4).toFixed(3);
+  if (t >= 2.2 && !TRANS.said) { TRANS.said = true; say(TRANS.to === 'edges' ? LINE_ARRIVE : LINE_BACK, 7000); }
+  if (t >= 4.6) { veil.style.opacity = '0'; TRANS = null; }
+}
+window.__cross = to => { if (to === 'edges') { P.x = EDGE.arrive[0]; P.z = EDGE.arrive[1]; P.yaw = Math.PI; } else { P.x = 30.0; P.z = 22.4; P.yaw = 0; } P.y = world.ground(P.x, P.z); };   /* (tests) */
 /* what you're standing on, for footsteps */
 function surfaceAt(x, z, y){
+  if (z > 100) return edgesSurface(x, z);
   if (x > 9 && x < 32 && z > 3 && z < 8 && y > -0.05) return 'concrete';
   if (z < 8) return 'gravel';
   if (x > 28.8 && x < 31.2) return 'road';
@@ -191,9 +232,9 @@ function gust(t){ const a = Math.sin(t*0.071)*0.5 + Math.sin(t*0.043 + 1.3)*0.5;
 const RAY = new THREE.Raycaster(), V2 = new THREE.Vector2();
 function reach(cx, cy){
   const r = cv.getBoundingClientRect(); V2.set((cx - r.left)/r.width*2 - 1, -((cy - r.top)/r.height*2 - 1));
-  RAY.setFromCamera(V2, camera); RAY.far = 6;
+  RAY.setFromCamera(V2, camera); RAY.far = 12;
   const hit = RAY.intersectObjects(CLICK, false)[0]; if (!hit) return;
-  const o = hit.object, k = o.userData.say, near = k === 'bench' ? 2.6 : 3.6; if (hit.distance > near) return;
+  const o = hit.object, k = o.userData.say, near = o.userData.reach || (k === 'bench' ? 2.6 : 3.6); if (hit.distance > near) return;   /* (a sign meant to be read from the road says so with its own reach) */
   if (typeof k === 'function') { const w = k(hit); if (w) say(w, 4600); return; }
   /* Seam's own click actions first (the close-ups, the dumpster, the pit...), as Missing Mile's Seam version does */
   const SEAM = window.EG_SEAM;

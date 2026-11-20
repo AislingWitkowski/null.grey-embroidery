@@ -14,7 +14,7 @@ const OUT = process.argv[2] || '/tmp/pl_';
   for (const id of process.argv.slice(3).length ? process.argv.slice(3) : ['passport', 'smile', 'newspaper']) {
     console.log(id, await p.evaluate(i => window.EG_SEAM.look.lift(i), id)); await p.waitForTimeout(2500);
     await p.screenshot({ path:OUT + 'lift-' + id + '.png', timeout:300000 });
-    if (id === 'passport') { await p.evaluate(() => window.EG_SEAM.look.yes()); await p.waitForTimeout(2500); await p.screenshot({ path:OUT + 'passport-open.png', timeout:300000 });
+    if (id === 'passport') { await p.evaluate(() => window.EG_SEAM.look.yes()); await p.waitForTimeout(12000); await p.screenshot({ path:OUT + 'passport-open.png', timeout:300000 });
       await p.evaluate(() => window.EG_SEAM.look.off(true)); await p.waitForTimeout(800); await p.screenshot({ path:OUT + 'passport-open-seam.png', timeout:300000 }); await p.evaluate(() => window.EG_SEAM.look.off(false)); }
     await p.evaluate(() => { try { pkCx; } catch (e) {} }); await p.keyboard.press('Escape'); await p.waitForTimeout(300);
     await p.evaluate(() => { if (!window.EG_SEAM.pocket.isOpen()) window.EG_SEAM.pocket.open(); }); await p.waitForTimeout(800);
