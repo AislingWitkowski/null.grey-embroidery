@@ -6011,6 +6011,7 @@ var EG_FIX_STR = [
   [/<rect x="5" y="2" width="20" height="4" rx="1" fill="#bdbab3"\/>/, function(){ return EG_CANTOP(4, 26, 5.4); }],   /* the tall can */
   [/<rect x="13" y="4" width="14" height="10" fill="#1e1714"\/>/, function(){ return '<path d="M12 14.4 Q12 12.6 15 12.4 L25 12.4 Q28 12.6 28 14.4 Z" fill="#000000" fill-opacity="0.28"/><rect x="15" y="10" width="10" height="3" fill="#2e2622" opacity="0.85"/>' +
     '<rect x="13" y="3" width="14" height="7.6" rx="1.4" fill="#3a302a"/>' + [0, 1, 2, 3, 4, 5, 6].map(function(i){ return '<rect x="' + (14.2 + i*1.8) + '" y="3.6" width="0.7" height="6.4" fill="#000000" opacity="0.28"/>'; }).join('') + '<rect x="13.6" y="3.4" width="12.8" height="0.9" rx="0.45" fill="#ffffff" opacity="0.18"/>'; }],   /* ink bottles: a neck, and a ribbed cap */
+  [/<rect x="34" y="2" width="5" height="4" fill="#1e1714"\/>/, function(){ return '<rect x="33" y="4.6" width="7" height="1.6" rx="0.4" fill="#1e1714"/><rect x="34.2" y="2.6" width="4.6" height="2.6" rx="1" fill="#2e2824"/><rect x="34.6" y="2.9" width="3.6" height="0.6" rx="0.3" fill="#ffffff" opacity="0.2"/>'; }],   /* the disposable camera's shutter button, sitting on its body */
   [/<path d="M2 4 L42 38" stroke="/, function(){ return '<path d="M10.5 11.2 L36 32.8" stroke="'; }]   /* the onigiri's tear line, kept on the wrapper */
 ];
 function egFixSvg(id, svg){
@@ -6035,6 +6036,9 @@ function egFixDom(id, root){   /* words on top; the wind bells' wishes down thei
   var html = root.outerHTML || '';
   if (/^f_carton_/.test(id)) T(function(t){ if (t.getAttribute('y') === '28') { t.setAttribute('y', '22.8'); fit(t, 22); } });   /* the carton's name above its picture, not on it */
   if (html.indexOf('M3 6 L37 6 Q39 28 37 49 L3 49 Q1 28 3 6 Z') >= 0) T(function(t){ if (t.getAttribute('y') === '43') t.setAttribute('y', '46.6'); if (t.getAttribute('y') === '20') fit(t, 33); });   /* pillow bags: the small name below the picture; the big one inside the bag */
+  if (id === 'f_cam_torundesu' || id === 'f_cam_flash') T(function(t){ if (t.getAttribute('y') === '26') { t.setAttribute('x', '30.5'); fit(t, 20); } });   /* the small words kept on the camera */
+  if (id === 'f_album') T(function(t, c){ if (c === 'アルバム') fit(t, 24); });
+  if (id === 'f_waxbottles') { var g = root.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('transform', 'translate(22 15) scale(0.92) translate(-25 -15.5)'); while (root.firstChild) g.appendChild(root.firstChild); root.appendChild(g); }   /* all five bottles inside the picture */
   if (id === 'f_gematogen') T(function(t, c){ if (c === 'ГЕМАТОГЕН') { t.setAttribute('x', '26.5'); fit(t, 30); } });
   if (id === 'f_taffy') { var el = root.querySelectorAll('ellipse'); for (var k = 0; k < el.length; k++) { var cy = el[k].getAttribute('cy'); if (cy === '18') el[k].setAttribute('cy', '20.3'); if (cy === '5') el[k].setAttribute('cy', '4.6'); } }
   if (id === 'f_stolichnye') { var pth = root.querySelectorAll('path'); for (var k = 0; k < pth.length; k++) { var d = pth[k].getAttribute('d') || ''; if (/^M18,30|^M13,20/.test(d)) pth[k].setAttribute('transform', 'translate(20 3) scale(0.84) translate(-20 -3)'); } T(function(t){ fit(t, 14); }); }
@@ -6044,8 +6048,14 @@ function egFixDom(id, root){   /* words on top; the wind bells' wishes down thei
   if (/^f_furin/.test(id)) { var w = root.querySelector('text'); if (w) { var len = (w.textContent || '').replace(/\s/g, '').length || 1, sz = Math.min(2.8, 33/len);
     w.setAttribute('x', '20'); w.setAttribute('y', '36'); w.setAttribute('writing-mode', 'tb'); w.setAttribute('style', (w.getAttribute('style') || '').replace(/font-size:[^;]*;?/, '') + ';writing-mode:vertical-rl;text-orientation:upright;font-size:' + sz.toFixed(2) + 'px'); w.setAttribute('font-size', sz.toFixed(2)); w.setAttribute('text-anchor', 'start'); w.removeAttribute('stroke'); } }
 }
+var EG_CLOVER = function(){   /* four heart-shaped leaves joined at the middle, as a real clover's are (Seam's floated apart) */
+  var s = ''; for (var i = 0; i < 4; i++) { var big = i === 1, L = big ? 10.5 : 9, W = big ? 6.2 : 5.4;
+    s += '<g transform="translate(20 18) rotate(' + (i*90 + 45) + ')"><path d="M0,0 C' + (-W*0.3) + ',' + (-L*0.35) + ' ' + (-W*1.15) + ',' + (-L*0.7) + ' ' + (-W*0.55) + ',' + (-L) + ' C' + (-W*0.2) + ',' + (-L*1.12) + ' 0,' + (-L*0.95) + ' 0,' + (-L*0.82) + ' C0,' + (-L*0.95) + ' ' + (W*0.2) + ',' + (-L*1.12) + ' ' + (W*0.55) + ',' + (-L) + ' C' + (W*1.15) + ',' + (-L*0.7) + ' ' + (W*0.3) + ',' + (-L*0.35) + ' 0,0 Z" fill="' + (i % 2 ? '#6a7040' : '#727846') + '"/><path d="M0,-0.6 L0,' + (-L*0.78) + '" stroke="#959469" stroke-width="0.5"/><path d="M' + (-W*0.32) + ',' + (-L*0.6) + ' Q0,' + (-L*0.72) + ' ' + (W*0.32) + ',' + (-L*0.6) + '" stroke="#a8a878" stroke-width="0.6" fill="none" opacity="0.7"/></g>'; }
+  return '<rect width="40" height="40" fill="none"/><path d="M20,19 Q22,30 26,37" stroke="#6e7440" stroke-width="1.2" fill="none" stroke-linecap="round"/>' + s + '<circle cx="20" cy="18" r="1.1" fill="#5e6436"/>';
+};
+var EG_ART = { f_clover:EG_CLOVER, f_clover_b:function(){ return '<g transform="translate(40 0) scale(-1 1)" opacity="0.8">' + EG_CLOVER() + '</g>'; } };
 function egSvgFor(id, A, w, h){
-  var raw = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + A.vb[0] + ' ' + A.vb[1] + '" width="' + w + '" height="' + h + '">' + egFixSvg(id, A.svg()) + '</svg>';
+  var raw = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + A.vb[0] + ' ' + A.vb[1] + '" width="' + w + '" height="' + h + '">' + egFixSvg(id, EG_ART[id] ? EG_ART[id]() : A.svg()) + '</svg>';
   try { var doc = new DOMParser().parseFromString(raw, 'image/svg+xml'); if (!doc.querySelector('parsererror')) { egFixDom(id, doc.documentElement); raw = new XMLSerializer().serializeToString(doc.documentElement); } } catch (e) {}
   return raw;
 }

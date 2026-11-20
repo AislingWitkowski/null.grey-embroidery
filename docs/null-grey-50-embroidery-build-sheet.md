@@ -576,3 +576,21 @@ Aisling: *"so remember seam at the hub and such and the rides out and ride back 
 - **The Sheet** ("things in both engines") and its CSV: the "Embroidery look in the pocket" column now says automatic look for all 317.
 - **Pending, Aisling:** step 2 (the pocket and passport themselves: real leather outside, holographic runes); step 3 (hand-made looks, item by item, most-seen first). **The field notebook** (doc 48) is an Embroidery item: waiting on photos of the inside of her own field notes.
 - Checked: walking, clicks, close-ups, the pocket, the train both ways, the text check (no must-fix), no blue, ids 317/317, no errors.
+
+### Nov 19–20 (late night) — every pocket thing looked over; the faults the smooth look showed, fixed
+Aisling: *"please go over all the items things are slightly um off, they look ok but some things arent connected or are not quite like right, umm off..like there is ok in lkong but like example the top is a little weird...would it be helpful to see all the real items?"* (with a screenshot of the chocolate creme can).
+- **How:** `node t/sheets.js /tmp/sh_` lays every thing out big, 20 to a sheet, in its Embroidery look. All 317 were looked at.
+- **Why things looked off:** Seam's pixels hid small faults in the drawings; drawn smooth they show. All fixed in Embroidery's look only (`seam/shim-post.js`, "EMBROIDERY'S FIXES"); ids and words untouched.
+- **Fixed:**
+  - **Cans** (every can: the drinks machine's, the kiosk's, the hub's, the tall chūhai can): the lid floated over a flat band. Now the shoulder narrows into a neck, a rolled rim, the lid sunk inside it, the tab lying on the lid.
+  - **Ghosts:** a faint second copy of moved words showed, because the inks were read from Seam's unfixed drawing. The inks are now read from the fixed drawing itself.
+  - **Words covered by pictures** (Apple, water melon, Rich Cherry, momo milk, lychee candy, plum milk candy, marshmallows, bubs, milk candy …): words go on top, small names move clear of the picture, long names fit their packet.
+  - **Ink bottles:** a neck joins the glass to the cap, and the cap is ribbed (it was a black block floating on top).
+  - **Wind bells:** the wishes run down the paper strip, as on a real 風鈴 (they ran off it sideways).
+  - **Disposable cameras:** the shutter button sits on the body; the small words stay on the camera.
+  - **The four-leaf clover:** four heart-shaped leaves joined at the middle (they floated apart).
+  - **Smaller:** the onigiri's tear line stays on the wrapper; Столичные's word under its towers; Гематоген's name clear of its sun; Laughing Taffy's dots clear of its words; the wax bottles all inside the picture; アルバム inside its label; ribbon moon clear of the bow.
+- **Looked fine:** the gacha capsules, plushies, coins and receipt, papers, tickets, magazines, the passport and pass, the pit, the keys.
+- **Seam:** the same faults are there in Seam's drawings but mostly hidden by its pixels. The masters were left as they are; they can be fixed there too if Aisling wants.
+- **Her real items:** photos would help most for the hand-made looks (step 3), item by item: the cans, the ink bottles, the wind bells, the cameras, the snacks she has. Not needed for these fixes.
+- Checked: ids 317/317, the pocket, the text check (no must-fix), no errors.

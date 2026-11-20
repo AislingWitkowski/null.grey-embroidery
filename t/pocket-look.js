@@ -5,7 +5,7 @@ const OUT = process.argv[2] || '/tmp/pl_';
   const p = await b.newPage({ viewport:{ width:1280, height:720 } }); let errs = 0;
   p.on('pageerror', e => { errs++; console.log('ERR', String(e.stack).slice(0, 300)); });
   await p.addInitScript(() => { try { localStorage.setItem('nullgrey.stamps', JSON.stringify(['tir', 'furusato'])); } catch (e) {} });
-  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed');
+  await p.goto('file://' + path.resolve('dist/missing-mile-station.html') + '?fixed', { timeout:300000 });
   await p.waitForFunction(() => document.getElementById('wait').classList.contains('gone'), null, { timeout:180000 });
   await p.evaluate(() => { const S = window.EG_SEAM; ['passport', 'quarter', 'newspaper', 'smile', 'f_pit', 'f_mm_choco', 'pass', 'multipass', 'f_gc_mice_tin', 'f_mag_shojo', 'f_cam_torundesu', 'f_mozart', 'f_carton_momo'].forEach(id => { try { S.pocket.put(id); } catch (e) {} }); });
   await p.evaluate(() => window.EG_SEAM.pocket.open()); await p.waitForTimeout(6000);
