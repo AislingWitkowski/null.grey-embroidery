@@ -15,7 +15,8 @@ npx esbuild src/main.js --bundle --format=iife --minify --target=es2020 --outfil
 python3 - <<'PY'
 page = open('tools/page.html').read(); js = open('dist/bundle.js').read().replace('</script', '<\\/script')
 seam = open('src/seam-shared.txt', encoding='utf8').read().replace('</script', '<\\/script')
-open('dist/missing-mile-station.html', 'w').write(page.replace('/*SEAM*/', seam).replace('/*BUNDLE*/', js))
+portal = open('tools/portal.js', encoding='utf8').read().replace('</script', '<\\/script')
+open('dist/missing-mile-station.html', 'w').write(page.replace('/*PORTAL*/', portal).replace('/*SEAM*/', seam).replace('/*BUNDLE*/', js))
 PY
 rm dist/bundle.js
 ls -la dist/missing-mile-station.html
