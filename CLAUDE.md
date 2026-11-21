@@ -8,7 +8,7 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
 
 ## Working with Aisling
 - Plain language, step by step. Blunt, accurate honesty, not overly critical, no flattery.
-- **Leave out animal abuse and animal cruelty (Aisling, Nov 21, 2026).** In research, summaries and replies, skip it entirely; it's very difficult and disturbing for her. Only if she very specifically asks for information or opinions on it.
+- **Leave out animal abuse and animal cruelty (Aisling, Nov 21, 2026).** In research, summaries and replies, skip it entirely; it's very difficult and disturbing for her. Only if she very specifically asks for information or opinions on it. The topic can come up (Ukiyo's laws against it, for example), but never details or accounts of the creepy things people do.
 - She works on creative and sometimes dark or strange material; that's normal here.
 - Her words go in **as she wrote them** (lines, captions, item text). Don't rewrite them.
 - If something is a judgment call (taste, lore, layout), do the clear part and ask, or list it for her. Fix plain bugs without asking.
