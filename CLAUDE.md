@@ -48,6 +48,7 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
    docs about that place and its lore (doc 00 lists them; e.g. doc 32 for the Furusato line's stops, doc 38 for every
    stop, doc 24 for Limbo), and the things she loves: doc 33's look loves and references, doc 50's reference notes,
    doc 13's watch-list. Build from those.
+   **Every place gets its own notebook questions (Aisling, Nov 25: "please remind as we build to have specific questions, always optional").** When the player leaves a place, the notebook asks three gentle questions: two from the shared pool, one that place's own (doc 48, "Three questions after each place"). Only about what they saw and felt: no decisions, no judging. Always optional. Write the place's own questions with the place and list them for Aisling to change.
 1. Pull first in every repo you'll touch.
 2. Make the change. Build: `npm install` once, then `bash build.sh` → `dist/missing-mile-station.html` (one self-contained page).
 3. Test with pictures: `node t/shots.js '[[x,z,yawDeg,pitch,look],...]' /tmp/p_` (look 1 = Missing Mile's own (soft + 2% grit + 2% glow, a hair darker), 2–4 = soft, grit, glow, 5 = side by side; x east,
