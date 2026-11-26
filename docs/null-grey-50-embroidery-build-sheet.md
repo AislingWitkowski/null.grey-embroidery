@@ -710,4 +710,5 @@ Aisling: *"ok do all the building on pocket passport and next part of missing mi
   1. **A look test:** one small corner of Missing Mile with the twist on top (wash, grain, crunch, a tweaked palette). Pictures before and after.
   2. **Three pocket items redone** in the new style, side by side with today's.
   3. Aisling reacts; tune; then roll out to everything.
+- **The look board:** `null.grey-moodboards/embroidery-look/README.md` (her watercolour first; Hobbit, Belladonna, puppet films, the forms, palette; more to come from her).
 - **Before Aldridge is built** (it waits for this look). Read docs 33, 38 (Aldridge's notes and photos), 56 (board 8) and the look boards in `null.grey-moodboards/aldridge/` and `nullgrey-textures/` first.
