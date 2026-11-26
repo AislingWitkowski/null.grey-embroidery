@@ -27,6 +27,7 @@ complex places. The plan is doc 33 (`claude/null-grey-33-embroidery-engine.md`);
 - **Captions and signs:** all lowercase in captions. Japanese first, English under it (or `日本語 · english` on one line).
 - **Don't commit third-party reference photos.** Describe them in the docs instead. Her own scans and photos are fine.
 - **The hidden key phrase is never written in any file.** Only its salted fingerprint is.
+- **Look boards, always (Aisling, Nov 26).** *"we should make it a … project rule to build these always for future builds or update them as we go.. to help us build"*. Every place, and every board she sends, gets a **look board** in `null.grey-moodboards` (`<place>/vibe-boards/` or the board's folder): one section per idea with its pins, what it looks like, where it goes and how to build it (Seam / Embroidery), plus questions for her. Make it as HTML (`/home/claude/scripts/vibe.py`), a PDF for her phone (`vibepdf.py`) and the spec (`boards.json`, which is also the small version for Claude to read). **Read the place's look boards before building it, and update them as decisions land.**
 
 ## Embroidery's own rules (doc 33)
 - **Not a copy of anything (Aisling, Nov 18: "we DO NOT want to copy silent hill").** The reference games are for how smooth it runs and how light and fog feel, never for their look, places or things. The fog colour, the inks, the ash, the places and the story are null.grey's own.
