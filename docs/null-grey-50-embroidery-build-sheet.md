@@ -699,3 +699,15 @@ Aisling: *"ok do all the building on pocket passport and next part of missing mi
 - **No new sounds** (so no new CC yet). Slots to add when she wants: the canopy's hum, the store's cooler.
 - **Checked:** walking, clicks, the train both ways, the pocket, close-ups, ids 317/317, the text check (no MUST FIX; LOVER'S on the canopy made red because yellow on cream didn't read; the dead O of OPEN allowed on purpose), `t/edges.js`, no blue in the edges' pictures. The pocket picture: the hologram's slight lavender lustre (allowed), and the dark plum of the folder flaps, which is Seam's own pocket ink (the same in Seam's look); dark violet shadows in the new look are kept warm.
 - **Pending, Aisling:** the grocery's name; the kiosk's name; the Kmart's and Dairy Queen's one-step-off names; her words for the things; whether the first thing you see should be something else (doc 38's *"next question: walking off the long road into town, what's the first thing you see?"*: here it's Lover's canopy and the kiosk, in the fog); the old downtown next (North Pointe, the Pop Shop, the mill, Uncle's Bait Shop).
+
+### 2026-11-26 · Next for Embroidery: the look twist and the pocket (decided in chat, not built yet)
+**For the Embroidery chat to pick up.** Full notes: doc 33, "Nov 26 — null.grey needs its own look".
+- **Aisling:** *"I imagine it very close to what embroidery is now but we need to tweak it with like a slight twist and some more and I'm just not happy with how items in pocket look… too much like seam."*
+- **Decided: tweak, don't start over.** Walking, light, fog, the train, the shared pocket and save all stay. Only the look layer changes.
+- **The twist (her direction):** the 1977 Rankin/Bass *Hobbit* palette and watercolour wash, film grain mixed with a slight pixel crunch (as in *The Hobbit* and *Belladonna of Sadness*), a touch of Czech puppet-film strangeness, and her own watercolour hand. **Real shapes, light and materials underneath** (the Nov 20 realism rule stays); the wash, grain and crunch go on top: *real, but painted*. Keep it to a short recipe so it doesn't turn to mud; each place can lean a little differently. Smooth before pretty still holds (a wash-and-grain pass is cheap).
+- **The pocket items:** they look too much like Seam because Embroidery reuses Seam's item pictures with a light "real" filter (`egReal` in `seam/shim-post.js`). They get **their own look**: her photos and scans kept as they are where an item has one; everything else repainted in the new style (real shape and light, soft wash, grain, slight crunch), reading as her hand, not pixel art. Same ids, words and save (the rule doesn't change).
+- **Steps:**
+  1. **A look test:** one small corner of Missing Mile with the twist on top (wash, grain, crunch, a tweaked palette). Pictures before and after.
+  2. **Three pocket items redone** in the new style, side by side with today's.
+  3. Aisling reacts; tune; then roll out to everything.
+- **Before Aldridge is built** (it waits for this look). Read docs 33, 38 (Aldridge's notes and photos), 56 (board 8) and the look boards in `null.grey-moodboards/aldridge/` and `nullgrey-textures/` first.
