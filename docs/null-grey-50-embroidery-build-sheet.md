@@ -720,3 +720,12 @@ Aisling sent 20 pictures (19 of her own, private): `null.grey-moodboards/her-art
 - **Line:** slightly wobbly ink edges; colour spilling a little past them.
 
 Waiting on her: which pieces are too personal to use at all, and whether to try paper-fog.
+
+### 2026-11-26 (late afternoon) · More of her art, and what it adds to the look
+Two more batches and her CCAD-era photos (`null.grey-moodboards/her-art-2026-11-26/`, README). For the look test:
+- **Aya Takano** is a huge influence on her painting (confirmed): soft flat colour, long pink-flushed limbs, big dark eyes. Add her *feel* to the recipe beside the Hobbit wash and Aisling's own line; never her pictures.
+- **Her tarot deck** (artist name pending): fine ink line and dots over pale green, lilac and blush washes. Good target for "real, but painted": fine ink detail over soft wash.
+- **Her later style** (from her junior year): pale wash with crayon scribbled over, gothic lettering, crowded small worlds.
+- **Puppets:** she built her own marionettes (silver hooded figures with cape wings, `ccad-2013-photos/09`, `17`), studied the 2013 Czech puppet exhibit daily, and met Petr Matásek (doc 47). His woman puppet (her photo, `art3/`) is the puppet-strangeness reference: carved pale face, jointed white arms, carved ribcage, long grey skirt, gliding on wheels.
+- **Paper-fog:** she says keep the fog, maybe slightly toward paper; not sure yet. Try a little and show her.
+- **Private:** the messy crayon pieces never appear whole; themes and small bits only.
