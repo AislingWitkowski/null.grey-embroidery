@@ -712,3 +712,11 @@ Aisling: *"ok do all the building on pocket passport and next part of missing mi
   3. Aisling reacts; tune; then roll out to everything.
 - **The look board:** `null.grey-moodboards/embroidery-look/README.md` (her watercolour first; Hobbit, Belladonna, puppet films, the forms, palette; more to come from her).
 - **Before Aldridge is built** (it waits for this look). Read docs 33, 38 (Aldridge's notes and photos), 56 (board 8) and the look boards in `null.grey-moodboards/aldridge/` and `nullgrey-textures/` first.
+
+### 2026-11-26 (afternoon) · Her art for the look
+Aisling sent 20 pictures (19 of her own, private): `null.grey-moodboards/her-art-2026-11-26/`, with a look board. For the look test:
+- **Pocket items:** match her still life (09: a rose, a leaf and a carved box): real, coloured pencil and wash, a soft grey cast shadow on paper.
+- **Paper-fog:** try letting far things fade into pencil line and cream paper instead of (or under) grey fog. Her own pieces do this (04, 06, 09).
+- **Line:** slightly wobbly ink edges; colour spilling a little past them.
+
+Waiting on her: which pieces are too personal to use at all, and whether to try paper-fog.
